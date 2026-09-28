@@ -214,8 +214,8 @@ def fig1_validity_chain(out_path):
 
     W, H = 1200, 620
     title = "The validity chain and its threats"
-    desc = ("Diagram of the inference chain from a trace-derived score to a use "
-            "decision: scoring, generalization, extrapolation, implication/decision. "
+    desc = ("Diagram of the inference chain from a trace-derived score to its use: "
+            "scoring, generalization, extrapolation, use. "
             "Each stage lists the threats mapped to it in the paper's Table 2.")
 
     stages = [
@@ -228,7 +228,7 @@ def fig1_validity_chain(out_path):
           "Version/context non-invariance",
           "Usage MNAR",
           "Criterion sampling and non-response"]),
-        ("Implication / decision", "does acting on the score\nchange what it measures?",
+        ("Use", "does acting on the score\nchange what it measures?",
          ["Consequences"]),
     ]
 
@@ -243,7 +243,7 @@ def fig1_validity_chain(out_path):
 
     out = svg_open(W, H, title, desc)
     out += text(W / 2, 40, title, size=22, fill=INK_PRIMARY, anchor="middle", weight="600")
-    out += text(W / 2, 66, "Table 2, section 2.7 -- inference, then the threats backing it must answer",
+    out += text(W / 2, 66, "Table 2, section 2.7: each inference, then the threats its backing must answer",
                 size=13, fill=INK_MUTED, anchor="middle", italic=True)
 
     y0 = top
@@ -284,7 +284,7 @@ def fig1_validity_chain(out_path):
 
     out += text(margin_x, top + box_h + 44,
                 "Backing for extrapolation (section 2.5: criterion sampling, criterion non-response) is folded "
-                "into extrapolation above; \"use\" in the paper's table is the implication/decision stage here.",
+                "into extrapolation above.",
                 size=11.5, fill=INK_MUTED, italic=True)
     out += SVG_CLOSE
 
@@ -593,11 +593,11 @@ def fig3_selection_and_authorship(out_path):
     ]
 
     W, H = 1200, 640
-    title = "Selection on the current score, and validity under rising agent share"
-    desc = ("Left: the validity slope and correlation of the change statistic "
-            "against the true state, under four criterion schedules -- all days, "
-            "a schedule triggered on the current score, a current-score-only "
-            "control, and inverse-probability weighting on a mixed schedule -- "
+    title = "Criterion sampling, and validity under rising agent share"
+    desc = ("Left: the person-centred slope and correlation of the criterion on "
+            "the composite on all days and on the days sampled by three criterion "
+            "schedules (the CUSUM-triggered schedule, the current-score control, "
+            "and the mixed schedule with inverse-probability weighting), "
             "with bootstrap intervals. Right: the predicted (formula) versus "
             "realized (simulated) attenuation ratio for indicators 4 and 5 when "
             "the agent-authored share rises with the state, raw and after "

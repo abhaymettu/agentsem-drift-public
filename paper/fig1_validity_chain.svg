@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 620" width="1200" height="620" font-family='system-ui, -apple-system, "Segoe UI", sans-serif' role="img" aria-labelledby="svgtitle svgdesc">
 <title id="svgtitle">The validity chain and its threats</title>
-<desc id="svgdesc">Diagram of the inference chain from a trace-derived score to a use decision: scoring, generalization, extrapolation, implication/decision. Each stage lists the threats mapped to it in the paper's Table 2.</desc>
+<desc id="svgdesc">Diagram of the inference chain from a trace-derived score to its use: scoring, generalization, extrapolation, use. Each stage lists the threats mapped to it in the paper's Table 2.</desc>
 <rect x="0" y="0" width="1200" height="620" fill="#fcfcfb"/>
 <text x="600.00" y="40.00" font-size="22" fill="#0b0b0b" text-anchor="middle" font-weight="600" style="">The validity chain and its threats</text>
-<text x="600.00" y="66.00" font-size="13" fill="#898781" text-anchor="middle" font-weight="normal" style="font-style:italic;">Table 2, section 2.7 -- inference, then the threats backing it must answer</text>
+<text x="600.00" y="66.00" font-size="13" fill="#898781" text-anchor="middle" font-weight="normal" style="font-style:italic;">Table 2, section 2.7: each inference, then the threats its backing must answer</text>
 <rect x="56.00" y="150.00" width="237.50" height="236.00" rx="10" fill="#ffffff" stroke="rgba(11,11,11,0.10)" stroke-width="1.5"/>
 <rect x="56.00" y="150.00" width="237.50" height="6.00" rx="3" fill="#2a78d6"/>
 <text x="72.00" y="182.00" font-size="16.5" fill="#0b0b0b" text-anchor="start" font-weight="600"><tspan x="72.00" dy="0.00">Scoring</tspan></text>
@@ -39,10 +39,10 @@
 <path d="M 892.50 263.00 L 902.50 268.00 L 892.50 273.00" fill="none" stroke="#898781" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="906.50" y="150.00" width="237.50" height="236.00" rx="10" fill="#ffffff" stroke="rgba(11,11,11,0.10)" stroke-width="1.5"/>
 <rect x="906.50" y="150.00" width="237.50" height="6.00" rx="3" fill="#eda100"/>
-<text x="922.50" y="182.00" font-size="16.5" fill="#0b0b0b" text-anchor="start" font-weight="600"><tspan x="922.50" dy="0.00">Implication / decision</tspan></text>
+<text x="922.50" y="182.00" font-size="16.5" fill="#0b0b0b" text-anchor="start" font-weight="600"><tspan x="922.50" dy="0.00">Use</tspan></text>
 <text x="922.50" y="202.00" font-size="11.5" fill="#898781" text-anchor="start" font-weight="normal"><tspan x="922.50" dy="0.00">does acting on the score</tspan><tspan x="922.50" dy="14.00">change what it measures?</tspan></text>
 <line x1="922.50" y1="234.00" x2="1128.00" y2="234.00" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
 <circle cx="928.50" cy="240.00" r="4.00" fill="#eda100" stroke="#fcfcfb" stroke-width="1"/>
 <text x="940.50" y="244.00" font-size="12.5" fill="#52514e" text-anchor="start" font-weight="normal"><tspan x="940.50" dy="0.00">Consequences</tspan></text>
-<text x="56.00" y="430.00" font-size="11.5" fill="#898781" text-anchor="start" font-weight="normal" style="font-style:italic;">Backing for extrapolation (section 2.5: criterion sampling, criterion non-response) is folded into extrapolation above; "use" in the paper's table is the implication/decision stage here.</text>
+<text x="56.00" y="430.00" font-size="11.5" fill="#898781" text-anchor="start" font-weight="normal" style="font-style:italic;">Backing for extrapolation (section 2.5: criterion sampling, criterion non-response) is folded into extrapolation above.</text>
 </svg>

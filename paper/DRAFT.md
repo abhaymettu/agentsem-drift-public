@@ -2,7 +2,7 @@
 
 Abhay Mettu
 
-Manuscript draft v1, 2026-09-27. Author notes, provenance and open items are kept separately.
+Manuscript draft v4, 2026-09-28. Author notes, provenance and open items are kept separately.
 
 ---
 
@@ -17,8 +17,9 @@ changes, and criterion samples triggered by the score itself. A simulation, froz
 scoring, tests these threats on eleven families of synthetic persons against eleven frozen predictions,
 with every magnitude conditional on invented parameters. Two predictions hold. A criterion schedule
 triggered by the change statistic attenuated the validity slope by 24.8 percent, about as much as
-probing whenever the current score was high (25.4 percent), so the attenuation is ordinary selection on
-the score; the frozen design could not have shown weighted recovery at 1,000 persons. Criterion non-response tied to the state added 12 to 16 percent slope bias, short of
+probing whenever the current score was high (25.4 percent), so it cannot be attributed to the trigger's
+history; in this generator it plausibly reflects selection on the score together with per-person
+scaling and centring. The frozen design could not have shown weighted recovery at 1,000 persons. Criterion non-response tied to the state added 12 to 16 percent slope bias, short of
 the frozen threshold on the interval, and weighting on observables did not remove it. When the
 agent-authored share rose with the state, one indicator's validity changed sign (from 0.34 to -0.01).
 The best rule flagged 20 percent of planted drifts within 21 days at one false flag per six tracked
@@ -215,8 +216,7 @@ first draft of this argument.
 
 ![Figure 1](fig1_validity_chain.svg)
 
-*Figure 1.* The validity argument as a chain of scoring, generalization, extrapolation and use (drawn as
-implication and decision), with the threats placed on each. The backing for extrapolation, criterion
+*Figure 1.* The validity argument as a chain of scoring, generalization, extrapolation and use, with the threats placed on each. The backing for extrapolation, criterion
 sampling and criterion non-response, is drawn inside extrapolation.
 
 ---
@@ -237,8 +237,8 @@ on the invented parameters listed in section 6.
 
 ### 3.2 Generator
 
-Each synthetic person has 140 days, with days 1 to 28 as baseline, and there are 1,000 persons per
-family per cell; all rules and schedules run on the same persons, so differences are paired. The state
+Each synthetic person has 140 days (days 1 to 28 are baseline), with 1,000 persons per family per
+cell; all rules run on the same persons. The state
 `D_t` is AR(1) with `phi_D = 0.7` and marginal SD 1; drift families add a ramp of +1.0 SD from an onset in
 days 50 to 100, over 7 to 21 days. Workload and a daily context (code, write, personal) vary alongside
 it; a day is used with probability `expit(logit(0.8) - kappa D_t)`, less on vacation or disengagement. Six indicators are observed on used days (late-activity share, session fragmentation, deferral
@@ -249,8 +249,8 @@ Indicators 4 and 5 are mixed with machine text by daily averaging, `X_jt = (1 - 
 with `M` independent of `D`. For indicator 4 the generator takes `pi_bar = 0.845`, `kappa = 0.547` and
 `delta = 0.274` from the corpus audit; the share is a day mean, but `kappa` and `delta` were computed over
 entries and used as day-level parameters (section 3.9 gives the consequence). Help is logged, with probability
-0.3 by default; a version change shifts indicators 2 and 6 by +0.5 and scales their loading by 0.7. The criterion is `Y_t = D_t + e_Y` with reliability 0.7, valid by
-construction, and the probability of answering falls with `D` at rate `m1`.
+0.3 by default; a version change shifts indicators 2 and 6 by +0.5 and scales their loading by 0.7. The criterion `Y_t = D_t + e_Y` has
+reliability 0.7, and the probability of answering falls with `D` at rate `m1`.
 
 **Families.** S (stable), DR (drift), VA (vacation), SP (workload sprint), BI (broken integration), AV
 (version change, logged for half), DE (disengagement), DV (drift overlapping a vacation), CS (context
@@ -416,13 +416,13 @@ Some results follow from the generator's structure: selection attenuation when t
 depends on the score; weighting on observables not removing state-dependent non-response; and
 the sign of state-coupled contamination, which follows from `X = H + pi (M - H)`. They are expected
 whenever `phi_D > 0`, the trigger depends on the score, the loadings are non-zero, and the coupling and
-mean gap are non-zero; section 3.10 checks their direction on an exploratory grid. The magnitudes (0.197, 17.8 points, 24.8 percent) are set by invented values and say
-nothing about any real setting.
+mean gap are non-zero; on an exploratory grid (section 3.10) the direction held on point estimates
+everywhere, but three expectations failed their interval rule in named cells. The magnitudes (0.197,
+17.8 points, 24.8 percent) are set by invented values.
 
 **Which mechanisms appeared.** Selection attenuation, state-coupled authorship distortion and the
-non-state false-flag sources appeared (the last without clearing their bars). The workload component
-did not work (SP ablation ratio 1.047), removing (i) did not explain half of the P2 gap, and P9 went the
-opposite way.
+non-state false-flag sources appeared; the workload component (SP ablation ratio 1.047) and component
+(i) did not do their jobs, and P9 went the opposite way.
 
 **Criterion sampling (P4)** (Figure 3, left). The triggered slope was 0.700 [0.640, 0.759] against an all-days slope of
 0.930, an attenuation of 24.8 percent [18.5, 31.3], with the correlation deflated by 0.104 [0.076,
@@ -434,10 +434,12 @@ check with a common loading and population scaling moved it by about 6 percent);
 combines with per-person loadings, scaling and person-centring on the selected days. With the previous day's
 statistic in the trigger, the attenuation was 16.1 percent [10.0, 22.1]; that reading is closer to
 selection on history, but the estimator effect seen in `current` has not been separated from it.
-Recovery by weighting could not be shown under either reading: the weighted slope differed from the
-all-days slope by -0.055 [-0.124, 0.018] with today's statistic and overshot by 0.067 [0.001, 0.132]
-with the previous day's, and an interval about 0.14 wide cannot fit a band 0.06 wide. This is a known selection result (Thorndike, 1949; Sackett and Yang, 2000), structurally the verification bias of
-Begg and Greenes (1983), shown here in the agent-probing setting. The history-conditional weighting from
+Weighted recovery could not be shown under either reading (-0.055 [-0.124, 0.018] with today's
+statistic; an overshoot of 0.067 [0.001, 0.132] with the previous day's); an interval about 0.14 wide
+cannot fit a band 0.06 wide. The correlation deflation is the classical range-restriction result (Thorndike, 1949;
+Sackett and Yang, 2000), structurally the verification bias of Begg and Greenes (1983), shown here in
+the agent-probing setting. The slope attenuation is not that result: direct selection leaves the slope
+unbiased in a homogeneous model, so it plausibly reflects the estimator, as above. The history-conditional weighting from
 micro-randomized trials (Boruvka et al., 2018) applies, but at N = 1,000 its interval is too wide to show
 recovery.
 
@@ -479,7 +481,9 @@ four-probe scaling, not evidence that passive scoring beats asking.
 days and on days sampled by the triggered, `current` and weighted mixed schedules, with 95 percent
 intervals. Right: attenuation factor predicted by the formula and simulated when the
 agent-written share rises with the state (hypothetical cell), for indicators 4 and 5, raw and filtered;
-indicator 5 raw is simulated at -0.08 against a predicted 0.29.
+indicator 5 raw is simulated at -0.08 against a predicted 0.29. The -0.08 is a mean of per-person
+attenuation ratios; the -0.011 in the text is a different estimator, the person-averaged within-person
+correlation of the indicator with the state.
 
 ### 3.10 Exploratory robustness (not frozen)
 
@@ -487,27 +491,33 @@ An exploratory grid varied one parameter at a time around the frozen default, in
 persons: the loading range ([0.10, 0.25] and [0.50, 0.80]), `phi_D` (0.3 and 0.9), the help effect (0.25
 and 1.0), day-level indicator-4 contamination, the rising-share slope (0.25 and 1.0), and `m1 = 1.5`. The
 plan, its six expectations and its success rule (a 95 percent interval excluding the null in every
-cell) were committed and hashed before the run (supplementary repository, `sim/ROBUSTNESS-PLAN.md`), and
-its seeds derive from that hash. Two cells, the default and `m1 = 1.5`, were computed once before the
-commit to check a code refactor and compared only with each other. `h` was re-tuned per cell; the
-schedule parameters were not. The grid is not part of the frozen design and changes no verdict in
-Table 1.
+cell) were committed and hashed before the run (supplementary repository, `sim/ROBUSTNESS-PLAN.md`);
+two cells were computed once before that commit, for a refactor check. `h` was re-tuned per cell and the
+schedule parameters were not. The grid changes no verdict in Table 1.
 
-- Passive rules beat their own chance baselines, state-dependent non-response added bias that
+Under the plan's pre-stated rule, three of the six expectations held in every cell (S3, S5, S6), and
+three failed the pre-stated rule in named cells (S1, S2, S4; bullets below). The grid's default cell uses a re-tuned A-fixed threshold
+(`h` = 3.209, against 3.334 in the frozen tuning) and different seeds, so its magnitudes (for example a
+triggered slope ratio of 0.829 [0.770, 0.890]) are not comparable with Table 1.
+
+- Held: passive rules beat their own chance baselines, state-dependent non-response added bias that
   propensity weighting did not remove (tested at `m1 = 1.5` only: added bias 0.162 [0.091, 0.207]), and
   the context shift raised false flags (CS over S ratio 1.43 to 1.93), in every cell tested.
-- Selection attenuation: the triggered schedule's probed-day slope was below the all-days slope in every
-  cell (ratio 0.550 to 0.893). The `current` control's was below it in every cell except the low-loading
-  cell, where its interval crossed 1 (0.885 [0.622, 1.176]).
-- Sign of state-coupled contamination: the direction held in all 11 cells on point estimates, positive
-  for indicator 4 and negative for indicator 5. Indicator 4's interval crossed zero in the low-loading,
+- S1 failed in one cell. The triggered schedule's probed-day slope was below the all-days slope in
+  every cell (ratio 0.550 to 0.893); the `current` control's interval crossed 1 in the low-loading cell
+  (0.885 [0.622, 1.176]).
+- S2 failed in three cells. Its direction held in all 11 cells on point estimates (positive for
+  indicator 4, negative for indicator 5), but indicator 4's interval crossed zero in the low-loading,
   high-persistence and strong-coupling cells, where its standard error was 5 to 16 times the default's.
-  That is a precision failure, not a sign reversal, and the grid says little about indicator 4 in those
-  cells.
-- Probe-only was expected to be indistinguishable from chance and was, except at `m1 = 1.5`, where it
-  fell below its chance baseline (-0.010 [-0.019, -0.001]). This was not a planned expectation. It is
-  consistent with non-response concentrating when the state is elevated, so that a criterion-only rule
-  sees least during drift.
+  Read as precision rather than a sign reversal, this still means the grid says little about indicator 4
+  in those cells. The indicator-5 value in the low-loading cell, -2.707 [-6.264, -0.707], is not
+  interpretable: the simulated attenuation ratio divides by the unmixed indicator's within-person
+  validity, which is small at weak loadings.
+- S4 failed in one cell. It expected probe-only to be indistinguishable from chance; at `m1 = 1.5`
+  probe-only fell just below its chance baseline (-0.010 [-0.019, -0.001]), a single marginal exclusion
+  in 1 of 11 cells, which chance alone can produce. The below-chance direction was not anticipated, and
+  attributing it to non-response concentrating when the state is elevated is a post hoc conjecture. In
+  the other ten cells, an interval containing zero is not evidence of equivalence.
 ---
 
 ## 4. A one-person corpus audit of the scoring inference
@@ -515,13 +525,12 @@ Table 1.
 ### 4.1 Methods
 
 **Data and scope.** The corpus is my own transcripts from one coding-agent command-line tool, read only.
-I am a heavy user of automation: most sessions ran with no person present, and 217 entries were prompts
-sent by automated processes (section 4.2). The corpus is therefore not a sample of everyday
-agent conversations, and the size of the contamination below tracks this user's automation. Every
+I am a heavy user of automation (section 4.2), so the corpus is not a sample of everyday agent
+conversations, and the contamination below tracks this user's automation. Every
 aggregate below is computed on the 73,955 user-role entries timestamped on or before a snapshot cutoff
 (2026-09-28T01:32:31Z), which the audit script reproduces from any later state of the corpus. Raw scan
-counts are not reported, because they depend on when the scan is run: the live transcript store keeps
-growing, including from the sessions that produced this analysis.
+counts are not reported: they depend on when the scan runs, because the transcript store keeps growing,
+including from the sessions that produced this analysis.
 
 **What is kept.** Per-entry metadata (timestamp, session, role, flags, provenance fields, harness
 version, model id, length) and an authorship class. Tool-result payloads are never read; other text is
@@ -536,15 +545,15 @@ markers. Sessions are `autonomous` (no typed entry), `mixed` or `interactive`.
 
 **Indicators.** Late-activity share (entries between 00:00 and 05:00 local), session fragmentation
 (distinct sessions per active hour) and message length (mean log characters), each in three versions:
-naive (all user-role entries), middle (dropping tool results and subagent traffic, which are
-structurally tagged and which any analyst would drop) and typed (`human-typed` only). Only the
+naive (all user-role entries), middle (dropping the structurally tagged tool results and subagent
+traffic) and typed (`human-typed` only). Only the
 disagreement between versions is reported, never the level of a typed series, which is the nearest
 thing here to a behavioural signal about the person.
 
 **Change points.** Days with a typed entry were split chronologically at 70 percent (cutoff
 2026-09-21). Change points were found on training days by penalized binary segmentation and checked
-against independently dated infrastructure events: harness versions, model ids, dated configuration
-backups, dated policy sections and hook modification times.
+against independently dated infrastructure events (versions, model ids, configuration backups, policy
+dates, hook changes).
 
 ### 4.2 Results
 
@@ -561,11 +570,10 @@ backups, dated policy sections and hook modification times.
 
 Of 73,955 user-role entries, 688 were classed as typed. On the main thread, excluding tool results and
 subagent traffic, there were 6,154 text-bearing entries: 688 typed and 5,466 machine-authored, and the
-5,466 are exactly the injected (5,249) and automated-prompt (217) entries. So the machine text here is harness
+5,466 are exactly the injected (5,249) and automated-prompt (217) entries. The machine text here is harness
 injection and automated prompts, not delegated drafts. Its share is 0.888 by entry and 0.845 as a day
-mean (day-level SD 0.174 over 24 days). Over entries it is 0.274 within-person SDs longer than typed
-text, with variance ratio 0.547; from daily means over 21 days, the share is 0.823, the gap 0.196 and the
-ratio 0.098.
+mean (SD 0.174 over 24 days); its entry-level gap and variance ratio are 0.274 and 0.547, and its
+day-level share, gap and ratio (21 days) are 0.823, 0.196 and 0.098.
 
 **Person-absent sessions.** Of 1,544 main sessions, 1,303 (0.844) had no typed entry, 20 were mixed and
 221 interactive. The autonomous sessions supplied 0.570 of all naive user-role entries, 0.750 of the
@@ -578,8 +586,8 @@ naive against middle, 21 days with typed entries otherwise):
 | indicator | naive vs typed | naive vs middle | middle vs typed |
 |---|---:|---:|---:|
 | late-activity share | 0.90 | 0.94 | 0.90 |
-| session fragmentation | 0.12 | 0.999 | 0.110 |
-| message length (mean log chars) | 0.28 | -0.017 | 0.244 |
+| session fragmentation | 0.12 | 1.00 | 0.11 |
+| message length (mean log chars) | 0.28 | -0.02 | 0.24 |
 
 ![Figure 4](fig4_contamination.svg)
 
@@ -591,9 +599,9 @@ Fragmentation contamination comes from injected and automated-prompt traffic: dr
 subagent traffic leaves the series almost unchanged, and the middle series is nearly unrelated to the
 typed one. Message length is broken twice, by tool-result and subagent traffic and again by injection.
 Late activity agreed best even though three quarters of its naive entries came from autonomous
-sessions, so that agreement is a property of this window. Naive against typed, the correlations were
-0.94, 0.15 and 0.38 on the 15 paired training days and 0.90, -0.30 and 0.78 on the 6 test days, too few
-to read as a change.
+sessions, so that agreement is a property of this window. Split by time (15 training and 6 test days), the naive
+against typed correlations were 0.94, 0.15 and 0.38, then 0.90, -0.30 and 0.78; 6 days are too few to
+read as a change.
 
 **Pastes, agent drafts, third parties.** 0.30 percent of user-role entries carried a paste marker, and
 none was classed `human+paste`. No typed entry shared a 200-character span with the session's last five assistant turns, a check that
@@ -705,7 +713,8 @@ assign authorship classes; only metadata and aggregates were stored, tool-result
 read, and no state of any person was estimated. The stream contains some third-party content (0.77
 percent of tool results came from tools named for messaging, calendar or email), which the audit did not
 read. [AUTHOR TO CONFIRM: no ethics review was sought, because the only human data are the author's own
-usage metadata; no other person's data were analysed.]
+usage metadata; no other person's content was read (third-party traffic was counted only by tool
+name).]
 
 **Data and code availability.** The simulation code, the frozen pre-scoring document, both scoring runs,
 the reporting-only metrics, the audit code and the corpus audit's aggregate outputs are in the

@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 640" width="1200" height="640" font-family='system-ui, -apple-system, "Segoe UI", sans-serif' role="img" aria-labelledby="svgtitle svgdesc">
-<title id="svgtitle">Selection on the current score, and validity under rising agent share</title>
-<desc id="svgdesc">Left: the validity slope and correlation of the change statistic against the true state, under four criterion schedules -- all days, a schedule triggered on the current score, a current-score-only control, and inverse-probability weighting on a mixed schedule -- with bootstrap intervals. Right: the predicted (formula) versus realized (simulated) attenuation ratio for indicators 4 and 5 when the agent-authored share rises with the state, raw and after authorship filtering.</desc>
+<title id="svgtitle">Criterion sampling, and validity under rising agent share</title>
+<desc id="svgdesc">Left: the person-centred slope and correlation of the criterion on the composite on all days and on the days sampled by three criterion schedules (the CUSUM-triggered schedule, the current-score control, and the mixed schedule with inverse-probability weighting), with bootstrap intervals. Right: the predicted (formula) versus realized (simulated) attenuation ratio for indicators 4 and 5 when the agent-authored share rises with the state, raw and after authorship filtering.</desc>
 <rect x="0" y="0" width="1200" height="640" fill="#fcfcfb"/>
-<text x="600.00" y="36.00" font-size="19" fill="#0b0b0b" text-anchor="middle" font-weight="600" style="">Selection on the current score, and validity under rising agent share</text>
+<text x="600.00" y="36.00" font-size="19" fill="#0b0b0b" text-anchor="middle" font-weight="600" style="">Criterion sampling, and validity under rising agent share</text>
 <text x="60.00" y="94.00" font-size="14" fill="#0b0b0b" text-anchor="start" font-weight="600" style="">Validity slope and correlation, by criterion schedule</text>
 <line x1="160.00" y1="120.00" x2="160.00" y2="560.00" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
 <text x="160.00" y="582.00" font-size="11.5" fill="#898781" text-anchor="middle" font-weight="normal" style="">0</text>

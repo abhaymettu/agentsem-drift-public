@@ -1,13 +1,13 @@
-# Author notes for paper/DRAFT.md (v3)
+# Author notes for paper/DRAFT.md (v4)
 
 Kept out of the manuscript on purpose: provenance, local paths, verification status of references, the
-referee-response map, and open items. v0 `a497ae3`, v1 `d0db495`, v2 `3fb50cd`; v3 is uncommitted.
+referee-response map, and open items. v0 `a497ae3`, v1 `d0db495`, v2 `3fb50cd`, v3 `e1f2c72` (voice pass `201f649`); v4 is uncommitted.
 
 ## 1. Provenance
 
 | what | where |
 |---|---|
-| frozen pre-scoring document | `sim/PREREG.md`, commit `3c11e4f` (2026-09-27 21:21:40 CDT), sha256 `60db6dd195942387e5572a640224c4cb13836f29c37c1b611b14c70598678f17`; unchanged since the freeze (`git diff 3c11e4f HEAD -- sim/PREREG.md` empty) |
+| frozen pre-scoring document | `sim/PREREG.md`, commit `3c11e4f` (2026-09-27 21:21:40 CDT), sha256 `60db6dd195942387e5572a640224c4cb13836f29c37c1b611b14c70598678f17`; unchanged since the freeze (`git diff 3c11e4f HEAD sim/PREREG.md` is empty) |
 | run 1 (superseded) | `sim/superseded-run1/results.json`, `RESULTS.md` |
 | run 2 code | commit `5bc2310` (22:04:20 CDT); fixes listed in `sim/POSTFREEZE-DEVIATIONS.md` items 1 to 6 |
 | run 2 results | `sim/results.json`, `sim/RESULTS.md`, commit `6c17e0c` (22:05:55 CDT) |
@@ -21,7 +21,7 @@ referee-response map, and open items. v0 `a497ae3`, v1 `d0db495`, v2 `3fb50cd`; 
 | program studies cited as Mettu (2026b) | Study 1a `~/code/agentsem-trap-world` commit `21ec751` (`MORNING-HANDOFF.md`); Study 2 S1 `~/code/agentsem-study2-integration` commit `41d6774`; Study 5 `~/code/agentsem-study5-feasibility` commit `3dfe3c2` (`FALSIFICATION-PLAN.md`) |
 | Mettu (2026a) | `~/code/ghost-respondents/paper/GHOST-RESPONDENTS-DRAFT.md`, section 2.2 (E5, E7) |
 | exploratory robustness grid | plan `sim/ROBUSTNESS-PLAN.md`, sha256 `e1dbc8b74be6b3067e9433b76a1d1b24b01b705994b6a248771ad65f11836606`, committed in `3fb50cd` (2026-09-27 23:43:25 CDT); results `sim/robustness.json`, `sim/ROBUSTNESS.md`; two cells (`default`, `m1_15`) computed before the commit for a refactor check, disclosed as `sim/POSTFREEZE-DEVIATIONS.md` item 9 |
-| figures | `paper/figures.py` renders `paper/fig1` to `fig4` (.svg) from `sim/results.json`, `sim/metrics.json` and `pilot/results.json`. File numbers match figure numbers in the draft (renamed 2026-09-27) |
+| figures | `paper/figures.py` renders `paper/fig1` to `fig4` (.svg) from `sim/results.json`, `sim/metrics.json` and `pilot/results.json`. File numbers match figure numbers in the draft (renamed 2026-09-27). v4 edited text labels only (fig1 subtitle and footnote, fourth stage renamed "Use"; fig3 title and description); after re-running `figures.py`, every numeric token in all four SVGs is identical to `HEAD` (`201f649`) |
 | citation verification files | `~/lanes/bridge-jobs/agentsem-overnight-20260927/paper-citations.md`, `prior-art-passive.md`, `lit-verify.md` |
 
 ### Where each number comes from
@@ -157,10 +157,12 @@ the Bernoulli explanation from 9. The rest are open items below.
 
 ## 4. Submission export
 
-The `<!-- cite: -->` comments stay in DRAFT.md because `scripts/claims_lint.sh` exempts those lines.
-Strip them for submission with:
+The `<!-- cite: -->` comments stay in DRAFT.md, which is the lint source: `scripts/claims_lint.sh`
+exempts those lines. The submission file is produced by this export, which strips them:
 
     sed 's/ *<!-- cite: -->//' paper/DRAFT.md > paper/SUBMISSION.md
+
+SUBMISSION.md is a build product and is not committed.
 
 ## 5. Outward-facing actions (author only)
 
@@ -178,6 +180,19 @@ Strip them for submission with:
 | figures | done: four figures referenced at first use, with method-language captions |
 | ergodicity citations (item 10) | done |
 
+### Round 4 (v3 review, v4)
+
+| item | status |
+|---|---|
+| M1 (3.10 against its plan) | done: 3.10 opening paragraph and S2 bullet; 3.9 grid sentence |
+| M2 (S4) | done: 3.10 S4 bullet. The referee's 43 percent figure is not used. |
+| M3 (abstract, Thorndike) | done: abstract says the attenuation cannot be attributed to the trigger's history; 3.9 splits the sentence (Case II/III fits the correlation deflation, not the slope attenuation) |
+| M4 | done: grid default uses re-tuned `h` 3.209 (robustness.json `cells.default.tuned_h.A-fixed.h`) against 3.334 (`sim/tuning.json`) and different seeds; triggered ratio 0.829 [0.770, 0.890]; not comparable with Table 1 |
+| M5 (figures) | done: text labels only; see provenance row; caption clause names the two estimators (-0.08 mean per-person attenuation ratio, `P6.pi_rises_with_D.ind5_att_mc_mean`; -0.011 person-averaged within-person correlation, metrics item n) |
+| item 17 | done in the draft: header "Manuscript draft v4"; export stated above. DOI and ethics confirmation remain author actions |
+| ethics placeholder | done: "no other person's content was read (third-party traffic was counted only by tool name)", still bracketed |
+| suggested | 4.2 table now two decimals throughout (1.00, 0.11, -0.02, 0.24, matching Figure 4). The fig2 y-axis ticks were not changed (label-only edits were allowed; ticks are computed) |
+
 Deferred: only the optional N1 check (`triggered` on the previous day's statistic in the homogeneous
 isolate), which needs a new run.
 
@@ -190,6 +205,6 @@ isolate), which needs a new run.
 4. P1b's lower bound is exactly 0.500; check whether it is a bootstrap quantile or a floor.
 5. Begg and Greenes (1983) full text; the unverified list is in section 4.
 6. Venue word limit (Advances in Methods and Practices in Psychological Science) against the body
-   (about 8,320 words excluding Appendix A and references).
-8. Retention: whether to raise `cleanupPeriodDays` above 45.
-9. The spec's pasted-draft check says "earlier assistant message"; the code checks the last five turns.
+   (about 8,430 words excluding Appendix A and references).
+7. Retention: whether to raise `cleanupPeriodDays` above 45.
+8. The spec's pasted-draft check says "earlier assistant message"; the code checks the last five turns.
