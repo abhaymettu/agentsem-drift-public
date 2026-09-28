@@ -1,0 +1,161 @@
+# Author notes for paper/DRAFT.md (v1)
+
+Kept out of the manuscript on purpose: provenance, local paths, verification status of references, the
+referee-response map, and open items. Committed v0 of the draft is `a497ae3`. v1 is uncommitted.
+
+## 1. Provenance
+
+| what | where |
+|---|---|
+| frozen pre-scoring document | `sim/PREREG.md`, commit `3c11e4f` (2026-09-27 21:21:40 CDT), sha256 `60db6dd195942387e5572a640224c4cb13836f29c37c1b611b14c70598678f17`; unchanged since the freeze (`git diff 3c11e4f HEAD -- sim/PREREG.md` empty) |
+| run 1 (superseded) | `sim/superseded-run1/results.json`, `RESULTS.md` |
+| run 2 code | commit `5bc2310` (22:04:20 CDT); fixes listed in `sim/POSTFREEZE-DEVIATIONS.md` items 1 to 6 |
+| run 2 results | `sim/results.json`, `sim/RESULTS.md`, commit `6c17e0c` (22:05:55 CDT) |
+| reporting-only metrics | `sim/metrics.json`, `sim/METRICS.md` (POSTFREEZE item 7) |
+| tuned values | `sim/tuning.json` (`h.probe-only` 22.949 after re-tune; run 1 value under `h.probe_only_h_run1`) |
+| scoring-code audit | `~/lanes/bridge-jobs/agentsem-overnight-20260927/score-fidelity-audit.md` (run by an Opus agent in the same lane) |
+| referee review | `~/lanes/bridge-jobs/agentsem-overnight-20260927/paper-referee-review.md` |
+| spec, including section 10 (21:28 CDT reframing) | `specs/001-drift-layer/spec.md`; section 10 was committed in `5bc2310`, not in the freeze |
+| corpus audit | `pilot/trace_audit.py`, `pilot/results.json`, `pilot/RESULTS.md`, `pilot/INVENTORY.md`, `pilot/indicator4_params.json`; snapshot `--until 2026-09-28T01:32:31Z` |
+| retention setting | `~/.claude/settings.json`, `cleanupPeriodDays: 45` |
+| program studies cited as Mettu (2026b) | Study 1a `~/code/agentsem-trap-world` commit `21ec751` (`MORNING-HANDOFF.md`); Study 2 S1 `~/code/agentsem-study2-integration` commit `41d6774`; Study 5 `~/code/agentsem-study5-feasibility` commit `3dfe3c2` (`FALSIFICATION-PLAN.md`) |
+| Mettu (2026a) | `~/code/ghost-respondents/paper/GHOST-RESPONDENTS-DRAFT.md`, section 2.2 (E5, E7) |
+| citation verification files | `~/lanes/bridge-jobs/agentsem-overnight-20260927/paper-citations.md`, `prior-art-passive.md`, `lit-verify.md` |
+
+### Where each number comes from
+
+- Table 1 and section 3.9: `sim/results.json` (`predictions`). P5 totals at `m1 = 1.5`:
+  `P5.rel_bias_by_m1_and_schedule.m1_15`. Trigger-timing alternative: `P4.trigger_timing_ambiguous_P4`.
+- Section 3.8 and the indicator-5 validity, chance baselines and analytic attenuation in 3.9:
+  `sim/metrics.json` (`a` curve; `b` abstention; `c` budgets; `d` PPV; `e` IQR; `f` median days; `h`
+  chance baselines; `i` realized false flags; `j` reset cost; `k` current; `l` pop; `m` kappa cell; `n`
+  indicator-5 validity; `o` analytic attenuation).
+- Section 3.3 thresholds, 3.4 schedule values: `sim/tuning.json`; `pi' = 0.365` and the SD 0.109 vs 0.174
+  note: `sim/PREREG.md`.
+- Section 4: only post-cutoff aggregates from `pilot/results.json` (`aggregates`: 73,955 user-role entries,
+  the class counts, sessions, naive-vs-filtered statistics, change points) and
+  `pilot/indicator4_params.json` (main thread and `day_level_main_thread`). These are identical in the
+  committed run and the working-tree re-run, and `trace_audit.py --until 2026-09-28T01:32:31Z` reproduces
+  them from any later corpus state.
+- Raw scan counts, kept here as provenance only (they depend on when the scan runs, because the live
+  transcript store keeps growing, including from the analysis sessions themselves):
+
+  | run | files found / opened | user-role entries parsed | assistant-role parsed | dropped by cutoff | promptSource / turnOrigin coverage |
+  |---|---|---:|---:|---:|---|
+  | committed (`HEAD`) | 2,281 / 2,280 | 75,145 | 125,875 | 1,190 | 3,397 (4.5%) / 1,609 (2.1%) |
+  | working-tree re-run | 2,311 / 2,310 | 76,192 | 127,670 | 2,237 | 3,425 (4.5%) / 1,637 (2.1%) |
+
+  Both runs: 0 parse errors, 0 unparseable timestamps, 326 lane-prompt files loaded. Mechanism:
+  `trace_audit.py` counts `stats["user_entries"]` while parsing, then `main()` keeps rows with
+  `timestamp_utc <= until`, so the dropped rows are entries timestamped after the cutoff. The draft's
+  "under 5 percent" provenance-coverage statement is taken from these pre-cutoff counts and holds in both
+  runs.
+
+### Numbers that do not come from sim/*.json or pilot/*.json
+
+- Run 1's P8 intervals, 17.3 [14.7, 19.8] and 7.12 [6.34, 7.91]: the points are in
+  `sim/superseded-run1/results.json` (17.3; 7.119), the intervals only in `score-fidelity-audit.md` (G1
+  table).
+- Commit timestamps (git log), the 21:28 time of spec section 10 (spec text), and the 45-day retention
+  (`~/.claude/settings.json`).
+- The "about 22 baseline-window answers" in section 3.6: `sim/POSTFREEZE-DEVIATIONS.md` item 6.
+
+### Discrepancies noticed
+
+- The coordinator's brief said every passive rule is 2 to 3.7 times its chance baseline. In
+  `sim/metrics.json` the ablation without (ii) is 1.8 times (0.144 against 0.081). The draft says "the
+  ablations are 1.8 to 3.1 times theirs".
+- P5 share of bias removed: `sim/results.json` lower bound -0.23146 (reported -0.231);
+  `POSTFREEZE-DEVIATIONS.md` item 4 says -23.2 percent.
+- In `sim/metrics.json`, the person-level IQR interval for A-fixed-minus-ii is [0.075, 0.326], far wider
+  than the others; not used in the draft.
+
+## 2. Reference verification status
+
+From the three citation files. The manuscript carries no status tags.
+
+| reference | status |
+|---|---|
+| AERA, APA and NCME (2014); Messick (1995); Kane (2013); Borsboom et al. (2004) | verified |
+| Curran and Bauer (2011); Hamaker et al. (2015); Bolger and Laurenceau (2013) | verified |
+| Pearson (1903); Lawley (1944, volume year; 1943 may be the reading year) | verified |
+| Thorndike (1949) | book verified; Case II and III labels confirmed only in secondary sources, so the draft attributes the labels to Sackett and Yang (2000) |
+| Sackett and Yang (2000); Page (1954); Rubin (1976); Klasnja et al. (2015); Nahum-Shani et al. (2018) | verified |
+| Begg and Greenes (1983) | abstract and secondary summaries only; JSTOR full text not read <!-- cite: --> |
+| Lamp and MacKinnon (2024) | verified from PMC full text; page span 647-648 not reconciled with the publisher; the referee says it is a two-page abstract, so it is cited only alongside Sackett and Yang |
+| Boruvka et al. (2018) | verified (arXiv full text; JASA details via PubMed) |
+| Lathia et al. (2013) | verified, pages 183-192 |
+| Zhou et al. (2002) | verified at the abstract page, with the corrected title |
+| Tao et al. (2021) | verified |
+| ALBA, MAQuA, Yun et al. (2024), Anthropic (2025), Shen and Han (2026) | verified |
+| Tieleman et al. (2026), arXiv 2606.17973 | verified (never "Slingshot" or "Ash") |
+| Eichstaedt et al. (2018); GLOBEM (Xu et al., 2023); OpenAI and MIT Media Lab (2025); Helmich et al. (2023) | verified through search or fetch summaries, not full reads |
+| Horiuchi (2026) | abstract only |
+| FDA (2026) General Wellness guidance | verified |
+| Mettu (2026a, 2026b) | own unpublished work; not retrievable until deposited |
+
+Not cited because unverified: Molenaar (2004) and Fisher, Medaglia and Jeronimus (2018) on ergodicity;
+Mohr, Zhang and Schueller (2017) on personal sensing; intensive-longitudinal invariance literature;
+Qian et al. (2021) (partly verified only).
+
+## 3. Referee review: what v1 did
+
+Required revisions:
+
+| item | status | note |
+|---|---|---|
+| 1 non-response attribution | addressed | abstract and 3.9 report the added bias (12 to 16 percent) and the four totals with intervals; triggered total said to include the 24.8 percent selection |
+| 2 trigger timing | addressed | 2.5 says the as-run trigger uses S_t; abstract, Table 1 and 3.9 give both readings and the +0.067 overshoot; 3.6 justifies keeping S_t as primary (fixed before scoring, switching after would be post hoc) and gives S_{t-1} equal weight |
+| 3 pilot parameters | addressed, option (b) plus the analytic values | "These are the values..." deleted; entry-level use stated; day-level analytic attenuation reported (0.235 vs 0.527); machine text identified as injection plus automated prompts; rising-share cell labelled hypothetical. No re-run |
+| 4 chance baselines and P8 | addressed | chance baselines, realized false flags and person-level IQR reported; P8 described as a win over a nearly blind comparator. The referee's Poisson figure (0.11) is not used |
+| 5 missing frozen metrics | addressed | all reported in 3.8 except the reset cost, which is not computable from the frozen panels (stated) |
+| 6 precision column | addressed | Table 1 "precision" column; abstract states the frozen design could not show weighted recovery |
+| 7 overreach | addressed | list of what appeared and what did not; "not fixable" reworded; indicator-5 validity with interval, labelled non-frozen and dependent on invented values |
+| 8 run disclosure | addressed | audit described as run by an AI agent in the same project; AI-use statement; run 1 P8 beside run 2; timestamps; section 10 reframing disclosed |
+| 9 Kane structure | addressed | section 2 recast as scoring, generalization, extrapolation, backing and use, with a mapping column to the earlier links |
+| 10 missing inferences | partly | generalization, underrepresentation, heterogeneity and use added. The person-level validity distribution is not in any artifact, so it is named as a requirement (R7), not reported. Ergodicity citations deferred until verified |
+| 11 Borsboom sentence | addressed | rewritten in 2.2 as the referee proposed |
+| 12 construct and direction | addressed | 2.1 |
+| 13 one primary link per threat | addressed | context and usage missingness placed under extrapolation, with a cross-reference to generalization |
+| 14 structure vs magnitude | partly | 3.9 separates the two and Appendix A gives the attenuation derivation; "conditional on invented parameters" is in the abstract. The small parameter grid (phi_D, lam range, band, m1, coupling) is deferred: it needs new simulation runs |
+| 15 corpus scope | addressed | title changed from "everyday agent conversations" to "agent conversation traces"; abstract and 4.1 scope the corpus to one heavy-automation user's coding-agent transcripts; "existence proof and measurement protocol" wording used |
+| 16 middle series | deferred | needs a new pilot computation. The draft notes that the naive series is an upper bound and that the message-length share is already on the structural basis |
+| 17 journal form | partly | paths, lane references, open items and inline tags moved here; ethics and data-availability statements added. External deposit (OSF or Zenodo DOI) is an author action |
+| 18 duplicate screening sentence | addressed | |
+
+Suggested revisions: 1 (rename "negative controls") addressed; 2 (P9 mechanisms) partly, one candidate
+named and labelled unchecked; 3 (IPW effective sample size, stabilized weights) deferred, needs
+computation; 4 (P5 "under" vs "within") addressed; 5 (P1b lower bound exactly 0.500, quantile or floor)
+not checked, see open items; "chain is conjunctive" addressed; 6 (Borsboom vs Kane tension) addressed; 7
+(Sackett and Yang for case labels) addressed, Begg and Greenes full text still unread; 8 (invariance and
+personal-sensing literature) deferred until verified; 9 figures deferred, Bernoulli explanation added.
+
+Coordinator items (B) to (E) are applied: the old predictions prose is replaced by Table 1 plus the
+decision-rule and no-retune sentences (3.5); the abstract gives one number per finding; the duplicated
+sha, architecture-B, metrics-missing and "Where addressed" sentences, "These limits bind the whole
+paper." and the second screening-level sentence are gone.
+
+## 4. Open items for the author
+
+1. Affiliation, corresponding address, acknowledgements, and a conflicts statement.
+2. Deposit the repository, the frozen document and both runs with an external timestamp (OSF or Zenodo),
+   and make Mettu (2026a, 2026b) retrievable.
+3. Ethics: decide whether a self-study of one's own metadata needs an institutional determination, and
+   state it.
+4. AI-use statement: add what the author personally checked, if the venue asks for it.
+5. Parameter grid for the structural results (referee 14) and the IPW checks (suggestion 3) need new
+   simulation runs, labelled post-scoring.
+6. The middle (structural) series for the three corpus indicators (referee 16) needs a new pilot run.
+7. P1b's lower bound is exactly 0.500; check whether it is a bootstrap quantile or a floor.
+8. P9: check the candidate explanation (BD ramps still rising after day 28) as a labelled exploratory
+   analysis.
+9. The G3 alternative curve (sensitivity against false flags with pre-onset flags not cancelling later
+   detection) was not computed.
+10. Person-level validity distribution (referee 10c), and the ergodicity citations once verified.
+11. Begg and Greenes (1983) full text.
+12. Retention: whether to raise `cleanupPeriodDays` above 45 (earlier decision slate item D12).
+13. Figures: class shares, autonomous-session shares, change-point base rate, Table 1 as an interval
+    plot, the sensitivity against false-flag curve.
+14. Venue: Advances in Methods and Practices in Psychological Science; check its word limit against the
+    body (about 8,440 words excluding the appendix and references).
+15. The spec's pasted-draft check says "earlier assistant message"; the code checks the last five turns.
