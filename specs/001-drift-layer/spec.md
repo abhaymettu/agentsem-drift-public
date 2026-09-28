@@ -37,8 +37,9 @@ New here, with the known results each applies:
 - **N2. Probe-schedule calibration.** A trigger on a statistic of past composites biases the slope,
   because past composites predict current state beyond today's composite. A band trigger also restricts
   range and so deflates the correlation. A random floor plus IPW on the logged propensity recovers the
-  population value; without IPW it does not. This applies Pearson (1903), Lawley (1943) and Thorndike
-  Cases II and III to agent probing; it does not discover them. Triggered/event-contingent EMA prior art
+  population value; without IPW it does not. This applies Pearson (1903), Lawley (1944) and Thorndike
+  Cases II and III, and it is structurally verification bias (Begg & Greenes 1983, Biometrics 39:207-215)
+  moved to a dynamic trigger. It is a known result in a new setting, not a discovery (paper-citations.md, 2026-09-27). Triggered/event-contingent EMA prior art
   must be read before the paper calls N2 new (prior-art gap c is search-only so far).
 - **N3. Authorship contamination of the user's own trace.** A share of "user" text is machine-authored:
   pasted agent drafts, hook and system injections, autonomous-lane prompts. Autonomous sessions also
@@ -272,3 +273,23 @@ Source: `selfreport-build-brief-v2.md` in the lane dir.
 - **Abstention analysis** is a first-class metric in the simulation and in any replay: the share of
   person-days on which the layer declines to assess, the reasons, and false alarms among assessed days
   versus all days.
+
+## 10. Direction correction (his, 2026-09-27 21:28 CDT; supersedes sections 2 D4 and 9 where they differ)
+
+Source: `~/.claude/CONTEXT.md`, "2026-09-27 9:28pm - agentSEM direction". agentSEM measures a person's
+state naturally, from their normal agent conversations: no questionnaires, and no psych bot. **The
+contribution is measurement validity.** He builds no system and no product; the agent is the object of
+study. No clinical diagnosis claims. Theory, simulation and his own corpus only, with nothing faked.
+
+Consequences:
+- **D4 (demo) is cancelled.** A replay of a drift layer is a system prototype. Section 9's stage 1 demo
+  and stage 3 replay are withdrawn, and any visual becomes a figure in the paper.
+- **The simulation stays and is read as validity evidence.** Architectures A-naive, A-fixed and pop are
+  alternative scoring rules whose validity is under test, not products. Probe schedules are
+  criterion-sampling designs for a future validation study, not an agent administering items. P4 and P5
+  concern bias in validity estimates caused by how the criterion is sampled.
+- **The corpus audit stays.** It uses his own corpus and measures how much of the trace is his (a
+  construct-irrelevant-variance threat), never his state.
+- **The paper (D5) is the endpoint.** It is a measurement-validity paper: an argument-based validity
+  chain from trace to indicator to within-person score to change claim, the threats to each link, the
+  pre-registered simulation (every failure reported), and the one-person corpus audit.

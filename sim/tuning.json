@@ -46,9 +46,15 @@
       "se": 0.009559429467686582
     },
     "probe-only": {
+      "h": 22.948591090463605,
+      "fa_per_month": 0.16505726476532676,
+      "se": 0.03236615478561373
+    },
+    "probe_only_h_run1": {
       "h": 6.539074181460682,
       "fa_per_month": 0.16505726476532676,
-      "se": 0.026168812573987826
+      "se": 0.026168812573987826,
+      "note": "run 1's probe-only h, superseded by a POSTFREEZE re-tune on the corrected probe_only_C (4-probe baseline block, days 7/14/21/28) instead of ~22 unadministered baseline-window answers. See sim/POSTFREEZE-DEVIATIONS.md."
     }
   },
   "schedules": {

@@ -1021,17 +1021,27 @@ def pop_reference(panel):
                 sd=np.nanstd(panel["X"][:, :BASELINE_DAYS, :], (0, 1)))
 
 
+# POSTFREEZE fix (score-fidelity audit): the 4-probe baseline block (section 4) is days 7, 14, 21,
+# 28 -- 0-indexed [6, 13, 20, 27]. probe_only_C previously z-scored on all responded Y over days
+# 1-28 (about 22 answers the `random` schedule never actually administers pre-baseline); it now
+# z-scores on exactly those 4 probe answers, per PREREG deviation 4's fallback convention.
+PROBE_BASELINE_DAYS = [6, 13, 20, 27]
+
+
 def probe_only_C(panel, rng):
     """Probe-only comparator's composite: a CUSUM on probe answers alone, z-scored on the
-    baseline-block probe mean/sd, under the `random` schedule (spec section 4: daily p = 0.1 post-
-    baseline, plus the fixed baseline block) at the matched budget -- not an oracle over every
-    responded day. C (and reason) are defined only on days actually probed AND responded; every
-    other day holds. One implementation, shared by tune_h('probe-only', ...) and score()'s P8."""
-    Yb = panel["Y"][:, :BASELINE_DAYS]
-    respb = panel["responded"][:, :BASELINE_DAYS]
-    mu = np.where(respb, Yb, np.nan)
-    m, s = np.nanmean(mu, 1), np.nanstd(mu, 1, ddof=1)
-    s = np.where(s > 1e-6, s, 1.0)
+    4-probe baseline block (days 7, 14, 21, 28; section 4), under the `random` schedule (spec
+    section 4: daily p = 0.1 post-baseline, plus the fixed baseline block) at the matched budget
+    -- not an oracle over every responded day. C (and reason) are defined only on days actually
+    probed AND responded; every other day holds. One implementation, shared by
+    tune_h('probe-only', ...) and score()'s P8."""
+    Yb = panel["Y"][:, PROBE_BASELINE_DAYS]
+    respb = panel["responded"][:, PROBE_BASELINE_DAYS]
+    v = np.where(respb, Yb, np.nan)
+    cnt = respb.sum(1)
+    m = np.where(cnt >= 2, np.nanmean(v, 1), 0.0)
+    s = np.nanstd(v, 1, ddof=1)
+    s = np.where((cnt >= 2) & (s > 1e-6), s, 1.0)
     probed, _, _ = probe_schedule(rng, "random", panel["Y"], np.zeros_like(panel["Y"], dtype=bool))
     observed = probed & panel["responded"]
     C = safe_div(panel["Y"] - m[:, None], s[:, None])
@@ -1144,12 +1154,45 @@ def run_tune(pi_bar=PI_BAR_DEFAULT, kappa_a4=KAPPA_A4_DEFAULT, mu_m4=MU_M4_DEFAU
 # score(): implemented per the deliverable, but NOT to be run pre-freeze (D0 not run this session).
 # Reuses the exact primitives exercised by --check and tune(). PASS/FAIL is against the frozen
 # thresholds in section 6; P1-P3 are labelled construction checks, not findings.
+#
+# POSTFREEZE decision rule (score-fidelity audit, G1): a prediction holds only if its whole 95%
+# Monte Carlo interval clears the threshold (section 6), not its point estimate or bootstrap mean.
+# `mc_stat` replaces the old `person_bootstrap` (which decided on the bootstrap mean and had no
+# notion of independent vs paired panels). The MC SE reported beside every number is the bootstrap
+# SD -- the section-3 "SD across persons over sqrt(N)" convention, with N the actual person count
+# (not the stale 200 the spec text carries over from v2), which a bootstrap SD approximates
+# directly for these smooth per-person statistics (see PREREG.md's G1 ambiguity note).
 # ----------------------------------------------------------------------------------------------
-def person_bootstrap(fn, n_persons, B=2000, seed=0):
+def mc_stat(fn, ns, B=2000, seed=0):
+    """95%-MC-interval decision statistic from a `B`-draw person bootstrap. `ns` lists one
+    person-count per independent panel `fn` draws on: pass `ns=[N]` and have `fn` reuse its single
+    index array against every same-panel input for a PAIRED quantity (same persons under two
+    architectures/schedules); pass `ns=[N1, N2, ...]` for quantities from independent panels
+    (different families/cells), each drawing its own resample. `point` is `fn` evaluated on the
+    identity index (not the bootstrap mean); `se` is the bootstrap SD; `lo`/`hi` are the 2.5/97.5
+    percentiles."""
     rng = np.random.default_rng(seed)
-    vals = np.array([fn(rng.integers(0, n_persons, n_persons)) for _ in range(B)])
-    lo, hi = np.percentile(vals, [2.5, 97.5])
-    return float(np.mean(vals)), float(lo), float(hi)
+    point = float(fn(*[np.arange(n) for n in ns]))
+    draws = np.array([fn(*[rng.integers(0, n, n) for n in ns]) for _ in range(B)], dtype=float)
+    lo, hi = (float(x) for x in np.nanpercentile(draws, [2.5, 97.5]))
+    se = float(np.nanstd(draws, ddof=1))
+    return dict(point=point, se=se, lo=lo, hi=hi)
+
+
+def _verdict(stat, kind, thr):
+    """PASS iff the WHOLE 95% MC interval clears the threshold (section 6's decision rule).
+    kind='ge': interval entirely >= thr. kind='le': interval entirely <= thr. kind='within':
+    interval entirely inside +-thr. kind='range': interval entirely inside [thr[0], thr[1]]."""
+    lo, hi = stat["lo"], stat["hi"]
+    if kind == "ge":
+        return bool(lo >= thr)
+    if kind == "le":
+        return bool(hi <= thr)
+    if kind == "within":
+        return bool(lo >= -thr and hi <= thr)
+    if kind == "range":
+        return bool(lo >= thr[0] and hi <= thr[1])
+    raise ValueError(kind)
 
 
 def _fa_month_pp(alarm, reason):
@@ -1159,27 +1202,45 @@ def _fa_month_pp(alarm, reason):
     return safe_div(al, mon / 30.0, fill=np.nan)
 
 
-def _sensitivity(alarm, onset, window=21):
+def _fa_pooled(alarm, reason, idx):
+    """Pooled FA/tracked-person-month over the persons in `idx`: total alarms over total tracked
+    months (G2's Reading 1 -- the estimand `h` is tuned to; `fa_rate_for_alarm` restricted to a
+    person subset for bootstrap resampling)."""
+    tracked = (reason[idx, BASELINE_DAYS:] == 0).sum()
+    return alarm[idx, BASELINE_DAYS:].sum() / max(tracked / 30.0, 1e-9)
+
+
+def _sensitivity(alarm, onset, window=21, exclude_pre_onset_alarms=True):
+    """Per-person detected boolean. `exclude_pre_onset_alarms` (G3's ambiguity): True (default,
+    as-run/primary) classifies on the first alarm -- a pre-onset alarm makes the person a
+    false-alarm case, not detected. False (the audit's "more natural" alternative, Reading 2)
+    routes the pre-onset alarm to the FA tally only; the person still counts as detected if a
+    later alarm falls inside the window."""
     day = np.arange(alarm.shape[1])[None, :]
     in_window = (day >= onset[:, None]) & (day < onset[:, None] + window)
-    pre = day < onset[:, None]
-    fa_pre = (alarm & pre).any(1)
-    return (alarm & in_window).any(1) & ~fa_pre  # per-person boolean detected
+    detected = (alarm & in_window).any(1)
+    if exclude_pre_onset_alarms:
+        pre = day < onset[:, None]
+        fa_pre = (alarm & pre).any(1)
+        detected = detected & ~fa_pre
+    return detected  # per-person boolean detected
 
 
-def _rmst42(alarm, onset, cap=42):
+def _rmst42(alarm, onset, cap=42, exclude_pre_onset_alarms=True):
     """Per-person restricted time to detection, censored at `cap` days from onset: days from onset
-    to the first true (post-onset, not preceded by a pre-onset false alarm) alarm, or `cap` if none."""
+    to the first true alarm, or `cap` if none. `exclude_pre_onset_alarms`: see `_sensitivity`;
+    True (as-run/primary) censors at `cap` when a pre-onset alarm preceded onset."""
     n, T = alarm.shape
     day = np.arange(T)[None, :]
     days_from_onset = day - onset[:, None]
     in_window = (days_from_onset >= 0) & (days_from_onset < cap)
-    pre = days_from_onset < 0
-    fa_pre = (alarm & pre).any(1)
     hit = alarm & in_window
     candidate = np.where(hit, days_from_onset, cap)
-    first = candidate.min(1)
-    first = np.where(fa_pre, float(cap), first.astype(float))
+    first = candidate.min(1).astype(float)
+    if exclude_pre_onset_alarms:
+        pre = days_from_onset < 0
+        fa_pre = (alarm & pre).any(1)
+        first = np.where(fa_pre, float(cap), first)
     return first
 
 
@@ -1201,6 +1262,68 @@ def _prereg_stated_value(prereg_text_on_disk, name):
     if not m:
         raise RuntimeError(f"could not find a '- `{name} = ...`' bullet line in sim/PREREG.md")
     return float(m.group(1))
+
+
+# ----------------------------------------------------------------------------------------------
+# Vectorized per-person sufficient statistics for a person-centred (optionally weighted) slope
+# and correlation of Y on C, restricted to `mask`. Used by P4/P5's 2000-draw bootstraps: computing
+# these once and then only summing over resampled person indices is what makes a 2000-draw
+# bootstrap over person-centred slopes/correlations tractable (a naive per-draw call into
+# `person_slope_corr`, which loops over persons in Python, would be ~2000x slower). Mirrors the
+# audit's own bootstrap implementation exactly (score-fidelity audit, audit.py's `pstats`).
+# ----------------------------------------------------------------------------------------------
+def _pstats(mask, C, Y, w=None):
+    w = np.ones_like(C) if w is None else w
+    m = mask & ~np.isnan(C)
+    W = np.where(m, w, 0.0)
+    c = np.where(m, C, 0.0)
+    y = np.where(m, Y, 0.0)
+    Ws = W.sum(1)
+    ok = (m.sum(1) >= 3) & (Ws > 0)
+    wc = safe_div((W * c).sum(1), Ws)
+    wy = safe_div((W * y).sum(1), Ws)
+    cc = np.where(m, c - wc[:, None], 0.0)
+    yy = np.where(m, y - wy[:, None], 0.0)
+    st = dict(wxy=(W * cc * yy).sum(1), wxx=(W * cc * cc).sum(1), wyy=(W * yy * yy).sum(1),
+              n=m.sum(1).astype(float), sc=cc.sum(1), sy=yy.sum(1),
+              scc=(cc * cc).sum(1), syy=(yy * yy).sum(1), scy=(cc * yy).sum(1))
+    return {k: np.where(ok, v, 0.0) for k, v in st.items()}
+
+
+def _pslope(s, idx):
+    return s["wxy"][idx].sum() / s["wxx"][idx].sum()
+
+
+def rel_bias(sa, so, idx):
+    """Signed relative bias of the observed-schedule slope against the all-days slope, both
+    from `_pstats` sufficient statistics. Shared by P5's per-cell/per-schedule `rel_bias_fn`
+    and its `added_bias_fn` (m1=1.5 vs m1=0 comparison)."""
+    ba = _pslope(sa, idx)
+    return (_pslope(so, idx) - ba) / ba
+
+
+def _pcorr_unweighted(s, idx):
+    """np.corrcoef on the concatenated (weighted-centred) values -- unweighted itself, matching
+    every non-P4-IPW call site of person_slope_corr."""
+    Nn = s["n"][idx].sum()
+    mc = s["sc"][idx].sum() / Nn
+    my = s["sy"][idx].sum() / Nn
+    cov = s["scy"][idx].sum() / Nn - mc * my
+    return cov / np.sqrt((s["scc"][idx].sum() / Nn - mc**2) * (s["syy"][idx].sum() / Nn - my**2))
+
+
+def _pcorr_weighted(s, idx):
+    """BUG fix (P4's mixed-IPW correlation): sum(w*cc*yy) / sqrt(sum(w*cc^2) * sum(w*yy^2))."""
+    return s["wxy"][idx].sum() / np.sqrt(s["wxx"][idx].sum() * s["wyy"][idx].sum())
+
+
+# G3 ambiguity (pre-onset alarms, section "AMBIGUOUS items" of POSTFREEZE-DEVIATIONS.md): the
+# alternative reading's text is identical at every one of its 4 call sites (P2, P7, P8, P9) in
+# score() below; spread with `**G3_READINGS` into each `alternative` dict there.
+G3_READINGS = dict(
+    reading="pre-onset alarm routed to the FA tally only; still detected if a later alarm falls in "
+            "the window (Reading 2, the audit's more-natural reading)",
+)
 
 
 def score(prereg_sha):
@@ -1227,11 +1350,11 @@ def score(prereg_sha):
                                pi_bar=pi_bar, kappa_a4=kappa_a4, mu_m4=mu_m4)
 
     # ---- P1 (construction check): A-naive vs A-fixed FA/month on SP, VA, DE, BI ----
+    # G1: decide on the 95% MC interval (paired: A-naive and A-fixed share the same panel/persons).
+    # G2 (AMBIGUOUS, as-run primary = Reading 2, mean-of-person-rates): report both the as-run
+    # ratio-of-person-rate-sums and the alternative pooled (total-alarms/total-tracked-months) ratio.
     p1 = {}
-    for fam, lo_thr, hi_thr, note in [("SP", 2.0, None, "confirmed by A-fixed-minus-iii"),
-                                       ("VA", 0.5, 2.0, "no matching component"),
-                                       ("DE", 0.5, 2.0, "no matching component"),
-                                       ("BI", 0.5, 2.0, "no matching component")]:
+    for fam, lo_thr, hi_thr in [("SP", 2.0, None), ("VA", 0.5, 2.0), ("DE", 0.5, 2.0), ("BI", 0.5, 2.0)]:
         panel = panel_for(fam, "default")
         _, reason_n, alarm_n, _ = _run_arch(panel, "A-naive", H["A-naive"]["h"])
         _, reason_f, alarm_f, _ = _run_arch(panel, "A-fixed", H["A-fixed"]["h"])
@@ -1241,90 +1364,250 @@ def score(prereg_sha):
         def ratio_fn(idx, fa_n=fa_n, fa_f=fa_f):
             return np.nansum(fa_n[idx]) / max(np.nansum(fa_f[idx]), 1e-9)
 
-        mean, lo, hi = person_bootstrap(ratio_fn, N_PERSONS)
+        def ratio_fn_pooled(idx, alarm_n=alarm_n, reason_n=reason_n, alarm_f=alarm_f, reason_f=reason_f):
+            return _fa_pooled(alarm_n, reason_n, idx) / max(_fa_pooled(alarm_f, reason_f, idx), 1e-9)
+
+        stat = mc_stat(ratio_fn, [N_PERSONS])
+        kind = "ge" if hi_thr is None else "range"
+        thr = lo_thr if hi_thr is None else [lo_thr, hi_thr]
+        passed = _verdict(stat, kind, thr)
+        stat_pooled = mc_stat(ratio_fn_pooled, [N_PERSONS])
+        passed_pooled = _verdict(stat_pooled, kind, thr)
         if fam == "SP":
             _, reason_iii, alarm_iii, _ = _run_arch(panel, "A-fixed-minus-iii", H["A-fixed-minus-iii"]["h"])
             fa_iii = _fa_month_pp(alarm_iii, reason_iii)
             ablation_ratio = np.nansum(fa_n) / max(np.nansum(fa_iii), 1e-9)
+            note = f"ablation ratio (A-naive FA-month / A-fixed-minus-iii FA-month) = {ablation_ratio:.4f}"
         else:
             ablation_ratio = None
-        passed = (mean >= lo_thr) if hi_thr is None else (lo_thr <= mean <= hi_thr)
-        p1[fam] = dict(ratio_naive_over_fixed=mean, ci95=[lo, hi], threshold=[lo_thr, hi_thr],
-                        ablation_ratio=ablation_ratio, note=note, PASS=bool(passed))
+            note = "no matching component"
+        p1[fam] = dict(ratio_naive_over_fixed=stat, threshold=[lo_thr, hi_thr],
+                        ablation_ratio=ablation_ratio, note=note, PASS=bool(passed),
+                        fa_estimator_ambiguous_G2=dict(
+                            as_run_primary="mean of person-level FA rates (Reading 2)",
+                            alternative_pooled=dict(stat=stat_pooled, PASS=bool(passed_pooled),
+                                                     reading="pooled: total alarms / total tracked months (Reading 1); "
+                                                             "the audit's more-natural reading (matches the h tuning estimand)")))
     preds["P1"] = p1
 
     # ---- P1b: A-fixed DE FA/month <= 1.5x its S FA/month ----
+    # BUG fix: denominator is TOTAL person-months (post-baseline person-days/30), not tracked
+    # person-months. Ratio of totals cancels the shared N*(T-28)/30 denominator, so it reduces to
+    # the ratio of total post-baseline alarm counts.
     panel_de = panel_for("DE", "default")
     panel_s = panel_for("S", "default")
     _, reason_de, alarm_de, _ = _run_arch(panel_de, "A-fixed", H["A-fixed"]["h"])
     _, reason_s, alarm_s, _ = _run_arch(panel_s, "A-fixed", H["A-fixed"]["h"])
-    fa_de_pp, fa_s_pp = _fa_month_pp(alarm_de, reason_de), _fa_month_pp(alarm_s, reason_s)
-    ratio = np.nansum(fa_de_pp) / max(np.nansum(fa_s_pp), 1e-9)
-    preds["P1b"] = dict(de_over_s_fa_ratio=ratio, threshold=1.5, PASS=bool(ratio <= 1.5))
+    al_de_pp = alarm_de[:, BASELINE_DAYS:].sum(1)
+    al_s_pp = alarm_s[:, BASELINE_DAYS:].sum(1)
+    fa_s_pp = _fa_month_pp(alarm_s, reason_s)  # per-person tracked-month FA rate, reused by P3's av2_ratio (G2)
+    total_months = (T_DAYS - BASELINE_DAYS) / 30.0
+    fa_de_total_pm = float(al_de_pp.sum() / (N_PERSONS * total_months))
+    fa_s_total_pm = float(al_s_pp.sum() / (N_PERSONS * total_months))
+
+    def p1b_ratio(idx_de, idx_s):
+        return al_de_pp[idx_de].sum() / max(al_s_pp[idx_s].sum(), 1e-9)
+
+    # DE and S are different families -- independent panels (G4) -- so bootstrap them independently.
+    p1b_stat = mc_stat(p1b_ratio, [N_PERSONS, N_PERSONS])
+    preds["P1b"] = dict(fa_DE_total_person_month=fa_de_total_pm, fa_S_total_person_month=fa_s_total_pm,
+                         de_over_s_fa_ratio=p1b_stat, threshold=1.5, PASS=bool(_verdict(p1b_stat, "le", 1.5)))
 
     # ---- P2 (construction check): DR, targeted_theta1_05 ----
+    # G1: paired 95% MC interval (A-naive/A-fixed/A-fixed-minus-i share the same targeted panel).
+    # G3 (AMBIGUOUS, as-run primary = Reading 1, pre-onset alarm excludes detection): both readings
+    # of `_sensitivity` are computed and reported; the verdict uses the primary reading.
     panel_dr_t = panel_for("DR", "targeted_theta1_05")
     onset = panel_dr_t["t0"]
     _, _, alarm_naive, _ = _run_arch(panel_dr_t, "A-naive", H["A-naive"]["h"])
     _, _, alarm_fixed, _ = _run_arch(panel_dr_t, "A-fixed", H["A-fixed"]["h"])
     _, _, alarm_mi, _ = _run_arch(panel_dr_t, "A-fixed-minus-i", H["A-fixed-minus-i"]["h"])
-    sens_naive = _sensitivity(alarm_naive, onset).mean()
-    sens_fixed = _sensitivity(alarm_fixed, onset).mean()
-    sens_mi = _sensitivity(alarm_mi, onset).mean()
-    gap = sens_fixed - sens_naive
-    gap_i = sens_fixed - sens_mi
-    preds["P2"] = dict(sens_A_naive=sens_naive, sens_A_fixed=sens_fixed, sens_A_fixed_minus_i=sens_mi,
-                        gap=gap, gap_explained_by_i=gap_i,
-                        PASS=bool(gap >= 0.10 and gap_i >= 0.5 * gap))
+
+    def _p2_stats(excl):
+        sn = _sensitivity(alarm_naive, onset, exclude_pre_onset_alarms=excl).astype(float)
+        sf = _sensitivity(alarm_fixed, onset, exclude_pre_onset_alarms=excl).astype(float)
+        smi = _sensitivity(alarm_mi, onset, exclude_pre_onset_alarms=excl).astype(float)
+
+        def gap_fn(idx):
+            return sf[idx].mean() - sn[idx].mean()
+
+        def half_margin_fn(idx):
+            return (sf[idx].mean() - smi[idx].mean()) - 0.5 * gap_fn(idx)
+
+        gap_stat = mc_stat(gap_fn, [N_PERSONS])
+        half_stat = mc_stat(half_margin_fn, [N_PERSONS])
+        passed = _verdict(gap_stat, "ge", 0.10) and _verdict(half_stat, "ge", 0.0)
+        return dict(sens_A_naive=float(sn.mean()), sens_A_fixed=float(sf.mean()),
+                    sens_A_fixed_minus_i=float(smi.mean()), gap=gap_stat,
+                    gap_explained_by_i=half_stat, PASS=bool(passed))
+
+    p2_primary = _p2_stats(True)
+    p2_alt = _p2_stats(False)
+    preds["P2"] = dict(**p2_primary,
+                        pre_onset_alarm_ambiguous_G3=dict(
+                            as_run_primary="pre-onset alarm excludes detection (Reading 1)",
+                            alternative=dict(**p2_alt, **G3_READINGS)))
 
     # ---- P3 (construction check): AV logged persons, and AV2 vs S ----
+    # G1: av_ratio is paired within AV-logged persons; av2_ratio compares independent panels (AV2, S).
+    # G2 (AMBIGUOUS, as-run primary = Reading 2, mean-of-person-rates): both readings reported.
     panel_av = panel_for("AV", "default")
     logged = panel_av["av_logged"]
+    nl = int(logged.sum())
     _, reason_iv, alarm_iv, _ = _run_arch(panel_av, "A-fixed", H["A-fixed"]["h"])
     _, reason_miv, alarm_miv, _ = _run_arch(panel_av, "A-fixed-minus-iv", H["A-fixed-minus-iv"]["h"])
     fa_iv = _fa_month_pp(alarm_iv, reason_iv)[logged]
     fa_miv = _fa_month_pp(alarm_miv, reason_miv)[logged]
-    av_ratio = np.nansum(fa_miv) / max(np.nansum(fa_iv), 1e-9)
+    alarm_iv_l, reason_iv_l = alarm_iv[logged], reason_iv[logged]
+    alarm_miv_l, reason_miv_l = alarm_miv[logged], reason_miv[logged]
+
+    def av_ratio_fn(idx):
+        return np.nansum(fa_miv[idx]) / max(np.nansum(fa_iv[idx]), 1e-9)
+
+    def av_ratio_pooled_fn(idx):
+        return _fa_pooled(alarm_miv_l, reason_miv_l, idx) / max(_fa_pooled(alarm_iv_l, reason_iv_l, idx), 1e-9)
+
+    av_stat = mc_stat(av_ratio_fn, [nl])
+    av_stat_pooled = mc_stat(av_ratio_pooled_fn, [nl])
+
     panel_av2 = panel_for("AV2", "default")
     _, reason_av2, alarm_av2, _ = _run_arch(panel_av2, "A-fixed", H["A-fixed"]["h"])
     fa_av2 = _fa_month_pp(alarm_av2, reason_av2)
-    av2_ratio = np.nansum(fa_av2) / max(np.nansum(fa_s_pp), 1e-9)
-    preds["P3"] = dict(av_logged_removeiv_ratio=av_ratio, av2_over_s_ratio=av2_ratio,
-                        PASS=bool(av_ratio >= 2.0 and av2_ratio >= 2.0))
+
+    def av2_ratio_fn(i, j):
+        return np.nansum(fa_av2[i]) / max(np.nansum(fa_s_pp[j]), 1e-9)
+
+    def av2_ratio_pooled_fn(i, j):
+        return _fa_pooled(alarm_av2, reason_av2, i) / max(_fa_pooled(alarm_s, reason_s, j), 1e-9)
+
+    av2_stat = mc_stat(av2_ratio_fn, [N_PERSONS, N_PERSONS])
+    av2_stat_pooled = mc_stat(av2_ratio_pooled_fn, [N_PERSONS, N_PERSONS])
+    passed_p3 = _verdict(av_stat, "ge", 2.0) and _verdict(av2_stat, "ge", 2.0)
+    passed_p3_pooled = _verdict(av_stat_pooled, "ge", 2.0) and _verdict(av2_stat_pooled, "ge", 2.0)
+    preds["P3"] = dict(av_logged_removeiv_ratio=av_stat, av2_over_s_ratio=av2_stat,
+                        PASS=bool(passed_p3),
+                        fa_estimator_ambiguous_G2=dict(
+                            as_run_primary="mean of person-level FA rates (Reading 2)",
+                            alternative_pooled=dict(av_logged_removeiv_ratio=av_stat_pooled,
+                                                     av2_over_s_ratio=av2_stat_pooled,
+                                                     PASS=bool(passed_p3_pooled),
+                                                     reading="pooled: total alarms / total tracked months (Reading 1); "
+                                                             "the audit's more-natural reading")))
 
     # ---- P4: S, A-fixed, triggered/mixed/current calibration ----
+    # BUG fixes (score-fidelity audit): (a) probe-day samples are restricted to post-baseline days,
+    # to match the all-days reference, which never includes the p=1 baseline block; (b) the
+    # all-days reference is not conditioned on response (the same defect as P5's -- harmless at
+    # m1=0 but present in the code); (c) the mixed-IPW correlation is properly weighted, not
+    # np.corrcoef on the unweighted concatenation; (d) the slope-attenuation figure is signed, not
+    # abs (an inflation would otherwise misreport as an attenuation). G1: every number decided on
+    # its 95% MC interval (paired -- same S panel/persons throughout).
     panel_s4 = panel_for("S", "default")
-    C4, reason4, alarm4, band4 = _run_arch(panel_s4, "A-fixed", H["A-fixed"]["h"])
+    h_fixed = H["A-fixed"]["h"]
+    C4, reason4, alarm4, band4 = _run_arch(panel_s4, "A-fixed", h_fixed)
+    _, _, Strace4 = run_cusum(C4, h_fixed)
     rng4 = np.random.default_rng(eval_seed(prereg_sha, "S", "default") + 1)
 
     Y4, resp4 = panel_s4["Y"], panel_s4["responded"]
     post_mask = np.zeros_like(reason4, dtype=bool)
     post_mask[:, BASELINE_DAYS:] = True
-    all_mask = post_mask & ~np.isnan(C4) & resp4
-    b_all, r_all = person_slope_corr(all_mask, C4, Y4)
+    all_mask = post_mask & ~np.isnan(C4)  # BUG fix: drop "& resp4"
+
     probed_t, prop_t, id_t = probe_schedule(rng4, "triggered", C4, band4, p_trig=P["p_trig"])
-    obs_t = probed_t & resp4 & ~np.isnan(C4)
-    b_t, r_t = person_slope_corr(obs_t, C4, Y4)
+    obs_t = probed_t & resp4 & ~np.isnan(C4) & post_mask  # BUG fix: restrict to post-baseline
     probed_m, prop_m, id_m = probe_schedule(rng4, "mixed", C4, band4, p_trig2=P["p_trig2"])
-    obs_m = probed_m & resp4 & ~np.isnan(C4)
-    b_m, r_m = person_slope_corr(obs_m, C4, Y4)
+    obs_m = probed_m & resp4 & ~np.isnan(C4) & post_mask  # BUG fix: restrict to post-baseline
     w_m = np.where(obs_m, safe_div(1.0, prop_m), 0.0)
-    b_m_ipw, r_m_ipw = person_slope_corr(obs_m, C4, Y4, weight=w_m)
-    corr_deflate = r_all - r_t
-    slope_atten_rel = abs(b_all - b_t) / abs(b_all) if b_all else np.nan
+
+    sa, st_, sm = _pstats(all_mask, C4, Y4), _pstats(obs_t, C4, Y4), _pstats(obs_m, C4, Y4)
+    sw = _pstats(obs_m, C4, Y4, w=w_m)
+
+    def _p4_block(st, sw, extra=False):
+        """One P4 calibration block (corr deflation / signed slope attenuation / mixed-IPW slope
+        and corr diffs, each as a 95% MC interval) for a given triggered-stats/mixed-IPW-stats
+        pair. Shared by the primary (S_t band) and alternative (S_{t-1} band) readings below."""
+        def point(idx, sa=sa, st=st, sw=sw):
+            ba, bt, bw = _pslope(sa, idx), _pslope(st, idx), _pslope(sw, idx)
+            ra, rt = _pcorr_unweighted(sa, idx), _pcorr_unweighted(st, idx)
+            rw = _pcorr_weighted(sw, idx)  # BUG fix: weighted IPW correlation
+            out = dict(corr_deflation=ra - rt, slope_atten_rel=(ba - bt) / ba,  # BUG fix: signed
+                       ipw_slope_minus_all=bw - ba, ipw_corr_minus_all=rw - ra)
+            if extra:
+                out.update(b_all=ba, r_all=ra, b_trig=bt, r_trig=rt, b_mixed_ipw=bw, r_mixed_ipw=rw)
+            return out
+
+        def mc(key):
+            return mc_stat(lambda idx: point(idx)[key], [N_PERSONS])
+
+        corr_deflation = mc("corr_deflation")
+        slope_atten_rel = mc("slope_atten_rel")
+        ipw_slope_minus_all = mc("ipw_slope_minus_all")
+        ipw_corr_minus_all = mc("ipw_corr_minus_all")
+        passed = (_verdict(corr_deflation, "ge", 0.05) and _verdict(slope_atten_rel, "ge", 0.10)
+                  and _verdict(ipw_slope_minus_all, "within", 0.03)
+                  and _verdict(ipw_corr_minus_all, "within", 0.03))
+        return dict(mc=mc, corr_deflation=corr_deflation, slope_atten_rel=slope_atten_rel,
+                    ipw_slope_minus_all=ipw_slope_minus_all, ipw_corr_minus_all=ipw_corr_minus_all,
+                    passed=passed)
+
+    p4_primary = _p4_block(st_, sw, extra=True)
+    corr_deflation = p4_primary["corr_deflation"]
+    slope_atten_rel = p4_primary["slope_atten_rel"]
+    ipw_slope_minus_all = p4_primary["ipw_slope_minus_all"]
+    ipw_corr_minus_all = p4_primary["ipw_corr_minus_all"]
+    b_all_s, r_all_s = p4_primary["mc"]("b_all"), p4_primary["mc"]("r_all")
+    b_trig_s, r_trig_s = p4_primary["mc"]("b_trig"), p4_primary["mc"]("r_trig")
+    b_mixed_ipw_s, r_mixed_ipw_s = p4_primary["mc"]("b_mixed_ipw"), p4_primary["mc"]("r_mixed_ipw")
+    passed_p4 = p4_primary["passed"]
     ok_current, current_detail = check_c(False)
-    preds["P4"] = dict(all_days=dict(slope=b_all, corr=r_all),
-                        triggered=dict(slope=b_t, corr=r_t, corr_deflation=corr_deflate,
+
+    # AMBIGUOUS (P4 trigger timing, reported not adopted): as-run `in_band` uses S_t (today's
+    # CUSUM statistic, after folding in today's C_t). The alternative reading uses S_{t-1}
+    # (yesterday's), since a probe is decided before the day's own data exist -- the audit's
+    # more-natural reading. Independent probe draws (a separate rng offset); band4 (S_t) is
+    # already the primary as-run reading via _run_arch above.
+    Strace_prev = np.concatenate([np.zeros((N_PERSONS, 1)), Strace4[:, :-1]], axis=1)
+    band4_alt = (Strace_prev >= h_fixed * BAND_LO_FRAC) & (Strace_prev < h_fixed)
+    rng4_alt = np.random.default_rng(eval_seed(prereg_sha, "S", "default") + 101)
+    probed_t_alt, _, _ = probe_schedule(rng4_alt, "triggered", C4, band4_alt, p_trig=P["p_trig"])
+    obs_t_alt = probed_t_alt & resp4 & ~np.isnan(C4) & post_mask
+    probed_m_alt, prop_m_alt, _ = probe_schedule(rng4_alt, "mixed", C4, band4_alt, p_trig2=P["p_trig2"])
+    obs_m_alt = probed_m_alt & resp4 & ~np.isnan(C4) & post_mask
+    w_m_alt = np.where(obs_m_alt, safe_div(1.0, prop_m_alt), 0.0)
+    st_alt, sw_alt = _pstats(obs_t_alt, C4, Y4), _pstats(obs_m_alt, C4, Y4, w=w_m_alt)
+
+    p4_alt = _p4_block(st_alt, sw_alt)
+    corr_deflation_alt = p4_alt["corr_deflation"]
+    slope_atten_rel_alt = p4_alt["slope_atten_rel"]
+    ipw_slope_minus_all_alt = p4_alt["ipw_slope_minus_all"]
+    ipw_corr_minus_all_alt = p4_alt["ipw_corr_minus_all"]
+    passed_p4_alt = p4_alt["passed"]
+
+    preds["P4"] = dict(all_days=dict(slope=b_all_s, corr=r_all_s),
+                        triggered=dict(slope=b_trig_s, corr=r_trig_s, corr_deflation=corr_deflation,
                                         slope_attenuation_rel=slope_atten_rel),
-                        mixed=dict(slope=b_m, corr=r_m),
-                        mixed_ipw=dict(slope=b_m_ipw, corr=r_m_ipw,
-                                        slope_diff=abs(b_m_ipw - b_all), corr_diff=abs(r_m_ipw - r_all)),
+                        mixed_ipw=dict(slope=b_mixed_ipw_s, corr=r_mixed_ipw_s,
+                                        slope_diff=ipw_slope_minus_all, corr_diff=ipw_corr_minus_all),
                         current_check_isolated_mechanism=current_detail,
-                        PASS=bool(corr_deflate >= 0.05 and slope_atten_rel >= 0.10
-                                  and abs(b_m_ipw - b_all) <= 0.03 and abs(r_m_ipw - r_all) <= 0.03))
+                        PASS=bool(passed_p4),
+                        trigger_timing_ambiguous_P4=dict(
+                            as_run_primary="in_band on S_t (today's CUSUM statistic, after folding in C_t)",
+                            alternative=dict(
+                                corr_deflation=corr_deflation_alt, slope_attenuation_rel=slope_atten_rel_alt,
+                                mixed_ipw_slope_diff=ipw_slope_minus_all_alt, mixed_ipw_corr_diff=ipw_corr_minus_all_alt,
+                                PASS=bool(passed_p4_alt),
+                                reading="in_band on S_{t-1} (yesterday's CUSUM statistic, before today's C_t is "
+                                        "folded in); the audit's more-natural reading, since a probe is decided "
+                                        "before the day's data exist")))
 
     # ---- P5: S, m1 in {0, 0.5, 1.5}, A-fixed, schedules fixed/random/triggered/mixed ----
-    p5 = {}
+    # BUG fixes (score-fidelity audit): (a) the all-days reference is not conditioned on response
+    # -- at m1>0 response depends on D, so a responders-only reference carries the very MNAR bias
+    # P5 exists to measure; (b) probe-day samples are restricted to post-baseline days, matching
+    # P4. G1: every number decided on its 95% MC interval; G4: comparisons ACROSS m1 cells are
+    # unpaired by design (different simulated persons per cell), comparisons within one cell
+    # across schedules are paired (same panel).
+    sa_by_cell, so_by_cell = {}, {}
     biases = {}
     for m1_cell in ("default", "m1_05", "m1_15"):
         panel5 = panel_for("S", m1_cell)
@@ -1332,22 +1615,39 @@ def score(prereg_sha):
         Y5, resp5 = panel5["Y"], panel5["responded"]
         post5 = np.zeros_like(reason5, dtype=bool)
         post5[:, BASELINE_DAYS:] = True
-        all5 = post5 & ~np.isnan(C5) & resp5
-        b_all5, _ = person_slope_corr(all5, C5, Y5)
+        all5 = post5 & ~np.isnan(C5)  # BUG fix: drop "& resp5"
+        sa5 = _pstats(all5, C5, Y5)
+        sa_by_cell[m1_cell] = sa5
+        so_by_cell[m1_cell] = {}
         rng5 = np.random.default_rng(eval_seed(prereg_sha, "S", m1_cell) + 2)
         sched_biases = {}
         for sched, kw in [("fixed", {}), ("random", {}), ("triggered", dict(p_trig=P["p_trig"])),
                            ("mixed", dict(p_trig2=P["p_trig2"]))]:
             probed, prop, ident = probe_schedule(rng5, sched, C5, band5, **kw)
-            obs = probed & resp5 & ~np.isnan(C5)
-            b_obs, _ = person_slope_corr(obs, C5, Y5)
-            rel_bias = abs(b_obs - b_all5) / abs(b_all5) if b_all5 else np.nan
-            sched_biases[sched] = rel_bias
+            obs = probed & resp5 & ~np.isnan(C5) & post5  # BUG fix: restrict to post-baseline
+            so5 = _pstats(obs, C5, Y5)
+            so_by_cell[m1_cell][sched] = so5
+
+            def rel_bias_fn(idx, sa5=sa5, so5=so5):
+                return rel_bias(sa5, so5, idx)
+
+            sched_biases[sched] = mc_stat(rel_bias_fn, [N_PERSONS])
         biases[m1_cell] = sched_biases
-    added_bias_ok = all(biases["m1_15"][s] - biases["default"][s] >= 0.10 for s in biases["default"])
+
+    def added_bias_fn(sched):
+        def f(idx15, idx0):
+            b15 = rel_bias(sa_by_cell["m1_15"], so_by_cell["m1_15"][sched], idx15)
+            b0 = rel_bias(sa_by_cell["default"], so_by_cell["default"][sched], idx0)
+            return abs(b15) - abs(b0)
+        return f
+
+    added_bias = {s: mc_stat(added_bias_fn(s), [N_PERSONS, N_PERSONS]) for s in biases["default"]}
+    added_bias_ok = all(_verdict(added_bias[s], "ge", 0.10) for s in added_bias)
     p5 = dict(rel_bias_by_m1_and_schedule=biases,
-              m1_05_random_under_5pct=bool(biases["m1_05"]["random"] < 0.05),
-              m1_15_added_bias_ge_10pct_every_schedule=added_bias_ok)
+              added_abs_rel_bias_m1_15_minus_m1_0=added_bias,
+              m1_05_random_under_5pct=bool(_verdict(biases["m1_05"]["random"], "within", 0.05)),
+              m1_15_added_bias_ge_10pct_every_schedule=bool(added_bias_ok))
+
     # response-propensity IPW at m1=1.5, random schedule
     panel5b = panel_for("S", "m1_15")
     C5b, reason5b, alarm5b, band5b = _run_arch(panel5b, "A-fixed", H["A-fixed"]["h"])
@@ -1359,32 +1659,93 @@ def score(prereg_sha):
     dow = np.tile(dow_features(T5), (n5, 1, 1))
     feats = np.concatenate([np.nan_to_num(C5b)[..., None], lag[..., None], dow], axis=-1)
     admin = probed5b
-    Xd = feats[admin]
     yresp = resp5b[admin].astype(float)
-    beta_hat = logistic_irls(Xd, yresp)
+    beta_hat = logistic_irls(feats[admin], yresp)
     p_resp_hat = expit(feats @ beta_hat)
-    obs5b = probed5b & resp5b & ~np.isnan(C5b)
-    w_resp = np.where(obs5b, safe_div(1.0, np.clip(p_resp_hat, 0.05, 1.0)), 0.0)
     post5b = np.zeros_like(reason5b, dtype=bool)
     post5b[:, BASELINE_DAYS:] = True
-    all5b = post5b & ~np.isnan(C5b) & resp5b
-    b_all5b, _ = person_slope_corr(all5b, C5b, Y5b)
-    b_raw5b, _ = person_slope_corr(obs5b, C5b, Y5b)
-    b_ipw5b, _ = person_slope_corr(obs5b, C5b, Y5b, weight=w_resp)
-    bias_raw = abs(b_raw5b - b_all5b)
-    bias_ipw = abs(b_ipw5b - b_all5b)
-    frac_removed = 1 - bias_ipw / bias_raw if bias_raw else np.nan
-    p5["response_propensity_ipw_m1_15_random"] = dict(bias_raw=bias_raw, bias_ipw=bias_ipw,
-                                                         frac_removed=frac_removed,
-                                                         removes_less_than_half=bool(frac_removed < 0.5))
+    obs5b = probed5b & resp5b & ~np.isnan(C5b) & post5b  # BUG fix: restrict to post-baseline
+    w_resp = np.where(obs5b, safe_div(1.0, np.clip(p_resp_hat, 0.05, 1.0)), 0.0)
+    all5b = post5b & ~np.isnan(C5b)  # BUG fix: drop "& resp5b"
+    sa5b = _pstats(all5b, C5b, Y5b)
+    sraw5b = _pstats(obs5b, C5b, Y5b)
+    sipw5b = _pstats(obs5b, C5b, Y5b, w=w_resp)
+
+    def bias(s, idx):
+        """Absolute bias of an observed-schedule slope (`s`, `_pstats` sufficient statistics)
+        against the m1=1.5 all-days slope (`sa5b`). Shared by the raw/IPW/IPW-lag-alt bias
+        figures below."""
+        return abs(_pslope(s, idx) - _pslope(sa5b, idx))
+
+    def frac(s_ipw):
+        """Fraction of the raw bias that `s_ipw`'s IPW removes, as a function of `idx`."""
+        def f(idx):
+            br = bias(sraw5b, idx)
+            return 1 - bias(s_ipw, idx) / br if br > 1e-9 else np.nan
+        return f
+
+    bias_raw_stat = mc_stat(lambda idx: bias(sraw5b, idx), [N_PERSONS])
+    bias_ipw_stat = mc_stat(lambda idx: bias(sipw5b, idx), [N_PERSONS])
+    frac_removed_stat = mc_stat(frac(sipw5b), [N_PERSONS])
+    removes_less_than_half = _verdict(frac_removed_stat, "le", 0.5)
+    p5["response_propensity_ipw_m1_15_random"] = dict(
+        bias_raw=bias_raw_stat, bias_ipw=bias_ipw_stat, frac_removed=frac_removed_stat,
+        removes_less_than_half=bool(removes_less_than_half))
     p5["PASS"] = bool(p5["m1_05_random_under_5pct"] and p5["m1_15_added_bias_ge_10pct_every_schedule"]
-                       and p5["response_propensity_ipw_m1_15_random"]["removes_less_than_half"])
+                       and removes_less_than_half)
+
+    # AMBIGUOUS ("it"): as-run/primary reads "removes less than half of it" as the total m1=1.5
+    # raw bias (bias_raw_stat above). The alternative -- the audit's more-natural reading -- reads
+    # "it" as the bias ADDED over m1=0 (same 'random' schedule): frac of (raw_bias@1.5 -
+    # raw_bias@0) that IPW removes. Independent panels (m1=1.5 vs m1=0, G4).
+    def raw_bias0_fn(idx):
+        sa0, so0 = sa_by_cell["default"], so_by_cell["default"]["random"]
+        return abs(_pslope(so0, idx) - _pslope(sa0, idx))
+
+    def frac_removed_it_alt_fn(idx15, idx0):
+        raw15, ipw15, raw0 = bias(sraw5b, idx15), bias(sipw5b, idx15), raw_bias0_fn(idx0)
+        denom = raw15 - raw0
+        return (raw15 - ipw15) / denom if abs(denom) > 1e-9 else np.nan
+
+    frac_removed_it_alt_stat = mc_stat(frac_removed_it_alt_fn, [N_PERSONS, N_PERSONS])
+    removes_less_than_half_it_alt = _verdict(frac_removed_it_alt_stat, "le", 0.5)
+
+    # AMBIGUOUS ("lagged composites"): as-run/primary uses one lag (the minimal reading, marked
+    # more-natural by the audit). Alternative: several lags (lag 1-3) as additional IPW features.
+    lag2 = np.concatenate([np.zeros((n5, 2)), np.nan_to_num(C5b[:, :-2])], axis=1)
+    lag3 = np.concatenate([np.zeros((n5, 3)), np.nan_to_num(C5b[:, :-3])], axis=1)
+    feats_alt = np.concatenate([np.nan_to_num(C5b)[..., None], lag[..., None], lag2[..., None],
+                                 lag3[..., None], dow], axis=-1)
+    beta_hat_alt = logistic_irls(feats_alt[admin], yresp)
+    p_resp_hat_alt = expit(feats_alt @ beta_hat_alt)
+    w_resp_alt = np.where(obs5b, safe_div(1.0, np.clip(p_resp_hat_alt, 0.05, 1.0)), 0.0)
+    sipw5b_alt = _pstats(obs5b, C5b, Y5b, w=w_resp_alt)
+
+    bias_ipw_lagalt_stat = mc_stat(lambda idx: bias(sipw5b_alt, idx), [N_PERSONS])
+    frac_removed_lagalt_stat = mc_stat(frac(sipw5b_alt), [N_PERSONS])
+    removes_less_than_half_lagalt = _verdict(frac_removed_lagalt_stat, "le", 0.5)
+
+    p5["lagged_composites_ambiguous"] = dict(
+        as_run_primary="one lag (the minimal reading; the audit's more-natural reading)",
+        alternative=dict(bias_ipw=bias_ipw_lagalt_stat, frac_removed=frac_removed_lagalt_stat,
+                          removes_less_than_half=bool(removes_less_than_half_lagalt),
+                          reading="lag 1-3 as additional response-propensity IPW features"))
+    p5["it_ambiguous"] = dict(
+        as_run_primary="'it' = the total m1=1.5 raw bias",
+        alternative=dict(frac_removed=frac_removed_it_alt_stat,
+                          removes_less_than_half=bool(removes_less_than_half_it_alt),
+                          reading="'it' = the bias ADDED over m1=0 for the same schedule "
+                                  "(the audit's more-natural reading)"))
     preds["P5"] = p5
 
     # ---- P6: indicator-level attenuation, families default / bernoulli_mix / pi_rises_with_D ----
+    # G1: each ind_within_0.03 / higher_by_ge_0.05 check decided on a 95% MC interval, bootstrapped
+    # over the (variable-length) list of persons informative for that indicator/cell -- mirrors
+    # the audit's own per-person-list bootstrap exactly.
     def attenuation_person(h, d, x, pi_i, kap, mu_m):
         """Per-person P6 attenuation: the closed-form Att and the direct MC ratio r(X,D)/r(H,D),
-        for one indicator/mixing variant (unfiltered: pi, X; filtered: pi', X_filtered). Returns
+        for one indicator/mixing variant (unfiltered: pi, X; filtered: pi', X_filtered). Also
+        returns rH, rX (used only by the validity-vs-attenuation-scale ambiguity below). Returns
         None if this person's within-person H variance is too small to be informative."""
         VH = h.var()
         if VH < 1e-9:
@@ -1396,9 +1757,10 @@ def score(prereg_sha):
         att_formula = (1 - Epi) / np.sqrt(((1 - pi_i) ** 2).mean() + Epi2 * kappa_r + Varpi * delta_r**2)
         rX = np.corrcoef(x, d)[0, 1]
         att_mc = rX / rH if abs(rH) > 1e-6 else np.nan
-        return att_formula, att_mc
+        return att_formula, att_mc, rH, rX
 
     p6 = {}
+    validity_scale_lists = {}  # stashed for the pi_rises_with_D ind4 validity-vs-attenuation ambiguity
     for cell_name in ("default", "bernoulli_mix", "pi_rises_with_D"):
         panel6 = panel_for("S", cell_name)
         used6 = panel6["used"]
@@ -1410,6 +1772,7 @@ def score(prereg_sha):
             X6 = panel6["X"][:, :, j]
             Xf6 = panel6["X_filtered"][:, :, j]
             atts, mcs, atts_f, mcs_f = [], [], [], []
+            rH_list, rX_list = [], []
             for i in range(N_PERSONS):
                 ok = used6[i]
                 if ok.sum() < 10:
@@ -1418,72 +1781,153 @@ def score(prereg_sha):
                 res = attenuation_person(h, d, X6[i, ok], pi6[i, ok], kap, mu_m)
                 if res is None:
                     continue
-                atts.append(res[0]); mcs.append(res[1])
+                atts.append(res[0]); mcs.append(res[1]); rH_list.append(res[2]); rX_list.append(res[3])
                 # A-fixed's filtered indicator: per spec P6, pi is replaced by pi' here.
                 res_f = attenuation_person(h, d, Xf6[i, ok], pip6[i, ok], kap, mu_m)
                 if res_f is not None:
                     atts_f.append(res_f[0]); mcs_f.append(res_f[1])
+            atts, mcs = np.array(atts), np.array(mcs)
+            atts_f, mcs_f = np.array(atts_f), np.array(mcs_f)
             ind = j + 1  # PREREG's 1-based indicator numbering (IDX_MSGLEN=3 -> indicator 4, etc.)
+            # 95% MC interval for nanmean(mcs) - nanmean(atts), bootstrapping over the qualifying
+            # person list itself (P6 drops uninformative persons); likewise for the filtered pair.
+            diff_stat = mc_stat(lambda idx: np.nanmean(mcs[idx]) - np.nanmean(atts[idx]),
+                                 [len(atts)], seed=3)
+            diff_f_stat = mc_stat(lambda idx: np.nanmean(mcs_f[idx]) - np.nanmean(atts_f[idx]),
+                                   [len(atts_f)], seed=3)
             cell_res[f"ind{ind}_att_formula_mean"] = float(np.nanmean(atts))
             cell_res[f"ind{ind}_att_mc_mean"] = float(np.nanmean(mcs))
-            cell_res[f"ind{ind}_within_0.03"] = bool(abs(np.nanmean(atts) - np.nanmean(mcs)) < 0.03)
+            cell_res[f"ind{ind}_diff_mc_minus_formula"] = diff_stat
+            cell_res[f"ind{ind}_within_0.03"] = bool(_verdict(diff_stat, "within", 0.03))
             cell_res[f"ind{ind}_filtered_att_formula_mean"] = float(np.nanmean(atts_f))
             cell_res[f"ind{ind}_filtered_att_mc_mean"] = float(np.nanmean(mcs_f))
-            cell_res[f"ind{ind}_filtered_within_0.03"] = bool(
-                abs(np.nanmean(atts_f) - np.nanmean(mcs_f)) < 0.03)
+            cell_res[f"ind{ind}_filtered_diff_mc_minus_formula"] = diff_f_stat
+            cell_res[f"ind{ind}_filtered_within_0.03"] = bool(_verdict(diff_f_stat, "within", 0.03))
+            if cell_name == "pi_rises_with_D" and j == IDX_MSGLEN:
+                validity_scale_lists["formula"] = atts
+                validity_scale_lists["rH"] = np.array(rH_list)
+                validity_scale_lists["rX"] = np.array(rX_list)
         p6[cell_name] = cell_res
     pr = p6["pi_rises_with_D"]
-    p6["pi_rises_signed_departure"] = dict(
-        higher_by_ge_0_05=bool(pr["ind4_att_mc_mean"] - pr["ind4_att_formula_mean"] >= 0.05))
+    ind4_diff_stat = pr["ind4_diff_mc_minus_formula"]
+    higher_ok = _verdict(ind4_diff_stat, "ge", 0.05)
+    p6["pi_rises_signed_departure"] = dict(higher_by_ge_0_05=bool(higher_ok))
     p6["PASS"] = bool(p6["default"]["ind4_within_0.03"] and p6["default"]["ind5_within_0.03"]
                       and p6["default"]["ind4_filtered_within_0.03"] and p6["default"]["ind5_filtered_within_0.03"]
                       and p6["bernoulli_mix"]["ind4_within_0.03"] and p6["bernoulli_mix"]["ind5_within_0.03"]
                       and p6["bernoulli_mix"]["ind4_filtered_within_0.03"]
                       and p6["bernoulli_mix"]["ind5_filtered_within_0.03"]
                       and p6["pi_rises_signed_departure"]["higher_by_ge_0_05"])
+
+    # AMBIGUOUS (P6 validity vs attenuation scale, pi_rises_with_D ind4 only): as-run/primary
+    # compares ATTENUATION RATIOS (Att_mc vs Att_formula, above) -- the audit's more-natural
+    # reading, since P6's "within 0.03" clauses elsewhere are all on the ratio scale and "the
+    # formula" itself outputs a ratio. The alternative compares VALIDITY directly: r(X,D) vs
+    # Att_formula * r(H,D) -- smaller in magnitude by a factor of about r(H,D).
+    formula_l, rH_l, rX_l = validity_scale_lists["formula"], validity_scale_lists["rH"], validity_scale_lists["rX"]
+    validity_diff = rX_l - formula_l * rH_l
+    n_v = len(validity_diff)
+    validity_stat = mc_stat(lambda idx: np.nanmean(validity_diff[idx]), [n_v])
+    p6["validity_vs_attenuation_scale_ambiguous"] = dict(
+        as_run_primary="attenuation-ratio scale: Att_mc vs Att_formula (the audit's more-natural reading)",
+        alternative=dict(diff_mc_minus_formula=validity_stat,
+                          higher_by_ge_0_05=bool(_verdict(validity_stat, "ge", 0.05)),
+                          reading="validity scale: r(X,D) vs Att_formula * r(H,D)"))
     preds["P6"] = p6
 
     # ---- P7: DV sensitivity at least 15 points below DR sensitivity, A-fixed ----
+    # G1: independent panels (DR, DV; G4 -- different families, seeded separately).
+    # G3 (AMBIGUOUS, as-run primary = Reading 1): both readings reported.
     panel_dr7 = panel_for("DR", "default")
     panel_dv7 = panel_for("DV", "default")
     _, _, alarm_dr7, _ = _run_arch(panel_dr7, "A-fixed", H["A-fixed"]["h"])
     _, _, alarm_dv7, _ = _run_arch(panel_dv7, "A-fixed", H["A-fixed"]["h"])
-    sens_dr7 = _sensitivity(alarm_dr7, panel_dr7["t0"]).mean()
-    sens_dv7 = _sensitivity(alarm_dv7, panel_dv7["t0"]).mean()
-    preds["P7"] = dict(sens_DR=sens_dr7, sens_DV=sens_dv7, gap_points=100 * (sens_dr7 - sens_dv7),
-                        PASS=bool(100 * (sens_dr7 - sens_dv7) >= 15))
+
+    def _p7_stats(excl):
+        sdr = _sensitivity(alarm_dr7, panel_dr7["t0"], exclude_pre_onset_alarms=excl).astype(float)
+        sdv = _sensitivity(alarm_dv7, panel_dv7["t0"], exclude_pre_onset_alarms=excl).astype(float)
+        gap = mc_stat(lambda i, j: 100 * (sdr[i].mean() - sdv[j].mean()), [N_PERSONS, N_PERSONS])
+        return sdr, sdv, gap
+
+    sens_dr7, sens_dv7, gap_stat7 = _p7_stats(True)
+    _, _, gap_stat7_alt = _p7_stats(False)
+    preds["P7"] = dict(sens_DR=float(sens_dr7.mean()), sens_DV=float(sens_dv7.mean()),
+                        gap_points=gap_stat7, PASS=bool(_verdict(gap_stat7, "ge", 15)),
+                        pre_onset_alarm_ambiguous_G3=dict(
+                            as_run_primary="pre-onset alarm excludes detection (Reading 1)",
+                            alternative=dict(
+                                gap_points=gap_stat7_alt, PASS=bool(_verdict(gap_stat7_alt, "ge", 15)),
+                                **G3_READINGS)))
 
     # ---- P8: A-fixed passive-only (schedule none) vs probe-only (random, matched budget), DR ----
+    # G1: paired (same DR panel/persons under both architectures). POSTFREEZE re-tune disclosure:
+    # H["probe-only"]["h"] is the re-tuned value from the corrected probe_only_C (4-probe baseline
+    # block); run 1's value is preserved in tuning.json under "probe_only_h_run1" (see
+    # sim/POSTFREEZE-DEVIATIONS.md). G3 (AMBIGUOUS, as-run primary = Reading 1): both readings.
     panel_dr8 = panel_for("DR", "default")
     _, _, alarm_af8, _ = _run_arch(panel_dr8, "A-fixed", H["A-fixed"]["h"])
-    sens_af8 = _sensitivity(alarm_af8, panel_dr8["t0"]).mean()
-    rmst_af8 = _rmst42(alarm_af8, panel_dr8["t0"]).mean()
     rng_po8 = np.random.default_rng(eval_seed(prereg_sha, "DR", "default") + 10)
     Cpo8, reason_po8 = probe_only_C(panel_dr8, rng_po8)
     alarm_po8, _, _ = run_cusum(Cpo8, H["probe-only"]["h"])
-    sens_po8 = _sensitivity(alarm_po8, panel_dr8["t0"]).mean()
-    rmst_po8 = _rmst42(alarm_po8, panel_dr8["t0"]).mean()
-    preds["P8"] = dict(sens_A_fixed=sens_af8, sens_probe_only=sens_po8,
-                        sens_gap_points=100 * (sens_af8 - sens_po8),
-                        rmst42_A_fixed=rmst_af8, rmst42_probe_only=rmst_po8,
-                        rmst_gap_days=rmst_po8 - rmst_af8,
-                        PASS=bool(100 * (sens_af8 - sens_po8) >= 10 and (rmst_po8 - rmst_af8) >= 3))
+
+    def _p8_stats(excl):
+        saf = _sensitivity(alarm_af8, panel_dr8["t0"], exclude_pre_onset_alarms=excl).astype(float)
+        spo = _sensitivity(alarm_po8, panel_dr8["t0"], exclude_pre_onset_alarms=excl).astype(float)
+        raf = _rmst42(alarm_af8, panel_dr8["t0"], exclude_pre_onset_alarms=excl)
+        rpo = _rmst42(alarm_po8, panel_dr8["t0"], exclude_pre_onset_alarms=excl)
+        sens_gap = mc_stat(lambda idx: 100 * (saf[idx].mean() - spo[idx].mean()), [N_PERSONS])
+        rmst_gap = mc_stat(lambda idx: rpo[idx].mean() - raf[idx].mean(), [N_PERSONS])
+        passed = _verdict(sens_gap, "ge", 10) and _verdict(rmst_gap, "ge", 3)
+        return saf, spo, raf, rpo, sens_gap, rmst_gap, passed
+
+    saf8, spo8, raf8, rpo8, sens_gap8, rmst_gap8, passed8 = _p8_stats(True)
+    _, _, _, _, sens_gap8_alt, rmst_gap8_alt, passed8_alt = _p8_stats(False)
+    preds["P8"] = dict(sens_A_fixed=float(saf8.mean()), sens_probe_only=float(spo8.mean()),
+                        sens_gap_points=sens_gap8,
+                        rmst42_A_fixed=float(raf8.mean()), rmst42_probe_only=float(rpo8.mean()),
+                        rmst_gap_days=rmst_gap8, PASS=bool(passed8),
+                        pre_onset_alarm_ambiguous_G3=dict(
+                            as_run_primary="pre-onset alarm excludes detection (Reading 1)",
+                            alternative=dict(
+                                sens_gap_points=sens_gap8_alt, rmst_gap_days=rmst_gap8_alt,
+                                PASS=bool(passed8_alt), **G3_READINGS)))
 
     # ---- P9: BD alarm within tracked days 29-49; A-fixed BD sens <= 0.5 * DR sens ----
+    # G1: independent panels (BD, DR; G4). G3 (AMBIGUOUS, DR side only -- BD's onset sits inside
+    # the baseline, so the BD side has no pre-onset-alarm exclusion by design): both readings of
+    # the DR side reported.
     panel_bd9 = panel_for("BD", "default")
     _, _, alarm_bd9, _ = _run_arch(panel_bd9, "A-fixed", H["A-fixed"]["h"])
-    sens_bd9 = alarm_bd9[:, BASELINE_DAYS:BASELINE_DAYS + 21].any(1).mean()
-    sens_dr9 = _sensitivity(alarm_dr7, panel_dr7["t0"]).mean()  # reuse P7's DR run, same cell/arch
-    preds["P9"] = dict(sens_BD_days29_49=sens_bd9, sens_DR=sens_dr9,
-                        PASS=bool(sens_bd9 <= 0.5 * sens_dr9))
+    sens_bd9_pp = alarm_bd9[:, BASELINE_DAYS:BASELINE_DAYS + 21].any(1).astype(float)
+
+    def _p9_margin(excl):
+        sdr9 = _sensitivity(alarm_dr7, panel_dr7["t0"], exclude_pre_onset_alarms=excl).astype(float)
+        stat = mc_stat(lambda i, j: sens_bd9_pp[i].mean() - 0.5 * sdr9[j].mean(), [N_PERSONS, N_PERSONS])
+        return sdr9, stat
+
+    sens_dr9, margin9 = _p9_margin(True)
+    _, margin9_alt = _p9_margin(False)
+    preds["P9"] = dict(sens_BD_days29_49=float(sens_bd9_pp.mean()), sens_DR=float(sens_dr9.mean()),
+                        margin_BD_minus_halfDR=margin9, PASS=bool(_verdict(margin9, "le", 0.0)),
+                        pre_onset_alarm_ambiguous_G3=dict(
+                            as_run_primary="pre-onset alarm excludes detection (Reading 1); DR side only",
+                            alternative=dict(
+                                margin_BD_minus_halfDR=margin9_alt, PASS=bool(_verdict(margin9_alt, "le", 0.0)),
+                                **G3_READINGS)))
 
     # ---- P10: CS FA/month >= 1.5x its S rate, A-fixed ----
+    # G1: independent panels (CS, S; G4). Already the pooled FA/month reading -- no G2 ambiguity is
+    # flagged for P10 by the audit (it is already consistent with the h-tuning estimand).
     panel_cs10 = panel_for("CS", "default")
     _, reason_cs10, alarm_cs10, _ = _run_arch(panel_cs10, "A-fixed", H["A-fixed"]["h"])
-    fa_cs10 = fa_rate_for_alarm(alarm_cs10, reason_cs10)
-    fa_s10 = fa_rate_for_alarm(alarm_s, reason_s)
-    preds["P10"] = dict(fa_CS=fa_cs10, fa_S=fa_s10, ratio=fa_cs10 / max(fa_s10, 1e-9),
-                         PASS=bool(fa_cs10 / max(fa_s10, 1e-9) >= 1.5))
+
+    def p10_ratio(i, j):
+        return _fa_pooled(alarm_cs10, reason_cs10, i) / max(_fa_pooled(alarm_s, reason_s, j), 1e-9)
+
+    p10_stat = mc_stat(p10_ratio, [N_PERSONS, N_PERSONS])
+    preds["P10"] = dict(fa_CS=fa_rate_for_alarm(alarm_cs10, reason_cs10),
+                         fa_S=fa_rate_for_alarm(alarm_s, reason_s),
+                         ratio=p10_stat, PASS=bool(_verdict(p10_stat, "ge", 1.5)))
 
     results = {"prereg_sha256": prereg_sha, "pi_bar": pi_bar, "kappa_a4": kappa_a4, "mu_m4": mu_m4,
                "predictions": preds}
