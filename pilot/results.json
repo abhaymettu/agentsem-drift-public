@@ -1,20 +1,20 @@
 {
   "stats": {
-    "files_found": 2281,
-    "files_opened": 2280,
+    "files_found": 2311,
+    "files_opened": 2310,
     "files_failed_to_open": 1,
-    "lines_read": 573967,
-    "user_entries": 75145,
-    "assistant_entries": 125875,
+    "lines_read": 581664,
+    "user_entries": 76192,
+    "assistant_entries": 127670,
     "parse_errors": 0,
     "unparseable_timestamps": 0,
     "provenance_coverage": {
-      "promptSource": 3397,
-      "turnOrigin": 1609,
-      "entrypoint": 75145,
-      "userType": 75145
+      "promptSource": 3425,
+      "turnOrigin": 1637,
+      "entrypoint": 76192,
+      "userType": 76192
     },
-    "elapsed_seconds": 10.443009853363037,
+    "elapsed_seconds": 12.265456914901733,
     "lane_prompt_files": 326,
     "until": "2026-09-28T01:32:31Z"
   },
@@ -463,10 +463,10 @@
       "share_of_fragmentation_session_hours": 0.7461538461538462
     },
     "provenance_field_coverage": {
-      "promptSource": 3397,
-      "turnOrigin": 1609,
-      "entrypoint": 75145,
-      "userType": 75145
+      "promptSource": 3425,
+      "turnOrigin": 1637,
+      "entrypoint": 76192,
+      "userType": 76192
     }
   }
 }

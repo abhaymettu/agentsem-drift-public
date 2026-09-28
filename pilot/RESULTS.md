@@ -6,16 +6,16 @@ What was measured: how much of Abhay's own "user"-role stream in `~/.claude/proj
 
 ## Run stats
 
-- Files found under `~/.claude/projects`: 2281
-- Files opened: 2280 (failed to open: 1)
-- Lines read: 573967
-- `user`-role entries parsed: 75145
-- `assistant`-role entries parsed (text/model/tool-name only): 125875
+- Files found under `~/.claude/projects`: 2311
+- Files opened: 2310 (failed to open: 1)
+- Lines read: 581664
+- `user`-role entries parsed: 76192
+- `assistant`-role entries parsed (text/model/tool-name only): 127670
 - JSON parse errors (line skipped): 0
 - User entries with unparseable/missing timestamp: 0
 - Lane-prompt files loaded: 326
-- Provenance field coverage (share of user entries non-null): promptSource=3397/75145 (0.0452), turnOrigin=1609/75145 (0.0214), entrypoint=75145/75145 (1.0000), userType=75145/75145 (1.0000)
-- Elapsed: 10.44s
+- Provenance field coverage (share of user entries non-null): promptSource=3425/76192 (0.0450), turnOrigin=1637/76192 (0.0215), entrypoint=76192/76192 (1.0000), userType=76192/76192 (1.0000)
+- Elapsed: 12.27s
 
 ## Classification rules (exactly as implemented, in priority order)
 

@@ -20,5 +20,12 @@
     "n_days": 24,
     "mu_M4_humanSD": 0.2733395339951404,
     "kappa_a": 0.6354358107037785
+  },
+  "day_level_main_thread": {
+    "n_days_both": 21,
+    "pi_bar_daymean": 0.8229027541216615,
+    "mu_M4_day": 0.19624929309002312,
+    "kappa_a_day": 0.09840995564479449,
+    "mu_M4_entry_withinday_pooledHumanSD": 0.1994884294143741
   }
 }

@@ -1028,7 +1028,10 @@ def compute_indicator4_params(rows):
     pi_day_sd are the mean/population-SD of the per-day machine share, over days with >=1
     text-bearing entry. mu_M4_humanSD is the machine-vs-human mean log-chars gap in units of the
     human series' own population SD; kappa_a is the machine/human population-variance ratio of log
-    chars -- both computed only from integer char counts, never from text content."""
+    chars -- both computed only from integer char counts, never from text content.
+
+    day_level_main_thread reports the same two contamination quantities at day granularity;
+    see day_level_stats() below for what it computes and how."""
     def scope_stats(scoped_rows):
         text_rows = [r for r in scoped_rows if r["class"] != "tool-result" and r.get("chars", 0) > 0]
         n_text = len(text_rows)
@@ -1068,8 +1071,71 @@ def compute_indicator4_params(rows):
             "mu_M4_humanSD": mu_m4_humansd, "kappa_a": kappa_a,
         }
 
+    def day_level_stats(scoped_rows):
+        """Day-granularity contamination summary over the same text-bearing,
+        non-tool-result entries as scope_stats, restricted to days that have
+        >=1 human-typed AND >=1 non-human entry (n_days_both). h_d/m_d (per-day
+        mean log chars of each class) are intermediate only and are never
+        written out -- only the cross-day/pooled summary numbers below are."""
+        text_rows = [r for r in scoped_rows if r["class"] != "tool-result" and r.get("chars", 0) > 0]
+        by_day = defaultdict(lambda: {"human": [], "machine": []})
+        for r in text_rows:
+            d = r.get("date_local")
+            if d is None:
+                continue
+            bucket = by_day[d]["human"] if r["class"] == "human-typed" else by_day[d]["machine"]
+            bucket.append(math.log(r["chars"]))
+
+        days_both = {d: v for d, v in by_day.items() if v["human"] and v["machine"]}
+        n_days_both = len(days_both)
+
+        h_d_list, m_d_list, day_pis = [], [], []
+        pooled_ss, pooled_n = 0.0, 0
+        for v in days_both.values():
+            h_logs, m_logs = v["human"], v["machine"]
+            h_d_list.append(statistics.fmean(h_logs))
+            m_d_list.append(statistics.fmean(m_logs))
+            day_pis.append(len(m_logs) / (len(h_logs) + len(m_logs)))
+            if len(h_logs) > 1:
+                pooled_ss += len(h_logs) * statistics.pvariance(h_logs)
+                pooled_n += len(h_logs)
+
+        pi_bar_daymean = statistics.fmean(day_pis) if day_pis else None
+
+        # Mean gap (per-day mean log chars, machine minus human) computed once and shared by
+        # both mu_M4_day (normalized by the across-day human SD) and
+        # mu_M4_entry_withinday_pooledHumanSD (normalized by the pooled within-day human SD).
+        mean_gap = statistics.fmean(m_d_list) - statistics.fmean(h_d_list) if h_d_list else None
+
+        mu_m4_day = kappa_a_day = None
+        if n_days_both > 1:
+            h_pstdev = statistics.pstdev(h_d_list)
+            if h_pstdev > 0:
+                mu_m4_day = mean_gap / h_pstdev
+            h_pvar_days = statistics.pvariance(h_d_list)
+            if h_pvar_days > 0:
+                kappa_a_day = statistics.pvariance(m_d_list) / h_pvar_days
+
+        mu_m4_entry_withinday = None
+        if pooled_n > 0 and h_d_list:
+            pooled_sd = math.sqrt(pooled_ss / pooled_n)
+            if pooled_sd > 0:
+                mu_m4_entry_withinday = mean_gap / pooled_sd
+
+        return {
+            "n_days_both": n_days_both,
+            "pi_bar_daymean": pi_bar_daymean,
+            "mu_M4_day": mu_m4_day,
+            "kappa_a_day": kappa_a_day,
+            "mu_M4_entry_withinday_pooledHumanSD": mu_m4_entry_withinday,
+        }
+
     main_rows = [r for r in rows if r["class"] != "sidechain"]
-    return {"main_thread": scope_stats(main_rows), "with_sidechain": scope_stats(rows)}
+    return {
+        "main_thread": scope_stats(main_rows),
+        "with_sidechain": scope_stats(rows),
+        "day_level_main_thread": day_level_stats(main_rows),
+    }
 
 
 def write_indicator4_params(rows, path=INDICATOR4_PATH):

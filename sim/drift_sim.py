@@ -6,6 +6,9 @@ a non-diagnostic wellbeing/functioning state; it maps to no clinical condition. 
     python3 sim/drift_sim.py --check                       # known-answer self test
     python3 sim/drift_sim.py tune                          # tuning-seed-only; writes sim/tuning.json
     python3 sim/drift_sim.py score --prereg-sha <sha>       # NOT to be run pre-freeze; needs a committed PREREG
+    python3 sim/drift_sim.py metrics --prereg-sha <sha>     # REPORTING ONLY: PREREG section 5 metrics
+                                                             # score() omits; no thresholds, no verdicts;
+                                                             # writes sim/metrics.json, sim/METRICS.md
 
 PRE-FREEZE STAGE: this file may be exercised via --check and tune() only. Evaluation seeds come from
 eval_seed(), which raises unless sim/PREREG.md exists and its sha256 matches --prereg-sha. Tuning uses
@@ -843,7 +846,7 @@ def check_d(verbose, n=2_000_000):
         kappa_r = kap / VH
         delta_r = (mu_m - H.mean()) / np.sqrt(VH)
         Epi, Epi2, Varpi = pi.mean(), (pi**2).mean(), pi.var()
-        att_formula = (1 - Epi) / np.sqrt(((1 - pi) ** 2).mean() + Epi2 * kappa_r + Varpi * delta_r**2)
+        att_formula = _att(Epi, Epi2, Varpi, kappa_r, delta_r)
         r_x = np.corrcoef(X, D)[0, 1]
         att_mc = r_x / r_h
         ok = abs(att_mc - att_formula) < 0.03
@@ -1026,6 +1029,12 @@ def pop_reference(panel):
 # 1-28 (about 22 answers the `random` schedule never actually administers pre-baseline); it now
 # z-scores on exactly those 4 probe answers, per PREREG deviation 4's fallback convention.
 PROBE_BASELINE_DAYS = [6, 13, 20, 27]
+
+# Schedule -> the single extra probe_schedule() kwarg it needs, and the tuning.json ("schedules",
+# i.e. P) key that supplies its value. One dict shared by metrics()'s probes_block and
+# confirmation_block in place of their two separately hand-written if/elif kwargs ladders
+# (schedules not in this dict, e.g. 'none'/'fixed'/'random', need no extra kwarg).
+SCHED_KW = {"triggered": "p_trig", "mixed": "p_trig2", "current": "c_star"}
 
 
 def probe_only_C(panel, rng):
@@ -1244,6 +1253,41 @@ def _rmst42(alarm, onset, cap=42, exclude_pre_onset_alarms=True):
     return first
 
 
+def _days_to_detect(alarm, onset, day_lo, day_hi):
+    """Per-person days from `onset` to the first alarm inside [day_lo, day_hi) (per-person arrays),
+    NaN if never detected in that window, and NaN also when a pre-onset alarm already fired
+    (mirrors `_sensitivity`/`_rmst42`'s primary G3 reading; unlike those two, this metrics-only
+    helper is never called with the alternative reading, so the toggle was dropped -- pre-onset
+    alarms are always masked). Generalizes `_sensitivity`/`_rmst42`'s onset-anchored window to a
+    window whose bounds need not equal onset/onset+21 -- BD's metrics-section detection window is
+    the first 21 TRACKED days (28:49), not 21 days from its own (pre-baseline) onset, so
+    `day_lo`/`day_hi` and `onset` are passed separately. Used for the PREREG section 5 'median days
+    to detect among detected' metric only (REPORTING ONLY; no threshold uses this)."""
+    n, T = alarm.shape
+    day = np.arange(T)[None, :]
+    in_window = (day >= day_lo[:, None]) & (day < day_hi[:, None])
+    hit = alarm & in_window
+    any_hit = hit.any(1)
+    first_day = np.where(hit, day, T).min(1).astype(float)
+    dtd = first_day - onset
+    dtd = np.where(any_hit, dtd, np.nan)
+    pre = day < onset[:, None]
+    fa_pre = (alarm & pre).any(1)
+    dtd = np.where(fa_pre, np.nan, dtd)
+    return dtd
+
+
+def _att(Epi, Epi2, Varpi, kappa, delta):
+    """Closed-form attenuation: Att = (1 - E[pi]) / sqrt(E[(1-pi)^2] + E[pi^2] kappa +
+    Var(pi) delta^2), with E[(1-pi)^2] recovered from Var(pi) and E[pi] via Var(1-pi) = Var(pi)
+    (an exact identity, not an approximation). Shared by check_d, attenuation_person (P6) and
+    att_formula_value (metrics section o). att_formula_value_filtered keeps its own raw Monte
+    Carlo E[(1-pi')^2] estimate -- pi' has no closed form, so that quantity is a genuinely
+    different (empirically estimated) number, not a duplicate of this identity."""
+    E1mpi2 = Varpi + (1 - Epi) ** 2
+    return (1 - Epi) / np.sqrt(E1mpi2 + Epi2 * kappa + Varpi * delta ** 2)
+
+
 def _run_arch(panel, arch_name, h):
     if arch_name == "pop":
         C, reason = compute_composite(panel, NAIVE_FEATURES, pop_ref=pop_reference(panel))
@@ -1326,21 +1370,28 @@ G3_READINGS = dict(
 )
 
 
-def score(prereg_sha):
+def _load_frozen(action):
+    """Load and validate the tuning inputs shared by score() and metrics(): sim/PREREG.md must
+    exist, and tuning.json's pi_bar/kappa_a4/mu_m4 (read from the committed tuning run, not
+    passed in on the CLI) must equal the values the frozen sim/PREREG.md itself states
+    (constitution III/IV). Returns (H, P, pi_bar, kappa_a4, mu_m4)."""
     if not PREREG_PATH.exists():
-        raise RuntimeError("sim/PREREG.md missing -- cannot score pre-freeze.")
+        raise RuntimeError(f"sim/PREREG.md missing -- cannot {action} pre-freeze.")
     prereg_text_on_disk = PREREG_PATH.read_text()
     tuning = json.loads((HERE / "tuning.json").read_text())
     H = tuning["h"]
     P = tuning["schedules"]
-    # pi_bar/kappa_a4/mu_m4 are read from the committed tuning run, not passed in on the CLI, and
-    # must equal the values the frozen sim/PREREG.md itself states (constitution III/IV).
     pi_bar, kappa_a4, mu_m4 = tuning["pi_bar"], tuning["kappa_a4"], tuning["mu_m4"]
     for name, val in (("PI_BAR", pi_bar), ("KAPPA_A4", kappa_a4), ("MU_M4", mu_m4)):
         expected = _prereg_stated_value(prereg_text_on_disk, name)
         assert abs(val - expected) < 1e-9, (
             f"tuning.json's {name}={val} does not match sim/PREREG.md's stated {name}={expected}"
         )
+    return H, P, pi_bar, kappa_a4, mu_m4
+
+
+def score(prereg_sha):
+    H, P, pi_bar, kappa_a4, mu_m4 = _load_frozen("score")
     preds = {}
 
     def panel_for(family, cell_name):
@@ -1754,7 +1805,7 @@ def score(prereg_sha):
         kappa_r = kap / VH
         delta_r = (mu_m - h.mean()) / np.sqrt(VH)
         Epi, Epi2, Varpi = pi_i.mean(), (pi_i**2).mean(), pi_i.var()
-        att_formula = (1 - Epi) / np.sqrt(((1 - pi_i) ** 2).mean() + Epi2 * kappa_r + Varpi * delta_r**2)
+        att_formula = _att(Epi, Epi2, Varpi, kappa_r, delta_r)
         rX = np.corrcoef(x, d)[0, 1]
         att_mc = rX / rH if abs(rH) > 1e-6 else np.nan
         return att_formula, att_mc, rH, rX
@@ -1948,6 +1999,499 @@ def score(prereg_sha):
 
 
 # ----------------------------------------------------------------------------------------------
+# metrics(): PREREG section 5 lists metrics that score()'s section-6 predictions never output
+# (score() only computes the specific statistics each P1-P10 threshold needs). This subcommand is
+# REPORTING ONLY: no thresholds, no PASS/FAIL, no verdicts -- it reuses the same eval_seed()
+# panels, the same tuned h/schedule parameters (sim/tuning.json), and the same primitives
+# (compute_composite, run_cusum, probe_schedule, mc_stat, _fa_month_pp, _fa_pooled, _sensitivity)
+# that --check and score() already exercise. It writes sim/metrics.json and sim/METRICS.md and
+# touches nothing score() reads or writes (sim/results.json, sim/RESULTS.md are untouched, and
+# --prereg-sha is validated the same way but no PASS/FAIL depends on any number computed here).
+# ----------------------------------------------------------------------------------------------
+REASON_LABELS = {1: "unused_day", 2: "no_usable_indicator", 3: "low_usage_abstain_v",
+                 4: "version_reset_hold_iv"}
+
+
+def fa_block(alarm, reason):
+    """False-flag rate summary for one (alarm, reason) pair: false flags per tracked
+    person-month (`_fa_pooled`: pooled total-alarms / total-tracked-months), per total
+    person-month (every post-baseline day, regardless of abstention), and the IQR (spread) of
+    person-level false-flag rates (`_fa_month_pp`). One helper shared by metrics() (e), (g), (i)
+    and (m), which all report some subset of this same triple per family/architecture/cell."""
+    total_months = (T_DAYS - BASELINE_DAYS) / 30.0
+    fa_pp = _fa_month_pp(alarm, reason)
+
+    def tracked_fn(idx):
+        return _fa_pooled(alarm, reason, idx)
+
+    def total_fn(idx):
+        return alarm[idx, BASELINE_DAYS:].sum() / (N_PERSONS * total_months)
+
+    def iqr_fn(idx):
+        sub = fa_pp[idx]
+        return np.nanpercentile(sub, 75) - np.nanpercentile(sub, 25)
+
+    return dict(fa_per_tracked_person_month=mc_stat(tracked_fn, [N_PERSONS]),
+                fa_per_total_person_month=mc_stat(total_fn, [N_PERSONS]),
+                person_level_fa_rate_iqr=mc_stat(iqr_fn, [N_PERSONS]))
+
+
+def sens_stat(alarm, onset, window=21):
+    """Person-averaged sensitivity within `window` days of onset, with its 95% MC interval:
+    `_sensitivity(...).astype(float)` followed by `mc_stat` of its person-mean. One helper shared
+    by metrics() (a)'s h-sweep, (h)'s chance baseline, and (m)'s kappa comparison."""
+    s = _sensitivity(alarm, onset, window=window).astype(float)
+    return mc_stat(lambda idx: s[idx].mean(), [N_PERSONS])
+
+
+def metrics(prereg_sha):
+    H, P, pi_bar, kappa_a4, mu_m4 = _load_frozen("compute metrics")
+    total_months = (T_DAYS - BASELINE_DAYS) / 30.0
+
+    panel_cache = {}
+
+    def panel_for(family, cell_name):
+        key = (family, cell_name)
+        if key not in panel_cache:
+            seed = eval_seed(prereg_sha, family, cell_name)
+            rng = np.random.default_rng(seed)
+            panel_cache[key] = generate_panel(rng, family, cell_params(cell_name), n=N_PERSONS,
+                                               pi_bar=pi_bar, kappa_a4=kappa_a4, mu_m4=mu_m4)
+        return panel_cache[key]
+
+    arch_cache = {}
+
+    def arch_run(family, cell_name, arch):
+        """(C, reason, alarm, in_band) for any of ARCHS_FOR_H ('pop', 'A-naive', 'A-fixed',
+        'A-fixed-minus-*') plus 'probe-only', which `_run_arch` does not itself cover (it is a
+        CUSUM on probe answers alone, not an indicator composite). Cached per (family, cell,
+        arch); a fresh, deterministic rng derived from eval_seed feeds probe_only_C's own
+        `random`-schedule draw, mirroring score()'s P8 pattern."""
+        key = (family, cell_name, arch)
+        if key not in arch_cache:
+            if arch == "probe-only":
+                panel = panel_for(family, cell_name)
+                # CHOICE: offset +10 matches score()'s own P8 probe_only_C draw exactly (same
+                # family DR, same eval seed) -- so this metric's probe-only DR sensitivity
+                # reproduces P8's sens_probe_only bit-for-bit rather than an independent redraw.
+                rng_po = np.random.default_rng(eval_seed(prereg_sha, family, cell_name) + 10)
+                C, reason = probe_only_C(panel, rng_po)
+                alarm, in_band, _ = run_cusum(C, H["probe-only"]["h"])
+                arch_cache[key] = (C, reason, alarm, in_band)
+            else:
+                arch_cache[key] = _run_arch(panel_for(family, cell_name), arch, H[arch]["h"])
+        return arch_cache[key]
+
+    def composite_for(family, cell_name, arch):
+        """Composite (C, reason) without running the CUSUM -- used by the (a) h-sweep, which
+        varies h against the same composite instead of re-fitting the baseline per h."""
+        panel = panel_for(family, cell_name)
+        baseline = fit_baseline(panel["X"], panel["used"], panel["L_obs"])
+        return compute_composite(panel, arch_features(arch), baseline=baseline)
+
+    out = {}
+
+    # ---- (a) sensitivity-vs-false-flag curve: sweep h on S (false-flag axis) and DR (sensitivity
+    # axis), for A-fixed and A-naive. CHOICE: h grid is 15 points geometrically spaced from 0.2x to
+    # 3.0x each architecture's own tuned h (A-fixed and A-naive are tuned to very different h
+    # scales; a shared absolute grid would put one architecture's whole curve in one corner). ----
+    curve = {}
+    for arch in ("A-fixed", "A-naive"):
+        panel_dr = panel_for("DR", "default")
+        Cs, reason_s = composite_for("S", "default", arch)
+        Cdr, reason_dr = composite_for("DR", "default", arch)
+        onset_dr = panel_dr["t0"]
+        h_center = H[arch]["h"]
+        h_grid = np.geomspace(0.2 * h_center, 3.0 * h_center, 15)
+        points = []
+        for h in h_grid:
+            alarm_s, _, _ = run_cusum(Cs, float(h))
+            alarm_dr, _, _ = run_cusum(Cdr, float(h))
+            fa_stat = mc_stat(lambda idx, a=alarm_s, r=reason_s: _fa_pooled(a, r, idx), [N_PERSONS])
+            points.append(dict(h=float(h), fa_per_tracked_person_month=fa_stat,
+                                sensitivity_within_21d=sens_stat(alarm_dr, onset_dr)))
+        curve[arch] = points
+    out["a_sensitivity_vs_false_flag_curve"] = dict(
+        note="h swept on the default cell; false-flag rate measured on family S, sensitivity "
+             "within 21 days of onset measured on family DR, at each swept h.",
+        curve=curve)
+
+    # ---- (b) abstention share of person-days, by reason, for every family (A-fixed, default
+    # cell); DR additionally at kappa=0.3 (cell kappa03) against kappa=0 (cell default). Measured
+    # over post-baseline (tracked-window) person-days, matching where fa_rate_for_alarm and
+    # _fa_month_pp already measure "tracked" vs "total". ----
+    def abstention_block(family, cell_name):
+        _, reason, _, _ = arch_run(family, cell_name, "A-fixed")
+        post = reason[:, BASELINE_DAYS:]
+        block = {"total_abstention_share": mc_stat(
+            lambda idx: (post[idx] > 0).sum() / post[idx].size, [N_PERSONS])}
+        for code, label in REASON_LABELS.items():
+            block[label] = mc_stat(lambda idx, code=code: (post[idx] == code).sum() / post[idx].size,
+                                    [N_PERSONS])
+        return block
+
+    abstention = {fam: abstention_block(fam, "default") for fam in FAMILIES}
+    abstention_dr_kappa03 = abstention_block("DR", "kappa03")
+    out["b_abstention_share_by_family"] = dict(
+        note="Reasons: unused_day (no usage), no_usable_indicator, low_usage_abstain_v (feature v), "
+             "version_reset_hold_iv (feature iv). Share is of post-baseline (tracked-window) "
+             "person-days.",
+        by_family=abstention,
+        DR_kappa_0_3=abstention_dr_kappa03,
+        DR_kappa_0=abstention["DR"])
+
+    # ---- (c) probes per person-month, by family and schedule (the realized budget), A-fixed. ----
+    schedules_list = ["none", "fixed", "random", "triggered", "mixed", "current"]
+
+    def probes_block(family, cell_name):
+        Caf, reason_af, alarm_af, in_band_af = arch_run(family, cell_name, "A-fixed")
+        rng_p = np.random.default_rng(eval_seed(prereg_sha, family, cell_name) + 500)
+        block = {}
+        for sched in schedules_list:
+            kwargs = {SCHED_KW[sched]: P[SCHED_KW[sched]]} if sched in SCHED_KW else {}
+            probed, prop, identified = probe_schedule(rng_p, sched, Caf, in_band_af, **kwargs)
+            per_person = probed[:, BASELINE_DAYS:].sum(1) / total_months
+            stat = mc_stat(lambda idx, pp=per_person: pp[idx].mean(), [N_PERSONS])
+            block[sched] = dict(probes_per_person_month=stat, ipw_identified=bool(identified))
+        return block
+
+    out["c_probes_per_person_month_by_family_schedule"] = {
+        fam: probes_block(fam, "default") for fam in FAMILIES}
+
+    # ---- (d) confirmation rule: PPV of confirmed flags, confirmed false flags per person-month,
+    # mean days to confirmation, under random/mixed/triggered, on family DR (A-fixed). A flag's
+    # ground truth is true iff it falls in [onset, onset+21) (same window as sensitivity); a flag
+    # is confirmed if a probe in [t+1, t+CONFIRM_WINDOW] is observed (probed & responded) and reads
+    # at least CONFIRM_MARGIN above the person's baseline-block (days 7/14/21/28) probe mean. ----
+    def confirmation_block(schedule):
+        panel = panel_for("DR", "default")
+        onset = panel["t0"]
+        Caf, reason_af, alarm_af, in_band_af = arch_run("DR", "default", "A-fixed")
+        rng_c = np.random.default_rng(eval_seed(prereg_sha, "DR", "default") + 700
+                                       + schedules_list.index(schedule))
+        kwargs = {SCHED_KW[schedule]: P[SCHED_KW[schedule]]} if schedule in SCHED_KW else {}
+        probed, prop, identified = probe_schedule(rng_c, schedule, Caf, in_band_af, **kwargs)
+        responded = panel["responded"]
+        Y = panel["Y"]
+        observed = probed & responded
+
+        Yb = Y[:, PROBE_BASELINE_DAYS]
+        respb = responded[:, PROBE_BASELINE_DAYS]
+        v = np.where(respb, Yb, np.nan)
+        cnt = respb.sum(1)
+        base_mean = np.where(cnt >= 2, np.nanmean(v, 1), 0.0)
+
+        n, T = alarm_af.shape
+        confirmed_true = np.zeros(n)
+        confirmed_false = np.zeros(n)
+        days_sum = np.zeros(n)
+        n_confirmed = np.zeros(n)
+        n_flags_total = 0
+        for i in range(n):
+            flag_days = np.nonzero(alarm_af[i])[0]
+            n_flags_total += flag_days.size
+            for t in flag_days:
+                is_true = (t >= onset[i]) and (t < onset[i] + 21)
+                lo, hi = t + 1, min(t + CONFIRM_WINDOW, T - 1) + 1
+                if lo >= hi:
+                    continue
+                window = np.arange(lo, hi)
+                hits = window[observed[i, window] & (Y[i, window] - base_mean[i] >= CONFIRM_MARGIN)]
+                if hits.size:
+                    first = hits.min()
+                    n_confirmed[i] += 1
+                    days_sum[i] += (first - t)
+                    if is_true:
+                        confirmed_true[i] += 1
+                    else:
+                        confirmed_false[i] += 1
+
+        def ppv_fn(idx):
+            tp, fp = confirmed_true[idx].sum(), confirmed_false[idx].sum()
+            return tp / max(tp + fp, 1e-9)
+
+        def cfa_pm_fn(idx):
+            return confirmed_false[idx].sum() / (N_PERSONS * total_months)
+
+        def days_fn(idx):
+            return days_sum[idx].sum() / max(n_confirmed[idx].sum(), 1e-9)
+
+        return dict(PPV_confirmed_flags=mc_stat(ppv_fn, [N_PERSONS]),
+                    confirmed_false_flags_per_person_month=mc_stat(cfa_pm_fn, [N_PERSONS]),
+                    mean_days_to_confirmation=mc_stat(days_fn, [N_PERSONS]),
+                    ipw_identified=bool(identified),
+                    n_flags_total=int(n_flags_total),
+                    n_confirmed_total=int(n_confirmed.sum()),
+                    n_confirmed_true=int(confirmed_true.sum()),
+                    n_confirmed_false=int(confirmed_false.sum()))
+
+    out["d_confirmation_rule_DR"] = dict(
+        note="Ground truth per flag: true iff it falls in [onset, onset+21); confirmed iff a "
+             "probe in [t+1, t+7] is observed and reads >= 0.5 above the person's baseline-block "
+             "probe mean (section 4's confirmation rule). Family DR, A-fixed.",
+        random=confirmation_block("random"),
+        mixed=confirmation_block("mixed"),
+        triggered=confirmation_block("triggered"))
+
+    # ---- (e) IQR (spread) of person-level false-flag rates, A-fixed, default cell. ----
+    iqr_families = ["S", "VA", "SP", "BI", "AV", "DE", "CS"]
+    iqr_out = {}
+    for fam in iqr_families:
+        _, reason, alarm, _ = arch_run(fam, "default", "A-fixed")
+        iqr_out[fam] = fa_block(alarm, reason)["person_level_fa_rate_iqr"]
+    out["e_person_level_false_flag_rate_iqr"] = iqr_out
+
+    # ---- (f) median days to flag among detected, DR/DV (21 days from onset) and BD (the first 21
+    # tracked days, 28:49, per P9's own window -- BD's onset sits inside the baseline). A-fixed. ----
+    def dtd_block(fam):
+        panel = panel_for(fam, "default")
+        _, _, alarm, _ = arch_run(fam, "default", "A-fixed")
+        onset = panel["t0"]
+        n = alarm.shape[0]
+        if fam == "BD":
+            day_lo = np.full(n, float(BASELINE_DAYS))
+            day_hi = np.full(n, float(BASELINE_DAYS + 21))
+        else:
+            day_lo, day_hi = onset, onset + 21
+        dtd = _days_to_detect(alarm, onset, day_lo, day_hi)
+        stat = mc_stat(lambda idx: np.nanmedian(dtd[idx]), [N_PERSONS])
+        return dict(median_days_to_detect=stat, n_detected=int(np.sum(~np.isnan(dtd))))
+
+    out["f_median_days_to_detect_among_detected"] = {fam: dtd_block(fam) for fam in ("DR", "DV", "BD")}
+
+    # ---- (g) false flags per TOTAL person-month beside per TRACKED person-month, every family. ----
+    fa_totals = {}
+    for fam in FAMILIES:
+        _, reason, alarm, _ = arch_run(fam, "default", "A-fixed")
+        block = fa_block(alarm, reason)
+        fa_totals[fam] = dict(fa_per_tracked_person_month=block["fa_per_tracked_person_month"],
+                               fa_per_total_person_month=block["fa_per_total_person_month"])
+    out["g_false_flags_per_total_vs_tracked_person_month"] = fa_totals
+
+    # ---- (h) chance baseline: for each architecture (incl. probe-only), simulate a rule that
+    # flags on random TRACKED days on DR at the SAME realized false-flag rate that architecture
+    # gets on S, and report its sensitivity within 21 days beside the architecture's own observed
+    # DR sensitivity. CHOICE: simulated (not a Poisson-window closed form) -- one random draw per
+    # architecture from a fixed rng derived from eval_seed, not resampled inside mc_stat, exactly
+    # how every probe-schedule draw elsewhere in this file is handled; "tracked" uses that SAME
+    # architecture's own tracked-day pattern on the DR panel (reason == 0), so the chance rule
+    # only gets to flag where the real rule could have. ----
+    chance = {}
+    panel_dr_h = panel_for("DR", "default")
+    onset_h = panel_dr_h["t0"]
+    for arch_idx, arch in enumerate(ARCHS_FOR_H):
+        _, reason_s_h, alarm_s_h, _ = arch_run("S", "default", arch)
+        _, reason_dr_h, alarm_dr_h, _ = arch_run("DR", "default", arch)
+        fa_rate_s_h = fa_rate_for_alarm(alarm_s_h, reason_s_h)
+        p_day = fa_rate_s_h / 30.0
+        tracked_dr_h = np.zeros_like(reason_dr_h, dtype=bool)
+        tracked_dr_h[:, BASELINE_DAYS:] = (reason_dr_h[:, BASELINE_DAYS:] == 0)
+        rng_chance = np.random.default_rng(eval_seed(prereg_sha, "DR", "default") + 5000 + arch_idx)
+        chance_alarm = (rng_chance.random(alarm_dr_h.shape) < p_day) & tracked_dr_h
+        chance[arch] = dict(
+            realized_fa_per_tracked_person_month_on_S=float(fa_rate_s_h),
+            chance_sensitivity_within_21d=sens_stat(chance_alarm, onset_h),
+            observed_sensitivity_within_21d=sens_stat(alarm_dr_h, onset_h))
+    out["h_chance_baseline_sensitivity_vs_observed"] = dict(
+        note="Chance rule: independent random flags on DR's own tracked days (per this "
+             "architecture), at the per-day rate implied by that architecture's realized "
+             "false-flag rate on S; simulated once per architecture (not a Poisson closed form).",
+        by_architecture=chance)
+
+    # ---- (i) realized false flags per tracked and per total person-month on S, every
+    # architecture (incl. probe-only and pop), with the IQR across persons. ----
+    s_fa_by_arch = {}
+    for arch in ARCHS_FOR_H:
+        _, reason_s_i, alarm_s_i, _ = arch_run("S", "default", arch)
+        s_fa_by_arch[arch] = fa_block(alarm_s_i, reason_s_i)
+    out["i_realized_false_flags_on_S_by_architecture"] = s_fa_by_arch
+
+    # ---- (j) P3's reset cost: A-fixed DR sensitivity for onsets landing inside the 14-day
+    # re-baseline window after a logged version change, vs with no version change. Families are
+    # mutually exclusive scenario channels (sample_events only sets av_day for AV/AV2, t0 only for
+    # DR/DV/BD) -- checked programmatically below rather than assumed. ----
+    dr_panel_j = panel_for("DR", "default")
+    av_panel_j = panel_for("AV", "default")
+    dr_has_version_change = bool(np.any(~np.isnan(dr_panel_j["av_day"]) & dr_panel_j["av_logged"]))
+    av_has_drift_onset = bool(np.any(~np.isnan(av_panel_j["t0"])))
+    assert not dr_has_version_change and not av_has_drift_onset, (
+        "a combined drift/version-change panel unexpectedly exists -- families were assumed to be "
+        "mutually exclusive scenario channels (sample_events only sets av_day for AV/AV2, t0 only "
+        "for DR/DV/BD); j_p3_reset_cost's 'not computable' reason below no longer holds and this "
+        "metric needs an actual computation, not just the fixed reason string."
+    )
+    out["j_p3_reset_cost"] = dict(
+        computable=False,
+        reason="not computable from the frozen panels: families are mutually exclusive "
+               "scenario channels -- DR's av_day/av_logged are all-NaN/False (no version-change "
+               "event is generated for the DR family) and AV's t0 is all-NaN (no drift onset is "
+               "generated for the AV family), so no frozen panel has both a drift onset and a "
+               "logged version change to measure the re-baseline window's sensitivity cost "
+               "against.")
+
+    # ---- (k) the `current` control's own value in the default cell (slope, corr vs all-days),
+    # family S, A-fixed -- distinct from the isolated common-lam/pop-z-scaling mechanism check_c
+    # exercises (score()'s own --check (c) / P4's current_check_isolated_mechanism). This is the
+    # ordinary `current` schedule run on the same S/A-fixed panel used throughout, reported with
+    # no threshold, per PREREG P4's own text ("in the default cell its value is reported without
+    # a threshold"). ----
+    panel_k = panel_for("S", "default")
+    Ck, reason_k, alarm_k, band_k = arch_run("S", "default", "A-fixed")
+    Yk, respk = panel_k["Y"], panel_k["responded"]
+    post_mask_k = np.zeros_like(reason_k, dtype=bool)
+    post_mask_k[:, BASELINE_DAYS:] = True
+    all_mask_k = post_mask_k & ~np.isnan(Ck)
+    rng_k = np.random.default_rng(eval_seed(prereg_sha, "S", "default") + 6000)
+    probed_k, prop_k, id_k = probe_schedule(rng_k, "current", Ck, band_k, c_star=P["c_star"])
+    obs_k = probed_k & respk & ~np.isnan(Ck) & post_mask_k
+    sa_k = _pstats(all_mask_k, Ck, Yk)
+    sc_k = _pstats(obs_k, Ck, Yk)
+    out["k_current_control_default_cell"] = dict(
+        note="Ordinary `current` schedule (probe when C_t > c*) on family S / A-fixed / default "
+             "cell; reported without a threshold, per PREREG P4's own text.",
+        all_days=dict(slope=mc_stat(lambda idx: _pslope(sa_k, idx), [N_PERSONS]),
+                       corr=mc_stat(lambda idx: _pcorr_unweighted(sa_k, idx), [N_PERSONS])),
+        current=dict(slope=mc_stat(lambda idx: _pslope(sc_k, idx), [N_PERSONS]),
+                      corr=mc_stat(lambda idx: _pcorr_unweighted(sc_k, idx), [N_PERSONS])),
+        ipw_identified=bool(id_k))
+
+    # ---- (l) pop's DR sensitivity and S false flags -- pulled from (h)/(i) above (pop is one of
+    # ARCHS_FOR_H in both), not recomputed. ----
+    out["l_pop_architecture"] = dict(
+        DR_sensitivity_within_21d=chance["pop"]["observed_sensitivity_within_21d"],
+        S_false_flags=dict(
+            fa_per_tracked_person_month=s_fa_by_arch["pop"]["fa_per_tracked_person_month"],
+            fa_per_total_person_month=s_fa_by_arch["pop"]["fa_per_total_person_month"]))
+
+    # ---- (m) kappa=0.3 cell: A-fixed DR sensitivity, abstention share, and false flags, vs
+    # kappa=0 (the default cell). Abstention shares reuse the (b) block's DR entries. ----
+    kappa_sens, kappa_fa = {}, {}
+    for cell_m, label_m in (("default", "kappa_0"), ("kappa03", "kappa_0_3")):
+        panel_m = panel_for("DR", cell_m)
+        _, reason_m, alarm_m, _ = arch_run("DR", cell_m, "A-fixed")
+        onset_m = panel_m["t0"]
+        kappa_sens[label_m] = sens_stat(alarm_m, onset_m)
+        block = fa_block(alarm_m, reason_m)
+        kappa_fa[label_m] = dict(fa_per_tracked_person_month=block["fa_per_tracked_person_month"],
+                                  fa_per_total_person_month=block["fa_per_total_person_month"])
+    out["m_kappa_0_3_vs_kappa_0_cell_DR"] = dict(
+        DR_sensitivity_within_21d=kappa_sens,
+        DR_false_flags=kappa_fa,
+        DR_abstention_share=dict(kappa_0=abstention["DR"], kappa_0_3=abstention_dr_kappa03))
+
+    # ---- (n) P6 indicator-5 sign-flip check in the pi_rises_with_D cell: the simulated
+    # within-person validity itself (raw r(X5,D) and filtered r(Xfiltered5,D)), person-averaged
+    # with a bootstrap interval -- not the attenuation-ratio scale P6 itself reports. mu_M5 = -1.0
+    # sits BELOW indicator 5's own mean, opposite in sign to indicator 4's mu_M4 case (which P6
+    # already flags as a positive spurious coupling), so this checks for a sign flip rather than
+    # just extra attenuation. Reuses the same per-person qualifying-list bootstrap P6 uses
+    # (variable-length list, not N_PERSONS). ----
+    panel_n = panel_for("S", "pi_rises_with_D")
+    used_n, D_n = panel_n["used"], panel_n["D"]
+    X5_n, Xf5_n, H5_n = (panel_n["X"][:, :, IDX_NEGSELF], panel_n["X_filtered"][:, :, IDX_NEGSELF],
+                          panel_n["H"][:, :, IDX_NEGSELF])
+    rX_list, rXf_list, rH_list = [], [], []
+    for i in range(N_PERSONS):
+        ok = used_n[i]
+        if ok.sum() < 10:
+            continue
+        d = D_n[i, ok]
+        if d.std() < 1e-9:
+            continue
+        x, xf, h = X5_n[i, ok], Xf5_n[i, ok], H5_n[i, ok]
+        if x.std() > 1e-9:
+            rX_list.append(np.corrcoef(x, d)[0, 1])
+        if xf.std() > 1e-9:
+            rXf_list.append(np.corrcoef(xf, d)[0, 1])
+        if h.std() > 1e-9:
+            rH_list.append(np.corrcoef(h, d)[0, 1])
+    rX_arr, rXf_arr, rH_arr = np.array(rX_list), np.array(rXf_list), np.array(rH_list)
+    out["n_indicator5_validity_pi_rises_with_D"] = dict(
+        note="Person-averaged within-person correlation of indicator 5 (negative self-reference) "
+             "with D, in the pi_rises_with_D cell, family S -- raw (X) and authorship-filtered "
+             "(X_filtered, mixed with pi'); r(H5,D), the unmixed reference, is included for scale.",
+        raw_validity_corr_X5_D=mc_stat(lambda idx: np.nanmean(rX_arr[idx]), [len(rX_arr)], seed=9),
+        filtered_validity_corr_X5_D=mc_stat(lambda idx: np.nanmean(rXf_arr[idx]), [len(rXf_arr)], seed=9),
+        reference_unmixed_corr_H5_D=mc_stat(lambda idx: np.nanmean(rH_arr[idx]), [len(rH_arr)], seed=9),
+        n_persons_raw=int(len(rX_arr)), n_persons_filtered=int(len(rXf_arr)))
+
+    # ---- (o) analytic P6 attenuation formula evaluated at the pilot's own parameter sets (read
+    # from pilot/indicator4_params.json, never hard-coded), both raw and authorship-filtered
+    # (pi -> pi'). Population-level formula (E[pi] etc from the Beta(10 pi_bar, 10(1-pi_bar))
+    # distribution directly) -- the VH=1 idealization check_d's own "beta-pilot" case already uses
+    # (reproduces its ~0.235 for the entry-level parameters), not the per-person VH-normalized
+    # version P6/attenuation_person compute. ----
+    def att_formula_value(pi_bar_v, kappa_v, delta_v):
+        Epi = pi_bar_v
+        Varpi = pi_bar_v * (1 - pi_bar_v) / 11.0  # exact: Beta(10 pi_bar, 10(1-pi_bar)), a+b=10
+        Epi2 = Varpi + Epi ** 2
+        return _att(Epi, Epi2, Varpi, kappa_v, delta_v)
+
+    def att_formula_value_filtered(pi_bar_v, kappa_v, delta_v, n=2_000_000, seed=4):
+        # pi' = 0.1 pi / (0.1 pi + 0.95 (1 - pi)) has no closed-form Beta moments; estimated from
+        # a large, deterministic Monte Carlo draw (not an eval-seed/simulated-person quantity).
+        rng_o = np.random.default_rng(seed)
+        pi_o = rng_o.beta(10 * pi_bar_v, 10 * (1 - pi_bar_v), n)
+        pip_o = 0.1 * pi_o / (0.1 * pi_o + 0.95 * (1 - pi_o))
+        Epi, Epi2, Varpi = pip_o.mean(), (pip_o ** 2).mean(), pip_o.var()
+        E1mpi2 = ((1 - pip_o) ** 2).mean()
+        return (1 - Epi) / np.sqrt(E1mpi2 + Epi2 * kappa_v + Varpi * delta_v ** 2)
+
+    pilot_params = json.loads((HERE.parent / "pilot" / "indicator4_params.json").read_text())
+    mt_o, dl_o = pilot_params["main_thread"], pilot_params["day_level_main_thread"]
+    o_sets = {
+        "entry_level_main_thread": dict(pi_bar=mt_o["pi_bar_daymean"], kappa=mt_o["kappa_a"],
+                                         delta=mt_o["mu_M4_humanSD"]),
+        "day_level_main_thread": dict(pi_bar=dl_o["pi_bar_daymean"], kappa=dl_o["kappa_a_day"],
+                                       delta=dl_o["mu_M4_day"]),
+    }
+    o_out = {}
+    for label, prm in o_sets.items():
+        o_out[label] = dict(
+            pi_bar=prm["pi_bar"], kappa=prm["kappa"], delta=prm["delta"],
+            att_formula_raw=float(att_formula_value(prm["pi_bar"], prm["kappa"], prm["delta"])),
+            att_formula_filtered=float(att_formula_value_filtered(prm["pi_bar"], prm["kappa"], prm["delta"])))
+    out["o_analytic_attenuation_pilot_params"] = dict(
+        note="Att = (1 - E pi) / sqrt(E[(1-pi)^2] + E[pi^2] kappa + Var(pi) delta^2), pi ~ "
+             "Beta(10 pi_bar, 10(1-pi_bar)); E[pi]/Var(pi) in closed form (E[pi]=pi_bar, "
+             "Var(pi)=pi_bar(1-pi_bar)/11 since the Beta's a+b=10 always). Filtered substitutes "
+             "pi' = 0.1 pi / (0.1 pi + 0.95 (1-pi)) throughout; pi' has no closed-form moments, so "
+             "they are estimated from a 2,000,000-draw Monte Carlo integral (deterministic, seed "
+             "4) rather than simulated persons. Parameters are read from "
+             "pilot/indicator4_params.json, not hard-coded.",
+        params=o_out)
+
+    metrics_out = {"prereg_sha256": prereg_sha, "pi_bar": pi_bar, "kappa_a4": kappa_a4,
+                   "mu_m4": mu_m4, "reporting_only": True, "metrics": out}
+    (HERE / "metrics.json").write_text(json.dumps(metrics_out, indent=2, default=float))
+
+    md = ["# sim/METRICS.md", "", "REPORTING ONLY: PREREG section 5 metrics that `score()` does",
+          "not output. No thresholds and no verdicts are computed or implied here -- every number",
+          "below is a plain report, with a 95% Monte Carlo interval from a 2000-draw person",
+          "bootstrap (`mc_stat`), exactly as score()'s predictions use. \"Flag\" is this file's word",
+          "for a CUSUM alarm; \"tracked\" person-months count only days the layer did not abstain,",
+          "\"total\" person-months count every post-baseline day regardless of abstention.", ""]
+
+    def section(title, body_lines):
+        md.append(f"## {title}")
+        md.append("")
+        md.extend(body_lines)
+        md.append("")
+
+    def jb(obj):
+        return ["```json", json.dumps(obj, indent=2, default=float), "```"]
+
+    # One section per `out` entry, in insertion order (a) through (o): the heading is the key
+    # itself, followed by the entry's JSON -- which already carries its own "note" field wherever
+    # one applies -- instead of a 15 hand-written title/blurb pair kept in sync with `out` by hand.
+    for key, value in out.items():
+        section(key, jb(value))
+
+    (HERE / "METRICS.md").write_text("\n".join(md))
+    return metrics_out
+
+
+# ----------------------------------------------------------------------------------------------
 # CLI
 # ----------------------------------------------------------------------------------------------
 def main():
@@ -1958,14 +2502,15 @@ def main():
     if args and args[0] == "tune":
         run_tune()
         return
-    if args and args[0] == "score":
+    if args and args[0] in ("score", "metrics"):
+        cmd = args[0]
         sha = None
         if "--prereg-sha" in args:
             sha = args[args.index("--prereg-sha") + 1]
         if not sha:
-            print("score requires --prereg-sha <sha256>", file=sys.stderr)
+            print(f"{cmd} requires --prereg-sha <sha256>", file=sys.stderr)
             sys.exit(2)
-        score(sha)
+        (score if cmd == "score" else metrics)(sha)
         return
     print(__doc__)
 

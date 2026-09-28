@@ -181,3 +181,7 @@ intervals matching the audit's own faithful re-implementation (`audit_out.json`,
 within rounding/bootstrap-seed noise, for every prediction. Final verdicts: P1b and P8 PASS; P1, P2,
 P3, P4, P5, P6, P7, P9, P10 FAIL -- identical to the audit's predicted "after BUG fixes + interval
 rule" table, and no run-1 FAIL becomes a PASS.
+
+## 7. `metrics` subcommand (reporting only, added after run-2)
+
+- reporting-only addition: `metrics` subcommand outputs the PREREG section 5 metrics that score() omitted; no verdict depends on them; run after the run-2 results commit 6c17e0c.
