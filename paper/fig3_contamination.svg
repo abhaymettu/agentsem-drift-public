@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 830" width="1200" height="830" font-family='system-ui, -apple-system, "Segoe UI", sans-serif' role="img" aria-labelledby="svgtitle svgdesc">
+<title id="svgtitle">Who wrote the "user" stream: contamination quantities</title>
+<desc id="svgdesc">Left: share of user-role entries and characters by authorship class, one person's agent-usage corpus. Right: day-level correlation between the naive, middle, and human-typed-only versions of three indicators; no indicator level or time series is shown, only agreement between authorship filters.</desc>
+<rect x="0" y="0" width="1200" height="830" fill="#fcfcfb"/>
+<text x="600.00" y="38.00" font-size="20" fill="#0b0b0b" text-anchor="middle" font-weight="600" style="">Who wrote the "user" stream: contamination quantities</text>
+<text x="600.00" y="60.00" font-size="12.5" fill="#898781" text-anchor="middle" font-weight="normal" style="font-style:italic;">Section 4 corpus audit: authorship classes and cross-filter agreement, not levels over time</text>
+<text x="60.00" y="138.00" font-size="14.5" fill="#0b0b0b" text-anchor="start" font-weight="600" style="">Share of the user-role stream, by authorship class</text>
+<line x1="228.00" y1="160.00" x2="228.00" y2="720.00" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="228.00" y="740.00" font-size="11.5" fill="#898781" text-anchor="middle" font-weight="normal" style="">0%</text>
+<line x1="318.82" y1="160.00" x2="318.82" y2="720.00" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="318.82" y="740.00" font-size="11.5" fill="#898781" text-anchor="middle" font-weight="normal" style="">20%</text>
+<line x1="409.64" y1="160.00" x2="409.64" y2="720.00" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="409.64" y="740.00" font-size="11.5" fill="#898781" text-anchor="middle" font-weight="normal" style="">40%</text>
+<line x1="500.47" y1="160.00" x2="500.47" y2="720.00" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="500.47" y="740.00" font-size="11.5" fill="#898781" text-anchor="middle" font-weight="normal" style="">60%</text>
+<line x1="228.00" y1="720.00" x2="570.00" y2="720.00" stroke="#c3c2b7" stroke-width="1.5" stroke-linecap="round"/>
+<text x="60.00" y="220.00" font-size="12.5" fill="#52514e" text-anchor="start" font-weight="normal" style="">tool result</text>
+<rect x="228.00" y="199.00" width="297.39" height="15.00" rx="3" fill="#2a78d6"/>
+<rect x="228.00" y="218.00" width="249.94" height="15.00" rx="3" fill="#2a78d6"/>
+<rect x="228.00" y="218.00" width="249.94" height="15" rx="3" fill="#2a78d6" fill-opacity="0.55"/>
+<text x="533.39" y="211.00" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" style="">65.5%</text>
+<text x="485.94" y="230.00" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" style="">55.0%</text>
+<text x="60.00" y="332.00" font-size="12.5" fill="#52514e" text-anchor="start" font-weight="normal" style="">subagent (sidechain)</text>
+<rect x="228.00" y="311.00" width="118.93" height="15.00" rx="3" fill="#eb6834"/>
+<rect x="228.00" y="330.00" width="154.74" height="15.00" rx="3" fill="#eb6834"/>
+<rect x="228.00" y="330.00" width="154.74" height="15" rx="3" fill="#eb6834" fill-opacity="0.55"/>
+<text x="354.93" y="323.00" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" style="">26.2%</text>
+<text x="390.74" y="342.00" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" style="">34.1%</text>
+<text x="60.00" y="444.00" font-size="12.5" fill="#52514e" text-anchor="start" font-weight="normal" style="">harness/hook injected</text>
+<rect x="228.00" y="423.00" width="32.23" height="15.00" rx="3" fill="#1baf7a"/>
+<rect x="228.00" y="442.00" width="41.25" height="15.00" rx="3" fill="#1baf7a"/>
+<rect x="228.00" y="442.00" width="41.25" height="15" rx="3" fill="#1baf7a" fill-opacity="0.55"/>
+<text x="268.23" y="435.00" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" style="">7.1%</text>
+<text x="277.25" y="454.00" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" style="">9.1%</text>
+<text x="60.00" y="556.00" font-size="12.5" fill="#52514e" text-anchor="start" font-weight="normal" style="">automated prompt</text>
+<rect x="228.00" y="535.00" width="1.33" height="15.00" rx="3" fill="#eda100"/>
+<rect x="228.00" y="554.00" width="1.63" height="15.00" rx="3" fill="#eda100"/>
+<rect x="228.00" y="554.00" width="1.63" height="15" rx="3" fill="#eda100" fill-opacity="0.55"/>
+<text x="237.33" y="547.00" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" style="">0.3%</text>
+<text x="237.63" y="566.00" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" style="">0.4%</text>
+<text x="60.00" y="668.00" font-size="12.5" fill="#52514e" text-anchor="start" font-weight="normal" style="">human-typed</text>
+<rect x="228.00" y="647.00" width="4.22" height="15.00" rx="3" fill="#e87ba4"/>
+<rect x="228.00" y="666.00" width="6.54" height="15.00" rx="3" fill="#e87ba4"/>
+<rect x="228.00" y="666.00" width="6.54" height="15" rx="3" fill="#e87ba4" fill-opacity="0.55"/>
+<text x="240.22" y="659.00" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" style="">0.9%</text>
+<text x="242.54" y="678.00" font-size="10.5" fill="#898781" text-anchor="start" font-weight="normal" style="">1.4%</text>
+<rect x="228.00" y="760.00" width="14.00" height="10.00" rx="2" fill="#898781"/>
+<text x="248.00" y="770.00" font-size="12" fill="#52514e" text-anchor="start" font-weight="normal" style="">share of entries</text>
+<rect x="378.00" y="760.00" width="14" height="10" rx="2" fill="#898781" fill-opacity="0.55"/>
+<text x="398.00" y="770.00" font-size="12" fill="#52514e" text-anchor="start" font-weight="normal" style="">share of characters</text>
+<text x="650.00" y="138.00" font-size="14.5" fill="#0b0b0b" text-anchor="start" font-weight="600" style="">Agreement between authorship filters, by indicator</text>
+<line x1="650.00" y1="601.71" x2="1140.00" y2="601.71" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="640.00" y="605.71" font-size="11.5" fill="#898781" text-anchor="end" font-weight="normal" style="">0</text>
+<line x1="650.00" y1="496.54" x2="1140.00" y2="496.54" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="640.00" y="500.54" font-size="11.5" fill="#898781" text-anchor="end" font-weight="normal" style="">0.25</text>
+<line x1="650.00" y1="391.37" x2="1140.00" y2="391.37" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="640.00" y="395.37" font-size="11.5" fill="#898781" text-anchor="end" font-weight="normal" style="">0.5</text>
+<line x1="650.00" y1="286.20" x2="1140.00" y2="286.20" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="640.00" y="290.20" font-size="11.5" fill="#898781" text-anchor="end" font-weight="normal" style="">0.75</text>
+<line x1="650.00" y1="181.03" x2="1140.00" y2="181.03" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="640.00" y="185.03" font-size="11.5" fill="#898781" text-anchor="end" font-weight="normal" style="">1</text>
+<line x1="650.00" y1="601.71" x2="1140.00" y2="601.71" stroke="#c3c2b7" stroke-width="1.5" stroke-linecap="round"/>
+<rect x="690.67" y="222.04" width="22.00" height="379.66" rx="3" fill="#2a78d6"/>
+<text x="701.67" y="216.04" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" style="">0.90</text>
+<rect x="720.67" y="207.75" width="22.00" height="393.96" rx="3" fill="#eb6834"/>
+<text x="731.67" y="201.75" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" style="">0.94</text>
+<rect x="750.67" y="222.81" width="22.00" height="378.89" rx="3" fill="#1baf7a"/>
+<text x="761.67" y="216.81" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" style="">0.90</text>
+<text x="731.67" y="652.00" font-size="12" fill="#52514e" text-anchor="middle" font-weight="normal"><tspan x="731.67" dy="0.00">late-activity share</tspan></text>
+<rect x="854.00" y="552.51" width="22.00" height="49.19" rx="3" fill="#2a78d6"/>
+<text x="865.00" y="546.51" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" style="">0.12</text>
+<rect x="884.00" y="181.26" width="22.00" height="420.44" rx="3" fill="#eb6834"/>
+<text x="895.00" y="175.26" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" style="">1.00</text>
+<rect x="914.00" y="555.45" width="22.00" height="46.26" rx="3" fill="#1baf7a"/>
+<text x="925.00" y="549.45" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" style="">0.11</text>
+<text x="895.00" y="652.00" font-size="12" fill="#52514e" text-anchor="middle" font-weight="normal"><tspan x="895.00" dy="0.00">session fragmentation</tspan></text>
+<rect x="1017.33" y="482.42" width="22.00" height="119.29" rx="3" fill="#2a78d6"/>
+<text x="1028.33" y="476.42" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" style="">0.28</text>
+<rect x="1047.33" y="601.71" width="22.00" height="7.26" rx="3" fill="#eb6834"/>
+<text x="1058.33" y="624.97" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" style="">-0.02</text>
+<rect x="1077.33" y="499.25" width="22.00" height="102.46" rx="3" fill="#1baf7a"/>
+<text x="1088.33" y="493.25" font-size="10" fill="#898781" text-anchor="middle" font-weight="normal" style="">0.24</text>
+<text x="1058.33" y="652.00" font-size="12" fill="#52514e" text-anchor="middle" font-weight="normal"><tspan x="1058.33" dy="0.00">message length</tspan><tspan x="1058.33" dy="14.00">(mean log chars)</tspan></text>
+<rect x="650.00" y="90.00" width="14.00" height="10.00" rx="2" fill="#2a78d6"/>
+<text x="670.00" y="100.00" font-size="12" fill="#52514e" text-anchor="start" font-weight="normal" style="">naive vs typed</text>
+<rect x="790.00" y="90.00" width="14.00" height="10.00" rx="2" fill="#eb6834"/>
+<text x="810.00" y="100.00" font-size="12" fill="#52514e" text-anchor="start" font-weight="normal" style="">naive vs middle</text>
+<rect x="930.00" y="90.00" width="14.00" height="10.00" rx="2" fill="#1baf7a"/>
+<text x="950.00" y="100.00" font-size="12" fill="#52514e" text-anchor="start" font-weight="normal" style="">middle vs typed</text>
+</svg>

@@ -16,14 +16,14 @@ machine-authored text in the "user" stream, score-contingent agent help, silent 
 changes, and criterion samples triggered by the score itself. A simulation, frozen and hashed before
 scoring, tests these threats on eleven families of synthetic persons against eleven frozen predictions,
 with every magnitude conditional on invented parameters. Two predictions hold. A criterion schedule
-triggered by the change statistic attenuated the validity slope by 24.8 percent (16.1 percent if the
-trigger uses the previous day's statistic), and the frozen design could not have shown weighted recovery
-at 1,000 persons. Criterion non-response tied to the state added 12 to 16 percent slope bias, short of
+triggered by the change statistic attenuated the validity slope by 24.8 percent, about as much as
+probing whenever the current score was high (25.4 percent), so the attenuation is ordinary selection on
+the score; the frozen design could not have shown weighted recovery at 1,000 persons. Criterion non-response tied to the state added 12 to 16 percent slope bias, short of
 the frozen threshold on the interval, and weighting on observables did not remove it. When the
 agent-authored share rose with the state, one indicator's validity changed sign (from 0.34 to -0.01).
 The best rule flagged 20 percent of planted drifts within 21 days at one false flag per six tracked
 person-months, 3.7 times its chance level; P8, the one prediction proper that passed, compared it with a
-criterion-only rule that was barely above chance (0.019 against 0.015). A metadata-only audit of one heavy-automation
+criterion-only rule indistinguishable from chance. A metadata-only audit of one heavy-automation
 user's coding-agent transcripts found that 0.93 percent of user-role entries were typed by the person.
 The audit is n = 1 and descriptive. The contribution is the argument, the design requirements it implies
 for a consented validation study, and an existence proof that the scoring inference can fail badly.
@@ -37,8 +37,7 @@ when, how long their messages were, how often they switched sessions, and what t
 It is natural to ask whether that trace could register when the person's wellbeing and functioning move
 away from their own usual range.
 
-The existing work that comes closest does one of three things. The first uses dialogue that is already
-about mental health. Tieleman et al. (2026) fine-tune a language model to estimate a questionnaire-scale
+The closest work does one of three things. The first uses dialogue already about mental health. Tieleman et al. (2026) fine-tune a language model to estimate a questionnaire-scale
 severity score from AI mental-health dialogue (final N = 3,953, held-out N = 842, r = .80). <!-- cite: -->
 The second elicits answers: ALBA (Varadarajan et al., 2024) and MAQuA (Varadarajan et al., 2026) choose
 questions adaptively and score them against a full questionnaire, and Yun et al. (2024) use a language
@@ -47,29 +46,28 @@ conversations or people cross-sectionally. Anthropic (2025) classified 131,484 o
 conversations as affective (2.9 percent of use) with an aggregate clustering tool and stated that it had
 no longitudinal data. Eichstaedt et al. (2018) predicted a chart-recorded condition from earlier
 social-media language between persons (N = 683, AUC = 0.72). <!-- cite: -->
-The OpenAI and MIT Media Lab study (2025) varied features of a voice product and measured self-reported
-loneliness, socialization and emotional dependence over four weeks.
+The OpenAI and MIT Media Lab study (2025) varied a voice product's features and measured self-reported
+loneliness and emotional dependence over four weeks.
 
 None of these asks whether a within-person change in a score computed from ordinary agent use is a
 change in the person. The passive-sensing literature gives a reason to ask first: in GLOBEM, a
 multi-year, multi-site phone-sensing dataset of more than 700 user-years, existing models did not
 generalize across cohorts or years (Xu et al., 2023). Work on dense experience sampling shows that
 within-person dynamics can carry information before a transition (Helmich et al., 2023), but it rests
-on intensive self-report, not on a trace the person did not produce for measurement. In my searches I
-found no study that validates within-person change inferred from general-purpose assistant logs against
-a repeated, independent criterion. That describes those searches, not the literature as a whole.
+on intensive self-report, not on a trace the person did not produce for measurement. My searches found
+no study validating within-person change inferred from general-purpose assistant logs against a
+repeated, independent criterion.
 
-Agent traces make the validity question harder than it is for a phone sensor, for reasons unrelated to
-how capable language models are. The agent writes much of what ends up in the "user" stream, the
-agent's help changes what the person does next, and the agent's software changes under the person every
-few days. A score can move because any of those moved.
+Agent traces make the validity question harder than it is for a phone sensor. The agent writes much of
+what ends up in the "user" stream, its help changes what the person does next, and its software changes
+under the person every few days. A score can move because any of those moved.
 
 Section 2 lays out the validity argument and its agent-specific threats. Section 3 reports a
 simulation of those threats, frozen and hashed before scoring. Section 4 audits the scoring inference on
 my own agent transcripts, using metadata only; it measures contamination and estimates no state.
 Section 5 turns the three into requirements for a consented validation study, section 6 states the
-scope, and section 7 is the single translational paragraph. The paper builds no system, proposes no
-product, and makes no claim about any clinical condition; the agent is studied as a measurement context.
+scope, and section 7 is the single translational paragraph. The paper builds no system or product
+and makes no claim about any clinical condition.
 
 ---
 
@@ -77,39 +75,37 @@ product, and makes no claim about any clinical condition; the agent is studied a
 
 ### 2.1 Construct, interpretation and frame
 
-**Construct.** The target is a single latent state that the simulation labels wellbeing and
-functioning, standardized within person, varying over days to weeks. It is not a clinical construct, and
-nothing here maps it to one. Its orientation follows the generator: higher values are the direction of
-concern, so a rise in the state lowers the probability of using the agent and of answering a criterion
-prompt and, in one cell, raises the share of text the agent writes. The change statistic is one-sided
-and targets rises. Declines are out of scope.
+**Construct.** A single latent, non-clinical state that the simulation labels wellbeing and
+functioning, standardized within person, varying over days to weeks. Higher values are the direction of
+concern: a rise lowers the probability of using the agent and of answering a criterion prompt and, in
+one cell, raises the share of text the agent writes. The change statistic is one-sided and targets
+rises; declines are out of scope.
 
 **Interpretation under test.**
 
 > A sustained rise in person i's trace-derived score above that person's own baseline indicates a rise
 > in person i's state.
 
-**Frame.** I use the argument-based approach (Kane, 2013): state the interpretation as a chain of
-inferences, each resting on assumptions, and collect backing for the assumptions that are least
-plausible. The chain is conjunctive: the interpretation holds only if every inference holds. Validity is
+**Frame.** I use the argument-based approach (Kane, 2013): state the interpretation as a conjunctive
+chain of inferences and collect backing for the least plausible assumptions. Validity is
 a property of an interpretation of scores (Messick, 1995; AERA, APA and NCME, 2014), and Messick's two
 named threats, construct-irrelevant variance and construct underrepresentation, organize most of what
 follows. Borsboom et al. (2004) take a different position, that a score is valid for an attribute only
 if variation in the attribute causes variation in the score. I use the argument-based structure to
 organize the evidence and the causal condition to say what the scoring inference requires, without
 claiming the two views agree. Four inferences carry the interpretation: scoring (section 2.2),
-generalization (2.3), extrapolation (2.4, with its backing in 2.5), and use (2.6). Table 2 in section
-2.7 maps each to its threat, its evidence and the section of this paper that bears on it.
+generalization (2.3), extrapolation (2.4, with its backing in 2.5), and use (2.6). Table 2 (section 2.7)
+maps each to its threats, backing and evidence here.
 
 ### 2.2 Scoring: whose behaviour is this?
 
-**Inference.** An indicator computed from the user side of the transcript (message length, late-night
-activity, session fragmentation) is a summary of the person's behaviour.
+**Inference.** An indicator computed from the user side of the transcript summarizes the person's
+behaviour.
 
 **Threat.** Much of an agent transcript's user-role stream is not typed by the user: tool results,
 harness and hook injections, prompts sent by automated processes, subagent traffic, and agent drafts
-pasted back. Sessions can also run with no person present, which contaminates timing indicators: an
-automated job at 3 a.m. adds late-night activity that no one performed. Machine text is
+pasted back. Person-absent sessions also contaminate timing: an automated job at 3 a.m. adds late-night
+activity no one performed. Machine text is
 construct-irrelevant because its causal path to the indicator runs through delegation and automation
 rather than through the behaviour the indicator is meant to reflect. When the state drives delegation,
 that variance is partly caused by the state, which is why correlational validity evidence cannot expose
@@ -152,44 +148,39 @@ agent, in the help it gives, in the mix of work, or in whether the person used t
   change can be re-baselined; an unlogged one looks like drift.
 - *Help.* The agent's help changes the person's next behaviour. In an earlier simulation in this
   program (Mettu, 2026b, Study 1a), personalized help left a shadow in the logs that raised internal
-  consistency and fit while validity fell (in closed form), and a world with no person signal passed
+  consistency and fit while validity fell (in closed form; the simulation grid showed only a small
+  fall), and a world with no person signal passed
   internal consistency, fit and convergent checks. Reliability evidence cannot stand in for validity
   evidence, as also seen when language-model questionnaire responses reached high internal consistency
   while failing invariance against human baselines (Shen and Han, 2026).
-- *Context and non-state change.* One stream mixes coding, writing and personal use, and an indicator's
-  mean can differ by context; the mix can shift with no change in state. Workload spikes, vacations,
-  disengagement from the tool and broken logging can each move the score with no change in state.
-- *Usage missingness.* If use depends on the state, days without use are missing not at random
-  (Rubin, 1976), and no analysis of the observed days alone removes the resulting bias. The same
-  missingness weakens generalization (section 2.3), because scores exist only on used days. An
-  abstention rule trades coverage for protection, and the trade has to be reported.
-- *Construct underrepresentation.* An agent trace samples only agent-mediated behaviour. A change in
-  the state that shows up elsewhere in a person's life and not in how they use the agent is invisible
-  to every rule here.
+- *Context and non-state change.* An indicator's mean can differ between coding, writing and personal
+  use, and the mix can shift; workload spikes, vacations, disengagement and broken logging can each move
+  the score with no change in state.
+- *Usage missingness.* If use depends on the state, unused days are missing not at random (Rubin,
+  1976), and no analysis of used days alone removes the bias; it also weakens generalization (section
+  2.3). An abstention rule trades coverage for protection.
+- *Construct underrepresentation.* An agent trace samples only agent-mediated behaviour; a change that
+  shows up elsewhere in a person's life is invisible to every rule here.
 
 ### 2.5 Backing for extrapolation: how the criterion is sampled
 
-Extrapolation is backed by the relation between the score and an independent criterion. In Kane's
-terms, the way that criterion is sampled is a threat to the backing, not an inference of its own.
+Extrapolation is backed by the score's relation to an independent criterion; how that criterion is
+sampled threatens the backing and is not an inference of its own.
 
 **Criterion sampling.** If which days get a criterion depends on the score, the estimated validity is
-biased. The general result is old: selection on a variable related
-to the predictor changes the observed correlation (Pearson, 1903; Lawley, 1944), and the direct and
-indirect range-restriction cases and their corrections are standard in personnel selection (Thorndike,
-1949; case labels and typology as in Sackett and Yang, 2000), with a recent restatement as collider bias
-(Lamp and MacKinnon, 2024). The closest structure is verification bias: when a positive index test
-raises the chance that the reference standard is applied, accuracy estimates are biased, and weighting
-each verified case by the inverse of its verification probability corrects them (Begg and Greenes,
-1983). Outcome-dependent two-phase designs use the same family of corrections (Zhou et al., 2002; Tao et
-al., 2021), and in experience sampling, trigger design is known to change which contexts get sampled
-(Lathia et al., 2013), without an attenuation result or a correction.
+biased. Selection on a variable related to the predictor changes the observed correlation (Pearson,
+1903; Lawley, 1944); the range-restriction cases and corrections are standard in personnel selection
+(Thorndike, 1949; typology in Sackett and Yang, 2000), restated recently as collider bias (Lamp and
+MacKinnon, 2024). The closest structure is verification bias, corrected by weighting each verified case
+by the inverse of its verification probability (Begg and Greenes, 1983), and outcome-dependent two-phase
+designs use the same corrections (Zhou et al., 2002; Tao et al., 2021). In experience sampling, trigger
+design changes which contexts get sampled (Lathia et al., 2013).
 
-Here the trigger is dynamic. A schedule that asks for the criterion when a CUSUM on past composites is
-high selects on the predictor's own history, and past composites predict the current state beyond the
-current composite, so the slope is attenuated and the correlation range-restricted. As implemented in
-the simulation, the trigger uses the CUSUM after the day's composite is folded in, so it also selects on
-the current composite; the version that uses only the previous day's statistic is the one the
-history argument describes, and both are reported. A random floor with every occasion's selection
+A schedule that asks for the criterion when a CUSUM is high selects on the score. As implemented in the
+simulation, the CUSUM includes the day's composite, so the trigger selects on the current score as well
+as on its history; section 3.9 compares it with a schedule that selects on the current score alone. A
+trigger on the previous day's statistic would select on history only, which predicts the current state
+beyond the current composite. A random floor with every occasion's selection
 probability logged makes inverse-probability weighting possible; a trigger-only or fixed schedule does
 not, because some days have zero probability of a criterion.
 
@@ -216,7 +207,7 @@ first draft of this argument.
 | inference | main threats | backing needed | where in this paper | earlier link |
 |---|---|---|---|---|
 | scoring | machine-authored entries; person-absent sessions; state-driven delegation | entry-level provenance; machine share per indicator; naive vs filtered | section 4; section 3, P6 | link 1 |
-| generalization | baseline error; drift inside the baseline; varying indicator count; heterogeneity across persons | baseline and change-score reliability; person-level validity distribution | section 3, P9 and family BD | part of links 2 and 3 |
+| generalization | baseline error; drift inside the baseline; varying indicator count; heterogeneity across persons | baseline and change-score reliability; person-level validity distribution | section 3, P9, family BD; 3.8 | part of links 2 and 3 |
 | extrapolation | version, help and context non-invariance; non-state change; usage missing not at random; construct underrepresentation | invariance across contexts, versions and help; false flags by non-state family; sensitivity; abstention | section 3, P1 to P3, P7, P10, `kappa` cell | links 2 and 3 |
 | backing for extrapolation | score-triggered criterion sampling; criterion non-response | random floor with logged propensities; weighted and unweighted estimates | section 3, P4, P5 | link 4 |
 | use | score-contingent help; reactivity to flags and prompts | logged randomized help; logged prompts | section 3, targeted-help cells, P2 | not in the first draft |
@@ -233,10 +224,9 @@ The design, metrics and predictions were frozen before scoring as a committed fi
 freeze is a local commit, not an external registration. The design was written for a change-detection
 layer; seven minutes after the freeze, the project's direction was recorded as a measurement-validity
 study, and the simulation is read here as validity evidence. That reframing changed nothing in the frozen
-text. The scoring rules are candidates whose validity is under test, not products; the probe schedules
-are criterion-sampling designs for a future validation study, not an agent administering questions.
-Everything in this section is synthetic, and every magnitude is conditional on the invented parameters
-listed in section 6.
+text. The scoring rules are candidates under test, not products, and the probe schedules are
+criterion-sampling designs for a future validation study. Everything here is synthetic and conditional
+on the invented parameters listed in section 6.
 
 ### 3.2 Generator
 
@@ -259,9 +249,8 @@ construction, and the probability of answering falls with `D` at rate `m1`.
 
 **Families.** S (stable), DR (drift), VA (vacation), SP (workload sprint), BI (broken integration), AV
 (version change, logged for half), DE (disengagement), DV (drift overlapping a vacation), CS (context
-shift, no state change), BD (drift beginning inside the baseline), AV2 (unlogged version change on
-indicators 1 and 4). AV and DV were not used for tuning; CS, BD and AV2 are families the fixed rule was
-not designed for.
+shift), BD (drift beginning inside the baseline) and AV2 (unlogged version change on indicators 1 and
+4); the fixed rule was not designed for CS, BD or AV2.
 
 **Cells.** A default cell plus one-at-a-time variations: `kappa = 0.3`; `m1 = 0.5`; `m1 = 1.5`;
 help targeted on the previous day's composite; targeted help whose effect grows with the state
@@ -287,7 +276,7 @@ tuned per rule on family S, on a separate tuning seed, to one false flag per six
 - `probe-only`: a CUSUM on criterion answers alone, z-scored on a four-probe baseline block, random
   schedule, matched budget.
 
-Context is not adjusted by any rule; family CS measures that cost. Tuned thresholds (`sim/tuning.json`):
+No rule adjusts for context. Tuned thresholds (`sim/tuning.json`):
 `h` = 1.125 (`pop`), 1.739 (`A-naive`), 3.334 (`A-fixed`) and 22.949 (`probe-only`, after the
 post-freeze re-tune in section 3.6).
 
@@ -317,33 +306,29 @@ are not findings.
 
 Run 1 was scored first, at the freeze. A separate audit of the scoring code against the frozen text, run
 by an AI agent within the same project, found that run 1 decided every prediction on point estimates
-rather than on the interval rule, and that the code departed from the frozen text in four places: P1b
-divided by tracked rather than total person-months; P4 mixed the baseline probe block into the triggered
-and mixed samples, conditioned the all-days reference on response, and computed an unweighted
-correlation for the weighted estimate; P5 conditioned its reference slope on response; and the
-criterion-only rule in P8 was z-scored on about 22 baseline-window answers that its schedule never
-administers, instead of the four-probe block. Run 1 is kept unedited and superseded. Run 2 applies those
-fixes and nothing else; its code was committed at 22:04 CDT, 43 minutes after the freeze. The P8 fix
-changes the criterion-only threshold, so the frozen tuning procedure was re-run on the corrected code
-and the tuning seed, moving its `h` from 6.539 to 22.949; no evaluation-seed number was used. Run 1's P8 was 17.3 points [14.7, 19.8] and 7.12 days [6.34, 7.91]
-under the interval rule; run 2's is 17.8 [15.2, 20.4] and 7.73 [6.94, 8.49]. Every verdict the fixes
-changed went from PASS to FAIL (P6 and P10). Where the audit found the frozen text open to two readings,
-both are computed; the verdict uses the as-run reading, fixed before either was scored, and the
-alternative is reported beside it. For trigger timing, the alternative (the previous day's statistic) is
-the more natural reading for a real study, since a criterion prompt is decided before the day's data
-exist, and it is reported with equal weight in section 3.9.
+rather than on the interval rule and departed from the frozen text in four places: P1b's denominator
+(tracked instead of total person-months); P4's probe window, all-days reference and weighted
+correlation; P5's reference slope, which was conditioned on response; and P8's criterion-only rule,
+z-scored on about 22 baseline-window answers its schedule never administers instead of the four-probe
+block. Run 1 is kept unedited and superseded. Run 2, committed 43 minutes after the freeze, applies those
+fixes and nothing else. The P8 fix changes the criterion-only threshold, so the frozen tuning procedure
+was re-run on the corrected code and the tuning seed, moving its `h` from 6.539 to 22.949; no
+evaluation-seed number was used. Run 1's P8 was 17.3 points [14.7, 19.8] and 7.12 days [6.34, 7.91];
+run 2's is in Table 1. Every verdict the fixes changed went from PASS to FAIL (P6 and P10). Where the
+audit found the frozen text open to two readings, both are computed; the verdict uses the as-run
+reading, fixed before scoring, and the alternative is reported beside it. For trigger timing the
+alternative (the previous day's statistic) is the more natural reading for a real study, since a prompt
+is decided before the day's data exist, and it is discussed with equal weight in section 3.9.
 
 ### 3.7 Results
 
 Only P1b and P8 hold. The other nine fail, including three of the four construction checks.
 
-**Table 1. Predictions, score run 2.** Point estimate [95% Monte Carlo interval], 1,000 synthetic persons
-per family per cell; "cc" marks a construction check. Alternative readings: G2, pooled rather than
-person-averaged false-flag rate; G3, a flag before onset does not cancel a later detection; P4, trigger on
-the previous day's statistic; P6, validity rather than attenuation scale. Precision: "holds"; "clear miss"
-(interval wholly on the wrong side); "undecided" (interval straddles the threshold); "not decidable" (a
-"within X" interval wider than 2X, which no point estimate could pass at N = 1,000); "opposite" (interval
-wholly on the far side of the predicted direction).
+**Table 1. Predictions, score run 2.** Point [95% Monte Carlo interval], 1,000 persons per family per
+cell; "cc", construction check. Alternatives: G2, pooled false-flag rate; G3, a pre-onset flag does not
+cancel a later detection; P4, previous day's statistic; P6, validity scale. Precision: "clear miss",
+interval wholly on the wrong side; "undecided", interval straddles the threshold; "not decidable", a
+"within X" interval wider than 2X; "opposite", interval wholly beyond the predicted direction.
 
 | | statistic | threshold | run 2 | verdict | precision | alternative reading |
 |---|---|---|---|---|---|---|
@@ -371,9 +356,8 @@ wholly on the far side of the predicted direction).
 | P9 | BD sensitivity minus half of DR sensitivity | <= 0 | 0.174 [0.144, 0.203] | FAIL | opposite | G3: 0.142 [0.112, 0.173] |
 | P10 | CS / S false flags, A-fixed | >= 1.5 | 1.71 [1.48, 1.99] | FAIL | undecided | none |
 
-A prediction fails if any part fails. Every alternative reading gives the same verdict as the primary.
-P1's SP ablation ratio (A-naive over A-fixed without (iii)) is 1.047, so the workload component did not
-account for the SP difference. P5's "under 5 percent" is scored as the interval lying inside plus or
+A prediction fails if any part fails; every alternative reading gives the same verdict. P1's SP
+ablation ratio is 1.047, so the workload component did not account for the SP difference. P5's "under 5 percent" is scored as the interval lying inside plus or
 minus 5 percent. In the Bernoulli cell the filtered and unfiltered indicator 4 coincide because the
 residual share `pi'` equals `pi` when `pi` is 0 or 1.
 
@@ -382,18 +366,16 @@ residual share `pi'` equals `pi` when `pi` is 0 or 1.
 The frozen design also lists metrics that no prediction scores. They were computed from the run 2 panels
 after scoring, as reporting only, with no thresholds.
 
-**Sensitivity against false flags.** For A-fixed, sensitivity within 21 days rises as `h` tightens from
-0.667 (1.167 false flags per tracked person-month, sensitivity 0.057) to a peak of 0.240 [0.214, 0.268]
-at `h` = 2.128 (0.343 false flags), and then falls, to 0.202 at `h` = 3.134 (0.171) and 0.020 at `h` =
-10.002 (0.011). A-naive peaks at 0.198 [0.175, 0.224] at `h` = 1.347 (0.243 false flags). The fall at
-loose thresholds is produced by the as-run reading of the frozen sensitivity rule: a flag before onset
-makes the person a miss even when a later flag falls inside the window, and the looser the threshold,
-the more drift persons flag before onset. Under the alternative reading (G3), where a pre-onset flag counts
-only as a false flag, that reason for the fall disappears; the curve was not computed under that
-reading. At the tuned threshold, the alternative reading raises the P8 gap from 17.8 to 23.7 points.
+**Sensitivity against false flags.** A-fixed's sensitivity peaks at 0.240 [0.214, 0.268] at `h` =
+2.128 (0.343 false flags per tracked person-month) and falls on both sides: to 0.057 at `h` = 0.667
+(1.167 false flags) and 0.020 at `h` = 10.002 (0.011). A-naive peaks at 0.198 [0.175, 0.224]. The fall at
+loose thresholds is expected from the as-run sensitivity rule, under which a flag before onset makes the
+person a miss even when a later flag falls inside the window; under the alternative reading (G3) that
+reason disappears, but the curve was not computed under it.
 
 **Chance baselines.** For each rule, random flags at the rule's own realized false-flag rate on S, placed
-on DR's tracked days, give a chance sensitivity. A-fixed's 0.197 is 3.7 times its chance level of 0.053
+on DR's tracked days and scored with the same pre-onset exclusion and tracked-day definition as the
+observed sensitivity, give a chance sensitivity. A-fixed's 0.197 is 3.7 times its chance level of 0.053
 [0.039, 0.067]; A-naive's 0.154 is 2.4 times 0.063; `pop`'s 0.180 is 2.3 times 0.077; the ablations are
 1.8 to 3.1 times theirs. Probe-only's 0.019 [0.011, 0.028] is against a chance level of 0.015 [0.008,
 0.023].
@@ -404,27 +386,30 @@ on DR's tracked days, give a chance sensitivity. A-fixed's 0.197 is 3.7 times it
 three quarters of persons had no false flag under probe-only. Its rate per total person-month, 0.014, is
 about 8 percent of its tracked rate, so it is tracked on few days.
 
+**Person-level validity.** Across persons, the within-person correlation of A-fixed's composite with
+the state on tracked days averaged 0.565 [0.560, 0.571] on S (5th to 95th percentile 0.410 to 0.695) and
+0.596 on DR, and no person's was at or below zero. For the raw message-length and negative
+self-reference indicators it was at or below zero for 18.8 to 21.5 percent of persons across S and DR;
+after filtering, for 0.4 to 0.8 percent.
+
 **Usage depending on the state.** In the `kappa = 0.3` cell, A-fixed's DR sensitivity was 0.168 [0.145,
 0.190] against 0.197 [0.173, 0.222] at `kappa = 0`, and the abstention share rose from 0.199 to 0.232,
 almost entirely from unused days; the low-usage abstention rule (v) fired on under 0.1 percent of days.
 
-**Other rules and controls.** `pop`, which appears in no prediction, reached a DR sensitivity of 0.180
-[0.157, 0.204]. The `current` control in the default cell, which probes when today's composite is high, gave a
-slope of 0.694 [0.588, 0.802] and a correlation of 0.190 [0.162, 0.219], against all-days values of 0.930
-and 0.471. The confirmation rule's positive predictive value on DR was 0.195 [0.162, 0.229] under
+**Other metrics.** `pop`, which appears in no prediction, reached a DR sensitivity of 0.180 [0.157,
+0.204]. The confirmation rule's positive predictive value on DR was 0.195 [0.162, 0.229] under
 `random`, 0.215 under `mixed` and 0.226 under `triggered`. Median days to flag among flagged DR persons
-was 14 [13, 15]. Realized criterion budgets varied by family under the score-dependent designs: 1.50 per
-person-month on S and 3.23 on DR under `triggered`, against about 3.0 in every family under `random`.
-The cost of the version reset for onsets inside the re-baseline window, frozen as "reported, with no
-threshold", cannot be computed: no frozen family contains both a drift onset and a version change.
+was 14 [13, 15]. Under `triggered`, the realized budget was 1.50 per person-month on S and
+3.23 on DR, against about 3.0 in every family under `random`. The frozen reset cost cannot be computed,
+because no frozen family has both a drift onset and a version change.
 
 ### 3.9 What the results show
 
-Some results follow qualitatively from the generator's structure and would appear under any parameter
-values of the same form: selection attenuation under an
-autocorrelated state with a score-dependent trigger; non-response that depends on the state not being
-removed by weighting on observables; and the sign of state-coupled contamination, which follows from
-`X = H + pi (M - H)`. The magnitudes (0.197, 17.8 points, 24.8 percent) are set by invented values and say
+Some results follow from the generator's structure: selection attenuation when the criterion schedule
+depends on the score; state-dependent non-response not being removed by weighting on observables; and
+the sign of state-coupled contamination, which follows from `X = H + pi (M - H)`. They are expected
+whenever `phi_D > 0`, the trigger depends on the score, and the coupling and mean gap are non-zero; no
+parameter grid was run. The magnitudes (0.197, 17.8 points, 24.8 percent) are set by invented values and say
 nothing about any real setting.
 
 **Which mechanisms appeared.** Selection attenuation, state-coupled authorship distortion and the
@@ -432,38 +417,40 @@ non-state sources of false flags (version and context changes, which moved false
 direction without clearing their bars) appeared. The workload component did not do its job (SP ablation
 ratio 1.047), removing (i) did not explain half of the P2 gap, and P9 went the opposite way.
 
-**Criterion sampling (P4).** With today's statistic in the trigger, the triggered slope was 0.700
-[0.640, 0.759] against an all-days slope of 0.930, an attenuation of 24.8 percent [18.5, 31.3], and the
-correlation fell by 0.104 from 0.471. With the previous day's statistic, which isolates the history
-mechanism of section 2.5, the attenuation was 16.1 percent [10.0, 22.1] and the correlation deflation
-0.049 [0.021, 0.077], just under its threshold. Recovery by weighting could not be shown either way. With
-today's statistic, the weighted slope differed from the all-days slope by -0.055 [-0.124, 0.018]; with
-the previous day's, it overshot by 0.067 [0.001, 0.132], an interval that excludes zero. An interval
-about 0.14 wide cannot fall inside a band 0.06 wide, so the frozen design could not have shown recovery
-at 1,000 persons under any correct implementation. The attenuation is an instance of Thorndike's Case III selection (Sackett and Yang, 2000), in which the selection variable is the predictor's own history,
-and it is structurally the verification bias of Begg and Greenes (1983). I found no prior treatment of
-this dynamic, history-dependent trigger in validity estimation. The history-conditional weighting from
+**Criterion sampling (P4).** The triggered slope was 0.700 [0.640, 0.759] against an all-days slope of
+0.930, an attenuation of 24.8 percent [18.5, 31.3], with the correlation deflated by 0.104 [0.076,
+0.133]. The `current` control, run on the same panel and probing whenever today's composite exceeds a
+fixed cut, gave a slope of 0.694 [0.588, 0.802], an attenuation of 25.4 percent [14.1, 36.7], and a
+correlation deflation of 0.281 [0.254, 0.309]. Selecting on the current score alone therefore produces
+the same slope attenuation, and the 24.8 percent should not be attributed to the trigger's history.
+In a homogeneous linear-Gaussian model, direct selection on the predictor leaves the criterion-on-predictor
+slope unbiased; the frozen construction check with a common loading and population scaling moved it by
+about 6 percent. The attenuation here plausibly comes from selection on the current score combined with
+per-person loadings, per-person scaling and person-centring on the selected days. With the previous day's
+statistic in the trigger, the attenuation was 16.1 percent [10.0, 22.1]; that reading is closer to
+selection on history, but the estimator effect seen in `current` has not been separated from it.
+Recovery by weighting could not be shown under either reading: the weighted slope differed from the
+all-days slope by -0.055 [-0.124, 0.018] with today's statistic and overshot by 0.067 [0.001, 0.132]
+with the previous day's, and an interval about 0.14 wide cannot fall inside a band 0.06 wide. This is a
+known selection result (Thorndike, 1949; Sackett and Yang, 2000), structurally the verification bias of
+Begg and Greenes (1983), shown here in the agent-probing setting. The history-conditional weighting from
 micro-randomized trials (Boruvka et al., 2018) applies, but at N = 1,000 its interval is too wide to show
 recovery.
 
 **Criterion non-response (P5).** At `m1 = 1.5`, the total relative slope bias was -15.3 percent [-20.0,
 -10.7] (fixed), -14.3 percent [-18.8, -9.8] (random), -40.3 percent [-47.8, -33.1] (triggered) and -18.3
 percent [-23.6, -13.1] (mixed). The triggered total includes the 24.8 percent selection attenuation that
-the same schedule shows at `m1 = 0`. The bias that non-response adds is 12 to 16 percent, and every lower
-bound is under 10 percent, so the frozen threshold is not met. A response-propensity weight fitted on
-the current composite, a lagged composite and day of week did not remove the bias; it removed -0.107
-[-0.231, -0.011] of it. The bias was not removed by a propensity model on these observables, in a
-generator where response depends on the state by construction.
+the same schedule shows at `m1 = 0`; the added bias is in Table 1. A response-propensity weight fitted on
+the current composite, a lagged composite and day of week did not remove it, in a generator where
+response depends on the state by construction.
 
-**Authorship (P6).** The contamination formula tracks the simulated attenuation in expectation: the
-largest point difference in the default and Bernoulli cells is 0.023, but three of the six comparisons
-in Table 1 fall outside plus or minus 0.03 on the interval, one of them not decidable at this sample
-size. The rising-share cell, which is hypothetical, gives the largest validity distortion the simulation
-found. Message length's attenuation factor exceeded the formula by 0.151 [0.119, 0.192]: validity
+**Authorship (P6).** The contamination formula tracks the simulated attenuation in expectation (largest
+point difference 0.023), but three of the six comparisons in Table 1 fall outside plus or minus 0.03 on
+the interval. The hypothetical rising-share cell gives the largest distortion the simulation found. Message length's attenuation factor exceeded the formula by 0.151 [0.119, 0.192]: validity
 supplied by delegation rather than by behaviour. For negative self-reference, whose machine-text mean
 sits below the human mean, the within-person validity was -0.011 [-0.016, -0.005] against 0.340 [0.334,
 0.346] for the unmixed indicator, so its sign changed; filtering restored the sign but not the size
-(0.139 [0.131, 0.146]). This is not a frozen prediction, since P6's rising-share clause names indicator 4
+(0.138 [0.131, 0.146]). This is not a frozen prediction, since P6's rising-share clause names indicator 4
 only, and it follows from an invented machine-text mean (-1.0 SD) and an invented coupling slope (0.5).
 
 The simulation's indicator 4 ran at the audit's day-mean machine share of 0.845 (residual share after
@@ -471,21 +458,17 @@ filtering 0.365), with a variance ratio and mean gap computed over entries. Anal
 gives an attenuation of 0.235 at those entry-level values (0.802 after filtering) and 0.527 at the
 day-level values from the same corpus (share 0.823, variance ratio 0.098, mean gap 0.196, 21 days; 0.929
 after filtering). The frozen simulation thus used the values that imply more attenuation; the day-level
-values, which match the generator's daily averaging, imply much less. The simulation was not re-run.
+values, which match the generator's daily averaging, imply much less. It was not re-run.
 
-**Drift inside the baseline (P9).** Drift that began inside the baseline was flagged more often in days
-29 to 49 (0.272) than DR was within 21 days of onset (0.197), the opposite of the prediction. One
-candidate explanation, not checked here, is that a BD onset in days 10 to 25 with a ramp of 7 to 21 days
-can still be rising after day 28, so the state keeps climbing against a baseline that absorbed only part
-of it. The pre-onset rule also applies only to the DR side of the comparison.
+**Drift inside the baseline (P9).** BD was flagged more often in days 29 to 49 (0.272) than DR within 21
+days of onset (0.197), the opposite of the prediction. One unchecked candidate: a BD onset in days 10 to
+25 with a 7 to 21 day ramp can still be rising after day 28, against a baseline that absorbed only part
+of it; the pre-onset rule also applies only to the DR side.
 
-**Detection and the P8 comparison.** At one false flag per six tracked person-months, A-fixed flagged
-0.197 of planted drifts within 21 days, 3.7 times its chance level. P8's pass is a win over a nearly
-blind comparator: the criterion-only rule, z-scored on a four-probe baseline block as the frozen design
-specifies, flagged 0.019 of drifts against a chance level of 0.015, with its false flags concentrated in
-a minority of persons. That is a property of the frozen design, not evidence that passive scoring beats
-asking. Combining passive and criterion data was not tested.
-
+**P8.** P8's pass is a win over a criterion-only comparator indistinguishable from chance (0.019
+[0.011, 0.028] against 0.015 [0.008, 0.023]), whose false-flag matching held per tracked person-month
+(0.179 against 0.151) but not per total person-month (0.014 against 0.121): a property of the frozen
+four-probe scaling, not evidence that passive scoring beats asking.
 ---
 
 ## 4. A one-person corpus audit of the scoring inference
@@ -510,16 +493,15 @@ check for pastes, and then discarded.
 (native provenance where present, otherwise structural markers of harness and hook text); `human+paste`
 or `injected` for entries with a paste marker, depending on whether typed text remains outside it;
 `lane-prompt` (a session's first entry matching a stored automated prompt); and `human-typed` for the
-rest. The native provenance fields `promptSource` and `turnOrigin` are each present on under 5 percent of
-user entries, so the classifier rests mostly on markers. Sessions are `autonomous` (no typed entry), `mixed`
-or `interactive`.
+rest. Native provenance fields cover under 5 percent of user entries, so the classifier rests mostly on
+markers. Sessions are `autonomous` (no typed entry), `mixed` or `interactive`.
 
 **Indicators.** Late-activity share (entries between 00:00 and 05:00 local), session fragmentation
-(distinct sessions per active hour) and message length (mean log characters), each in a naive version
-(all user-role entries) and a filtered version (`human-typed` only). The naive version includes tool
-results, which any analyst would drop, so it bounds contamination from above rather than representing a
-realistic analysis. Only the disagreement between the two versions is reported, never the level of a
-filtered series, which is the nearest thing here to a behavioural signal about the person.
+(distinct sessions per active hour) and message length (mean log characters), each in three versions:
+naive (all user-role entries), middle (dropping tool results and subagent traffic, which are
+structurally tagged and which any analyst would drop) and typed (`human-typed` only). Only the
+disagreement between versions is reported, never the level of a typed series, which is the nearest
+thing here to a behavioural signal about the person.
 
 **Change points.** Days with a typed entry were split chronologically at 70 percent (cutoff
 2026-09-21). Change points were found on training days by penalized binary segmentation and checked
@@ -541,30 +523,33 @@ backups, dated policy sections and hook modification times.
 
 Of 73,955 user-role entries, 688 were classed as typed. On the main thread, excluding tool results and
 subagent traffic, there were 6,154 text-bearing entries: 688 typed and 5,466 machine-authored, and the
-5,466 are exactly the injected (5,249) and automated-prompt (217) entries. The machine share of those
-entries is 0.888 by entry and 0.845 as a day mean (day-level SD 0.174 over 24 days). The machine text in
-this corpus is therefore harness injection and automated prompts, not agent drafts the person delegated.
-Computed over entries, machine text is 0.274 within-person SDs longer than typed text, with a variance
-ratio of 0.547; computed from daily means over the 21 days with both kinds of text, the share is 0.823,
-the mean gap 0.196 and the variance ratio 0.098.
+5,466 are exactly the injected (5,249) and automated-prompt (217) entries. So the machine text here is harness
+injection and automated prompts, not delegated drafts. Its share is 0.888 by entry and 0.845 as a day
+mean (day-level SD 0.174 over 24 days). Over entries it is 0.274 within-person SDs longer than typed
+text, with variance ratio 0.547; from daily means over 21 days, the share is 0.823, the gap 0.196 and the
+ratio 0.098.
 
 **Person-absent sessions.** Of 1,544 main sessions, 1,303 (0.844) had no typed entry, 20 were mixed and
 221 interactive. The autonomous sessions supplied 0.570 of all naive user-role entries, 0.750 of the
 entries between 00:00 and 05:00, and 0.746 of the session-by-hour units behind the fragmentation
 indicator.
 
-**Naive against filtered.** Over the 21 days with both series:
+**Naive, middle and typed.** Correlations between versions of the same daily indicator (24 days for
+naive against middle, 21 days with typed entries otherwise):
 
-| indicator | correlation, naive vs filtered | mean absolute difference |
-|---|---:|---:|
-| late-activity share | 0.90 | 0.081 |
-| session fragmentation | 0.12 | 2.62 sessions per active hour |
-| message length (mean log chars) | 0.28 | 1.21 |
+| indicator | naive vs typed | naive vs middle | middle vs typed |
+|---|---:|---:|---:|
+| late-activity share | 0.90 | 0.94 | 0.90 |
+| session fragmentation | 0.12 | 0.999 | 0.110 |
+| message length (mean log chars) | 0.28 | -0.017 | 0.244 |
 
-The correlations were 0.94, 0.15 and 0.38 on the 15 paired training days and 0.90, -0.30 and 0.78 on the
-6 paired test days, too few to read as a change. The naive fragmentation series largely counts how many
-automated sessions were running. Late activity agreed best even though three quarters of its naive
-entries came from autonomous sessions, so that agreement is a property of this window.
+Fragmentation contamination comes from injected and automated-prompt traffic: dropping tool results and
+subagent traffic leaves the series almost unchanged, and the middle series is nearly unrelated to the
+typed one. Message length is broken twice, by tool-result and subagent traffic and again by injection.
+Late activity agreed best even though three quarters of its naive entries came from autonomous
+sessions, so that agreement is a property of this window. Naive against typed, the correlations were
+0.94, 0.15 and 0.38 on the 15 paired training days and 0.90, -0.30 and 0.78 on the 6 test days, too few
+to read as a change.
 
 **Pastes, agent drafts, third parties.** 0.30 percent of user-role entries carried a paste marker, and
 none was classed `human+paste`. None of the 688 typed entries shared a 200-character span with one of the
@@ -574,10 +559,9 @@ structural estimate of third-party content, not a count of other people.
 
 **Infrastructure churn and change points.** The snapshot has 7 harness versions, 10 model ids and 27
 dated infrastructure-event candidates. The training period yielded 8 change points across the six naive
-and filtered series, and all 8 fell within 3 days of a candidate event. That match is uninformative,
-because every calendar day in the observed range has a candidate within 3 days. It attributes no change
-point to any event; what it shows is that in this corpus every change in a trace-derived series has a
-plausible infrastructure explanation nearby.
+and filtered series, and all 8 fell within 3 days of a candidate event. That is uninformative,
+because every calendar day in the range has a candidate within 3 days: in this corpus every change in a
+trace-derived series has a plausible infrastructure explanation nearby.
 
 **Data density.** 24 days had user-role activity and 21 had a typed entry.
 
@@ -594,9 +578,8 @@ plausible infrastructure explanation nearby.
   bound on that account.
 - **Retention.** The tool deleted transcripts older than 45 days on a rolling basis, and only 24 active
   days existed at the snapshot. Any longitudinal analysis of this corpus is capped by that setting.
-- **Indicators.** Three of six indicators were computed, machine-share parameters only for message
-  length, and no series between the naive and typed-only definitions (dropping only tool results and
-  subagent traffic) was computed for the three indicators.
+- **Indicators.** Three of six indicators were computed, and machine-share parameters only for message
+  length.
 - **No labels.** No state was estimated and no label was made or inferred.
 
 ---
@@ -610,10 +593,9 @@ participants. Nothing here has been built, and none of it describes a product.
   injected, tool, automated, subagent), a class for person-absent sessions, timing indicators computed on
   person-present sessions only, and provenance coverage reported by period. Markers are a weak
   substitute: the native fields covered under 5 percent of entries in section 4.
-- **R2. Logged, randomized help** at a known, constant probability (Klasnja et al., 2015; Nahum-Shani et
-  al., 2018), friction indicators scored on unhelped days, and a carryover check.
-- **R3. Logged agent and model versions**, with every change dated and its handling fixed in advance;
-  the audit saw 7 versions and 10 model ids in about a month.
+- **R2. Logged, randomized help** at a constant probability (Klasnja et al., 2015; Nahum-Shani et al.,
+  2018), with friction indicators scored on unhelped days.
+- **R3. Logged, dated agent and model versions**; the audit saw 7 versions and 10 model ids in a month.
 - **R4. A stated baseline and abstention policy**, fixed before data and reported with its coverage cost.
 - **R5. A random criterion floor with logged propensities, powered for the weighted estimate.** A
   score-based trigger may be added, with estimates weighted by the logged propensity and also reported
@@ -628,7 +610,7 @@ participants. Nothing here has been built, and none of it describes a product.
 - **R9. Consent and scope.** Consent to the specific data surfaces, retention period and criterion
   schedule; other people's content excluded or separately cleared. It has been proposed that inferences
   about mental state be governed the same way whatever their source, text included (Horiuchi, 2026).
-  The study's outputs are research data; any feedback to participants falls under section 7.
+  Any feedback to participants falls under section 7.
 
 ---
 
@@ -647,17 +629,16 @@ participants. Nothing here has been built, and none of it describes a product.
 4. **The criterion is valid by construction.** `Y = D + e`. Real criteria have their own validity
    questions, and the simulation does not model them.
 5. **The false-flag target is high.** One false flag per six tracked person-months is a tuning target
-   for comparing rules, and it is high for any setting in which a flag would reach a person. The
-   sensitivity against false-flag curve in section 3.8 shows other operating points.
+   for comparing rules, high for any setting in which a flag would reach a person; section 3.8 shows
+   other operating points.
 6. **One rule is not compared.** A language-model evidence reader was specified as future work and not
    run, because no local model was available, and no conclusion about it is drawn.
 7. **The corpus audit is n = 1 and descriptive.** It measures authorship contamination in one person's
    transcripts over 24 active days and estimates nothing about that person.
 
-The simulation also does not test combining passive and criterion data. An earlier simulation in this
-program found no resolved difference between ask-versus-infer budget rules at 300 to 1,000
-person-weeks on item-level error (Mettu, 2026b, Study 2); the schedules here are judged on calibration
-and detection instead.
+Combining passive and criterion data was not tested. An earlier simulation in this program found no
+resolved difference between ask-versus-infer budget rules at 300 to 1,000 person-weeks (Mettu, 2026b,
+Study 2); the schedules here are judged on calibration and detection instead.
 
 ---
 
@@ -681,14 +662,14 @@ stated in claims (FDA, 2026), and nothing in this paper states an intended use.
 
 **Use of AI tools.** The simulation code, the corpus-audit code, the analyses, the audit of the scoring
 code against the frozen text, and this draft were produced with AI coding agents (Anthropic Claude
-models) working under the author's direction. The scoring-code audit was run by an AI agent within the
-same project, not by an external party.
+models) working under the author's direction.
 
 **Ethics.** The corpus is the author's own agent transcripts. User-role text was read only in memory, to
 assign authorship classes; only metadata and aggregates were stored, tool-result payloads were never
 read, and no state of any person was estimated. The stream contains some third-party content (0.77
 percent of tool results came from tools named for messaging, calendar or email), which the audit did not
-read.
+read. [AUTHOR TO CONFIRM: no ethics review was sought, because the only human data are the author's own
+usage metadata; no other person's data were analysed.]
 
 **Data and code availability.** The simulation code, the frozen pre-scoring document, both scoring runs,
 the reporting-only metrics, the audit code and the corpus audit's aggregate outputs are in the

@@ -9,6 +9,10 @@ a non-diagnostic wellbeing/functioning state; it maps to no clinical condition. 
     python3 sim/drift_sim.py metrics --prereg-sha <sha>     # REPORTING ONLY: PREREG section 5 metrics
                                                              # score() omits; no thresholds, no verdicts;
                                                              # writes sim/metrics.json, sim/METRICS.md
+    python3 sim/drift_sim.py robust --plan-sha <sha>        # EXPLORATORY grid, sim/ROBUSTNESS-PLAN.md;
+                                                             # NOT part of PREREG/specs; no P1-P10 verdict
+                                                             # changes; writes sim/robustness.json,
+                                                             # sim/ROBUSTNESS.md
 
 PRE-FREEZE STAGE: this file may be exercised via --check and tune() only. Evaluation seeds come from
 eval_seed(), which raises unless sim/PREREG.md exists and its sha256 matches --prereg-sha. Tuning uses
@@ -555,13 +559,19 @@ def apply_bi_mask(arr, bi_mask):
 
 def generate_panel(rng, family, cell, n=N_PERSONS, T=T_DAYS,
                     pi_bar=PI_BAR_DEFAULT, kappa_a4=KAPPA_A4_DEFAULT, mu_m4=MU_M4_DEFAULT,
-                    lam_range=(0.25, 0.5)):
+                    lam_range=(0.25, 0.5), phi_D=PHI_D, psi=PSI, rising_slope=0.5):
     """One generated world for a family x cell combination. Returns a dict with every array the
     architectures and metrics need. `A` (help) and `X` (indicators 4,5 authorship-mixed already
     applied) are shared across every downstream architecture and schedule for this same panel --
-    the shared-persons / paired-bootstrap design of spec v3."""
+    the shared-persons / paired-bootstrap design of spec v3.
+
+    `phi_D`, `psi` and `rising_slope` (added for `robust`, sim/ROBUSTNESS-PLAN.md) default to the
+    exact frozen constants PHI_D, PSI and 0.5 -- every existing call site that omits them is
+    bit-identical to before this change. They only thread the already-frozen mechanism through
+    (D's own AR(1) persistence, indicators 2/3's help-effect array, the pi_rises branch's coupling
+    slope); no generator mechanics change."""
     ev = sample_events(rng, family, n)
-    D = ar1_panel(rng, n, T, PHI_D)
+    D = ar1_panel(rng, n, T, phi_D)
     if not np.all(np.isnan(ev["t0"])):
         day = np.arange(T)[None, :]
         ramp = np.clip((day - ev["t0"][:, None]) / ev["ramp"][:, None], 0, 1) * DELTA_D
@@ -628,7 +638,7 @@ def generate_panel(rng, family, cell, n=N_PERSONS, T=T_DAYS,
     if cell["mix_mode"] == "bernoulli":
         pi_t = (rng.random((n, T)) < pi_bar).astype(float)
     elif cell["pi_rises"]:
-        pi_t = expit(logit(pi_bar) + 0.5 * D)
+        pi_t = expit(logit(pi_bar) + rising_slope * D)
     else:
         a, b = 10 * pi_bar, 10 * (1 - pi_bar)
         pi_t = rng.beta(a, b, (n, T))
@@ -636,7 +646,7 @@ def generate_panel(rng, family, cell, n=N_PERSONS, T=T_DAYS,
 
     def build_H_X(A):
         H = (lam[:, None, :] * lam_mult) * D[:, :, None] + GAM[None, None, :] * L[:, :, None] \
-            + beta_ctx - (A[:, :, None] * PSI[None, None, :] * (1 + cell["theta1"] * D[:, :, None])) \
+            + beta_ctx - (A[:, :, None] * psi[None, None, :] * (1 + cell["theta1"] * D[:, :, None])) \
             + e + mean_shift
         X = H.copy()
         for k, j in enumerate((IDX_MSGLEN, IDX_NEGSELF)):
@@ -699,7 +709,7 @@ def generate_panel(rng, family, cell, n=N_PERSONS, T=T_DAYS,
             # prior day inside this loop.
             Ht = ((lam * lam_mult[:, t, :]) * D[:, t][:, None] + GAM[None, :] * L[:, t][:, None]
                   + beta_ctx[:, t, :]
-                  - (A[:, t][:, None] * PSI[None, :] * (1 + cell["theta1"] * D[:, t][:, None]))
+                  - (A[:, t][:, None] * psi[None, :] * (1 + cell["theta1"] * D[:, t][:, None]))
                   + e[:, t, :] + mean_shift[:, t, :])
             Xt = Ht.copy()
             Xt[:, IDX_MSGLEN] = mix_authorship(Ht[:, IDX_MSGLEN], pi_t[:, t], M[:, t, 0])
@@ -1060,15 +1070,21 @@ def probe_only_C(panel, rng):
 
 
 def tune_h(arch, n=N_PERSONS, seed=TUNING_SEED, target=1 / 6,
-           pi_bar=PI_BAR_DEFAULT, kappa_a4=KAPPA_A4_DEFAULT, mu_m4=MU_M4_DEFAULT):
+           pi_bar=PI_BAR_DEFAULT, kappa_a4=KAPPA_A4_DEFAULT, mu_m4=MU_M4_DEFAULT,
+           lam_range=(0.25, 0.5), cell_name="default", phi_D=PHI_D, psi=PSI, rising_slope=0.5):
+    """`lam_range`/`cell_name`/`phi_D`/`psi`/`rising_slope` are passthrough extensions for `robust`
+    (sim/ROBUSTNESS-PLAN.md): every existing call site omits them and gets the original default-cell
+    behavior bit-for-bit. Nothing about the generator itself changes."""
     rng = np.random.default_rng(seed)
-    cell = cell_params("default")
+    cell = cell_params(cell_name)
     if arch == "probe-only":
-        panel = generate_panel(rng, "S", cell, n=n, pi_bar=pi_bar, kappa_a4=kappa_a4, mu_m4=mu_m4)
+        panel = generate_panel(rng, "S", cell, n=n, pi_bar=pi_bar, kappa_a4=kappa_a4, mu_m4=mu_m4,
+                                lam_range=lam_range, phi_D=phi_D, psi=psi, rising_slope=rising_slope)
         rng2 = np.random.default_rng(seed + 1)
         C, reason = probe_only_C(panel, rng2)
     else:
-        panel = generate_panel(rng, "S", cell, n=n, pi_bar=pi_bar, kappa_a4=kappa_a4, mu_m4=mu_m4)
+        panel = generate_panel(rng, "S", cell, n=n, pi_bar=pi_bar, kappa_a4=kappa_a4, mu_m4=mu_m4,
+                                lam_range=lam_range, phi_D=phi_D, psi=psi, rising_slope=rising_slope)
         baseline = fit_baseline(panel["X"], panel["used"], panel["L_obs"])
         if arch == "pop":
             C, reason = compute_composite(panel, NAIVE_FEATURES, pop_ref=pop_reference(panel))
@@ -1388,6 +1404,25 @@ def _load_frozen(action):
             f"tuning.json's {name}={val} does not match sim/PREREG.md's stated {name}={expected}"
         )
     return H, P, pi_bar, kappa_a4, mu_m4
+
+
+def attenuation_person(h, d, x, pi_i, kap, mu_m):
+    """Per-person P6 attenuation: the closed-form Att and the direct MC ratio r(X,D)/r(H,D),
+    for one indicator/mixing variant (unfiltered: pi, X; filtered: pi', X_filtered). Also
+    returns rH, rX (used only by the validity-vs-attenuation-scale ambiguity below). Returns
+    None if this person's within-person H variance is too small to be informative. Module-level
+    (not a score()-local closure) so `robust`'s S2 check (sim/ROBUSTNESS-PLAN.md) can reuse it."""
+    VH = h.var()
+    if VH < 1e-9:
+        return None
+    rH = np.corrcoef(h, d)[0, 1]
+    kappa_r = kap / VH
+    delta_r = (mu_m - h.mean()) / np.sqrt(VH)
+    Epi, Epi2, Varpi = pi_i.mean(), (pi_i**2).mean(), pi_i.var()
+    att_formula = _att(Epi, Epi2, Varpi, kappa_r, delta_r)
+    rX = np.corrcoef(x, d)[0, 1]
+    att_mc = rX / rH if abs(rH) > 1e-6 else np.nan
+    return att_formula, att_mc, rH, rX
 
 
 def score(prereg_sha):
@@ -1793,23 +1828,6 @@ def score(prereg_sha):
     # G1: each ind_within_0.03 / higher_by_ge_0.05 check decided on a 95% MC interval, bootstrapped
     # over the (variable-length) list of persons informative for that indicator/cell -- mirrors
     # the audit's own per-person-list bootstrap exactly.
-    def attenuation_person(h, d, x, pi_i, kap, mu_m):
-        """Per-person P6 attenuation: the closed-form Att and the direct MC ratio r(X,D)/r(H,D),
-        for one indicator/mixing variant (unfiltered: pi, X; filtered: pi', X_filtered). Also
-        returns rH, rX (used only by the validity-vs-attenuation-scale ambiguity below). Returns
-        None if this person's within-person H variance is too small to be informative."""
-        VH = h.var()
-        if VH < 1e-9:
-            return None
-        rH = np.corrcoef(h, d)[0, 1]
-        kappa_r = kap / VH
-        delta_r = (mu_m - h.mean()) / np.sqrt(VH)
-        Epi, Epi2, Varpi = pi_i.mean(), (pi_i**2).mean(), pi_i.var()
-        att_formula = _att(Epi, Epi2, Varpi, kappa_r, delta_r)
-        rX = np.corrcoef(x, d)[0, 1]
-        att_mc = rX / rH if abs(rH) > 1e-6 else np.nan
-        return att_formula, att_mc, rH, rX
-
     p6 = {}
     validity_scale_lists = {}  # stashed for the pi_rises_with_D ind4 validity-vs-attenuation ambiguity
     for cell_name in ("default", "bernoulli_mix", "pi_rises_with_D"):
@@ -2578,6 +2596,357 @@ def metrics(prereg_sha):
 
 
 # ----------------------------------------------------------------------------------------------
+# robust: EXPLORATORY grid over the frozen defaults (sim/ROBUSTNESS-PLAN.md -- referee round-1 item
+# 14 / round-2 N5). NOT part of sim/PREREG.md or specs/; no P1-P10 verdict is touched. Every output
+# is headed "EXPLORATORY, not frozen". Reuses generate_panel, cell_params, compute_composite,
+# run_cusum, probe_schedule, fit_baseline, _run_arch, probe_only_C, mc_stat, _pstats/_pslope/
+# _pcorr_*, _sensitivity/sens_stat, fa_rate_for_alarm/_fa_pooled, attenuation_person/_att and
+# logistic_irls exactly as --check/tune/score/metrics already do; no generator mechanics change.
+# ----------------------------------------------------------------------------------------------
+ROBUSTNESS_PLAN_PATH = HERE / "ROBUSTNESS-PLAN.md"
+
+
+def robust_seed(plan_sha, *parts):
+    """The only sanctioned way to get a robustness-grid seed (sim/ROBUSTNESS-PLAN.md section (d)):
+    refuses to run unless sha256(sim/ROBUSTNESS-PLAN.md) matches `plan_sha`, mirroring eval_seed()'s
+    refusal on sim/PREREG.md. The literal "robust" tag plus the plan's own sha256 make every seed
+    disjoint from eval_seed()'s (hashed from a different file, no "robust" literal) and from the
+    fixed tuning seed 20260927 (a bare constant, not a hash)."""
+    if not ROBUSTNESS_PLAN_PATH.exists():
+        raise RuntimeError("sim/ROBUSTNESS-PLAN.md is missing; cannot derive a robustness seed.")
+    on_disk = hashlib.sha256(ROBUSTNESS_PLAN_PATH.read_bytes()).hexdigest()
+    if on_disk != plan_sha:
+        raise RuntimeError(
+            f"--plan-sha {plan_sha!r} does not match sim/ROBUSTNESS-PLAN.md's sha256 {on_disk!r}. "
+            "Robustness seeds are only derived from the committed, hashed plan."
+        )
+    tag = ":".join(["robust", plan_sha, *(str(p) for p in parts)]).encode()
+    return int(hashlib.sha256(tag).hexdigest()[:16], 16) % (2**32 - 1)
+
+
+def _psi_scaled(val):
+    """PSI with its two nonzero entries (indicators 2 and 3, IDX_FRAG/IDX_DEFER -- the only slots
+    the frozen spec gives a nonzero psi) both set to `val`; indicators 1, 4, 5, 6 stay 0, exactly
+    as in the frozen PSI array. Grid cells vary this shared scalar, not the per-indicator shape."""
+    out = np.zeros(N_IND)
+    out[IDX_FRAG] = val
+    out[IDX_DEFER] = val
+    return out
+
+
+def _robust_grid():
+    """The one-at-a-time grid, sim/ROBUSTNESS-PLAN.md section (a). A function (not a module-level
+    constant) so it re-reads pilot/indicator4_params.json fresh on every call, same as metrics()'s
+    item (o) does, instead of caching a stale read across a long-running process. Every cell is
+    computable: generate_panel's phi_D/psi/rising_slope keyword arguments (added for this grid, each
+    defaulting to the frozen constant) make every dimension in the plan's table reachable without
+    changing the generator's mechanics or any frozen output (see sim/ROBUSTNESS-PLAN.md section (a)
+    for the byte-identical proof against sim/results.json and sim/metrics.json)."""
+    dl = json.loads((HERE.parent / "pilot" / "indicator4_params.json").read_text())["day_level_main_thread"]
+    return [
+        dict(name="default", dimension="(baseline)", value="frozen default", cell_name="default",
+             gen_kwargs={}),
+        dict(name="lam_low", dimension="lam_range", value=[0.10, 0.25], cell_name="default",
+             gen_kwargs=dict(lam_range=(0.10, 0.25))),
+        dict(name="lam_high", dimension="lam_range", value=[0.50, 0.80], cell_name="default",
+             gen_kwargs=dict(lam_range=(0.50, 0.80))),
+        dict(name="phi_D_low", dimension="phi_D", value=0.3, cell_name="default",
+             gen_kwargs=dict(phi_D=0.3)),
+        dict(name="phi_D_high", dimension="phi_D", value=0.9, cell_name="default",
+             gen_kwargs=dict(phi_D=0.9)),
+        dict(name="psi_low", dimension="psi", value=0.25, cell_name="default",
+             gen_kwargs=dict(psi=_psi_scaled(0.25))),
+        dict(name="psi_high", dimension="psi", value=1.0, cell_name="default",
+             gen_kwargs=dict(psi=_psi_scaled(1.0))),
+        dict(name="ind4_daylevel", dimension="indicator4_contamination", value="day-level pilot",
+             cell_name="default",
+             gen_kwargs=dict(pi_bar=dl["pi_bar_daymean"], kappa_a4=dl["kappa_a_day"],
+                              mu_m4=dl["mu_M4_day"])),
+        dict(name="rising_slope_025", dimension="rising_share_logit_slope", value=0.25,
+             cell_name="default", gen_kwargs=dict(rising_slope=0.25)),
+        dict(name="rising_slope_10", dimension="rising_share_logit_slope", value=1.0,
+             cell_name="default", gen_kwargs=dict(rising_slope=1.0)),
+        dict(name="m1_15", dimension="m1", value=1.5, cell_name="m1_15", gen_kwargs={}),
+    ]
+
+
+def _robust_tune_all(plan_sha, cell):
+    """Re-tune h for every ARCHS_FOR_H architecture at this cell's own lam_range/phi_D/psi/
+    indicator-4-contamination values (sim/ROBUSTNESS-PLAN.md section (e)); m1 and rising_slope do
+    not affect the composite (m1 only touches Y/response; rising_slope only applies inside the
+    pi_rises_with_D mix mode, never used by tuning's own always-"default" cell), so tuning under an
+    m1- or rising_slope-only cell reproduces the default's h up to independent seed noise, by design.
+    `cell["gen_kwargs"]` is passed straight through: tune_h's own keyword defaults already equal the
+    frozen constants, so a key this cell doesn't vary falls back to exactly what the old per-key
+    `.get(..., DEFAULT)` extraction produced."""
+    H_cell = {}
+    for arch in ARCHS_FOR_H:
+        seed = robust_seed(plan_sha, "tune", cell["name"], arch)
+        H_cell[arch] = tune_h(arch, seed=seed, cell_name=cell["cell_name"], **cell["gen_kwargs"])
+    return H_cell
+
+
+def _robust_family_panel(plan_sha, family, cell, extra, cell_name_override=None):
+    seed = robust_seed(plan_sha, family, cell["name"], extra)
+    rng = np.random.default_rng(seed)
+    cn = cell_name_override if cell_name_override is not None else cell["cell_name"]
+    cp = cell_params(cn)
+    return generate_panel(rng, family, cp, n=N_PERSONS, **cell["gen_kwargs"])
+
+
+def _s1_selection_attenuation(plan_sha, cell, H_cell, P_frozen):
+    """S1: triggered/current attenuate the probe-on-composite slope vs all-days. Tested as the
+    RATIO of the probed-day slope to the all-days slope being < 1, not a signed difference: a
+    signed difference's sign depends on the (arbitrary) sign of the all-days slope itself, while
+    the ratio test is attenuation-direction-invariant (b_obs/b_all < 1 means |b_obs| < |b_all| with
+    the same relative orientation, whether b_all is positive or negative)."""
+    panel = _robust_family_panel(plan_sha, "S", cell, "s1")
+    h = H_cell["A-fixed"]["h"]
+    C, reason, alarm, band = _run_arch(panel, "A-fixed", h)
+    Y, resp = panel["Y"], panel["responded"]
+    post = np.zeros_like(reason, dtype=bool)
+    post[:, BASELINE_DAYS:] = True
+    all_mask = post & ~np.isnan(C)
+    sa = _pstats(all_mask, C, Y)
+    out = {}
+    rng_p = np.random.default_rng(robust_seed(plan_sha, "s1_probe", cell["name"]))
+    for sched, kw in (("triggered", dict(p_trig=P_frozen["p_trig"])),
+                      ("current", dict(c_star=P_frozen["c_star"]))):
+        probed, prop, ident = probe_schedule(rng_p, sched, C, band, **kw)
+        obs = probed & resp & ~np.isnan(C) & post
+        so = _pstats(obs, C, Y)
+        ratio_stat = mc_stat(lambda idx, sa=sa, so=so: _pslope(so, idx) / _pslope(sa, idx),
+                              [N_PERSONS])
+        out[sched] = dict(slope_ratio_obs_over_all=ratio_stat,
+                           holds=bool(_verdict(ratio_stat, "le", 1.0)))
+    out["holds"] = bool(out["triggered"]["holds"] and out["current"]["holds"])
+    return out
+
+
+def _s2_state_coupled_sign(plan_sha, cell):
+    """S2: in pi_rises_with_D, indicator 4's attenuation ratio is inflated vs the independent-pi
+    formula, indicator 5's is deflated. Does not depend on m1, so this panel always uses m1=0.
+    Passes through this cell's full gen_kwargs (lam_range, phi_D, psi, indicator-4 contamination,
+    rising_slope), so e.g. the rising_slope_025/rising_slope_10 cells actually vary the coupling
+    strength this check is about."""
+    gk = cell["gen_kwargs"]
+    kappa_a4 = gk.get("kappa_a4", KAPPA_A4_DEFAULT)
+    mu_m4 = gk.get("mu_m4", MU_M4_DEFAULT)
+    panel = _robust_family_panel(plan_sha, "S", cell, "s2_pi_rises",
+                                  cell_name_override="pi_rises_with_D")
+    used, D = panel["used"], panel["D"]
+    out = {}
+    for ind_label, j, mu_m, kap in (("indicator4", IDX_MSGLEN, mu_m4, kappa_a4),
+                                     ("indicator5", IDX_NEGSELF, -1.0, MIX_KAPPA_A5)):
+        H_, X_, pi_ = panel["H"][:, :, j], panel["X"][:, :, j], panel["pi_t"]
+        atts, mcs = [], []
+        for i in range(N_PERSONS):
+            ok = used[i]
+            if ok.sum() < 10:
+                continue
+            res = attenuation_person(H_[i, ok], D[i, ok], X_[i, ok], pi_[i, ok], kap, mu_m)
+            if res is None:
+                continue
+            atts.append(res[0]); mcs.append(res[1])
+        atts, mcs = np.array(atts), np.array(mcs)
+        diff_stat = mc_stat(lambda idx: np.nanmean(mcs[idx]) - np.nanmean(atts[idx]),
+                             [len(atts)], seed=3)
+        out[ind_label] = dict(diff_mc_minus_formula=diff_stat, n_persons=int(len(atts)))
+    out["indicator4"]["holds"] = bool(_verdict(out["indicator4"]["diff_mc_minus_formula"], "ge", 0.0))
+    out["indicator5"]["holds"] = bool(_verdict(out["indicator5"]["diff_mc_minus_formula"], "le", 0.0))
+    out["holds"] = bool(out["indicator4"]["holds"] and out["indicator5"]["holds"])
+    return out
+
+
+def _s3_s4_chance_baseline(plan_sha, cell, H_cell):
+    """S3: every passive rule beats its own chance baseline. S4: probe-only does not (within chance).
+    Chance rule and matched-false-flag-rate logic mirror metrics.json item (h) exactly."""
+    panel_s = _robust_family_panel(plan_sha, "S", cell, "s3s4_S")
+    panel_dr = _robust_family_panel(plan_sha, "DR", cell, "s3s4_DR")
+    onset = panel_dr["t0"]
+    out = {}
+    for arch in ARCHS_FOR_H:
+        h = H_cell[arch]["h"]
+        if arch == "probe-only":
+            rng_po_s = np.random.default_rng(robust_seed(plan_sha, "s3s4_po_S", cell["name"]))
+            C_s, reason_s = probe_only_C(panel_s, rng_po_s)
+            alarm_s, _, _ = run_cusum(C_s, h)
+            rng_po_dr = np.random.default_rng(robust_seed(plan_sha, "s3s4_po_DR", cell["name"]))
+            C_dr, reason_dr = probe_only_C(panel_dr, rng_po_dr)
+            alarm_dr, _, _ = run_cusum(C_dr, h)
+        else:
+            _, reason_s, alarm_s, _ = _run_arch(panel_s, arch, h)
+            _, reason_dr, alarm_dr, _ = _run_arch(panel_dr, arch, h)
+        fa_rate_s = fa_rate_for_alarm(alarm_s, reason_s)
+        p_day = fa_rate_s / 30.0
+        tracked_dr = np.zeros_like(reason_dr, dtype=bool)
+        tracked_dr[:, BASELINE_DAYS:] = (reason_dr[:, BASELINE_DAYS:] == 0)
+        rng_chance = np.random.default_rng(robust_seed(plan_sha, "s3s4_chance", cell["name"], arch))
+        chance_alarm = (rng_chance.random(alarm_dr.shape) < p_day) & tracked_dr
+        obs_bool = _sensitivity(alarm_dr, onset).astype(float)
+        chance_bool = _sensitivity(chance_alarm, onset).astype(float)
+        diff_stat = mc_stat(lambda idx, o=obs_bool, c=chance_bool: o[idx].mean() - c[idx].mean(),
+                             [N_PERSONS])
+        out[arch] = dict(realized_fa_per_tracked_person_month_on_S=float(fa_rate_s),
+                          observed_sensitivity_within_21d=sens_stat(alarm_dr, onset),
+                          chance_sensitivity_within_21d=sens_stat(chance_alarm, onset),
+                          diff_obs_minus_chance=diff_stat)
+    s3_archs = [a for a in ARCHS_FOR_H if a != "probe-only"]
+    for a in s3_archs:
+        out[a]["holds_s3"] = bool(_verdict(out[a]["diff_obs_minus_chance"], "ge", 0.0))
+    po_diff = out["probe-only"]["diff_obs_minus_chance"]
+    out["probe-only"]["holds_s4"] = bool(po_diff["lo"] <= 0.0 <= po_diff["hi"])
+    return dict(by_architecture=out,
+                S3_holds=bool(all(out[a]["holds_s3"] for a in s3_archs)),
+                S4_holds=bool(out["probe-only"]["holds_s4"]))
+
+
+def _s5_mnar_ipw(plan_sha, cell, H_cell):
+    """S5: m1=1.5 increases the ABSOLUTE VALUE of the relative slope bias over m1=0 (random
+    schedule) -- the frozen results show the signed relative bias is NEGATIVE at m1=1.5, so the
+    claim is about |bias| growing, not the bias's sign -- and response-propensity IPW (same
+    features as P5: C_t, one lag, day of week) does not remove all of it. Only a non-degenerate test
+    where this cell's own m1 != 0 (i.e. the m1_15 cell); see plan section (b)/(c)."""
+    if cell["cell_name"] != "m1_15":
+        return dict(applicable=False,
+                    reason="this cell's m1 is 0 (frozen default); no m1 axis to compare against")
+    h = H_cell["A-fixed"]["h"]
+    panel0 = _robust_family_panel(plan_sha, "S", cell, "s5_m1_0", cell_name_override="default")
+    panel1 = _robust_family_panel(plan_sha, "S", cell, "s5_m1_15", cell_name_override="m1_15")
+
+    def slope_bias_random(panel, label):
+        C, reason, alarm, band = _run_arch(panel, "A-fixed", h)
+        Y, resp = panel["Y"], panel["responded"]
+        post = np.zeros_like(reason, dtype=bool)
+        post[:, BASELINE_DAYS:] = True
+        all_mask = post & ~np.isnan(C)
+        sa = _pstats(all_mask, C, Y)
+        rng_p = np.random.default_rng(robust_seed(plan_sha, "s5_probe", cell["name"], label))
+        probed, prop, ident = probe_schedule(rng_p, "random", C, band)
+        obs = probed & resp & ~np.isnan(C) & post
+        so = _pstats(obs, C, Y)
+        return sa, so, obs, C, alarm, band, Y, resp
+
+    sa0, so0, *_ = slope_bias_random(panel0, "m1_0")
+    sa1, so1, _, C1, alarm1, band1, Y1, resp1 = slope_bias_random(panel1, "m1_15")
+
+    def added_bias_fn(idx1, idx0):
+        """|relative bias| at m1=1.5 minus |relative bias| at m1=0 (random schedule), exactly
+        mirroring score()'s own P5 added_bias_fn (rel_bias() = (b_obs - b_all) / b_all). NOT the
+        raw unscaled slope difference -- the frozen results show a NEGATIVE relative bias at
+        m1=1.5 (P5.rel_bias_by_m1_and_schedule), so the claim is that |bias| grows, not that the
+        (signed) bias itself is positive."""
+        b1 = abs(rel_bias(sa1, so1, idx1))
+        b0 = abs(rel_bias(sa0, so0, idx0))
+        return b1 - b0
+
+    added_bias_stat = mc_stat(added_bias_fn, [N_PERSONS, N_PERSONS])
+
+    rng_ipw = np.random.default_rng(robust_seed(plan_sha, "s5_ipw", cell["name"]))
+    probed1, prop1, _ = probe_schedule(rng_ipw, "random", C1, band1)
+    n1, T1 = C1.shape
+    lag = np.concatenate([np.zeros((n1, 1)), np.nan_to_num(C1[:, :-1])], axis=1)
+    dow = np.tile(dow_features(T1), (n1, 1, 1))
+    feats = np.concatenate([np.nan_to_num(C1)[..., None], lag[..., None], dow], axis=-1)
+    admin = probed1
+    yresp = resp1[admin].astype(float)
+    beta_hat = logistic_irls(feats[admin], yresp)
+    p_resp_hat = expit(feats @ beta_hat)
+    obs1 = probed1 & resp1 & ~np.isnan(C1)
+    obs1[:, :BASELINE_DAYS] = False
+    w_resp = np.where(obs1, safe_div(1.0, np.clip(p_resp_hat, 0.05, 1.0)), 0.0)
+    sraw1 = _pstats(obs1, C1, Y1)
+    sipw1 = _pstats(obs1, C1, Y1, w=w_resp)
+
+    def bias_fn(s, idx):
+        return abs(_pslope(s, idx) - _pslope(sa1, idx))
+
+    def frac_fn(idx):
+        br = bias_fn(sraw1, idx)
+        return 1 - bias_fn(sipw1, idx) / br if br > 1e-9 else np.nan
+
+    bias_raw_stat = mc_stat(lambda idx: bias_fn(sraw1, idx), [N_PERSONS])
+    bias_ipw_stat = mc_stat(lambda idx: bias_fn(sipw1, idx), [N_PERSONS])
+    frac_removed_stat = mc_stat(frac_fn, [N_PERSONS])
+    holds = bool(_verdict(added_bias_stat, "ge", 0.0) and frac_removed_stat["hi"] < 1.0)
+    return dict(applicable=True, added_bias_m1_15_minus_m1_0=added_bias_stat,
+                bias_raw=bias_raw_stat, bias_ipw=bias_ipw_stat, frac_removed=frac_removed_stat,
+                holds=holds)
+
+
+def _s6_cs_vs_s(plan_sha, cell, H_cell):
+    """S6: A-fixed's false flags on CS exceed its rate on S (P10's direction)."""
+    h = H_cell["A-fixed"]["h"]
+    panel_cs = _robust_family_panel(plan_sha, "CS", cell, "s6_CS")
+    panel_s = _robust_family_panel(plan_sha, "S", cell, "s6_S")
+    _, reason_cs, alarm_cs, _ = _run_arch(panel_cs, "A-fixed", h)
+    _, reason_s, alarm_s, _ = _run_arch(panel_s, "A-fixed", h)
+
+    def ratio_fn(i, j):
+        return _fa_pooled(alarm_cs, reason_cs, i) / max(_fa_pooled(alarm_s, reason_s, j), 1e-9)
+
+    ratio_stat = mc_stat(ratio_fn, [N_PERSONS, N_PERSONS])
+    return dict(fa_ratio_CS_over_S=ratio_stat, holds=bool(_verdict(ratio_stat, "ge", 1.0)))
+
+
+def compute_robust_cell(plan_sha, cell, P_frozen):
+    """One grid cell's full S1-S6 computation. Never writes a file -- `run_robust` does that."""
+    H_cell = _robust_tune_all(plan_sha, cell)
+    return dict(tuned_h=H_cell,
+                S1=_s1_selection_attenuation(plan_sha, cell, H_cell, P_frozen),
+                S2=_s2_state_coupled_sign(plan_sha, cell),
+                S3_S4=_s3_s4_chance_baseline(plan_sha, cell, H_cell),
+                S5=_s5_mnar_ipw(plan_sha, cell, H_cell),
+                S6=_s6_cs_vs_s(plan_sha, cell, H_cell))
+
+
+def run_robust(plan_sha):
+    robust_seed(plan_sha, "startup_check")  # fail fast if --plan-sha doesn't match, before any work
+    t0 = time.time()
+    P_frozen = json.loads((HERE / "tuning.json").read_text())["schedules"]
+    grid = _robust_grid()
+    cells_out = {}
+    for cell in grid:
+        print(f"[robust] cell {cell['name']} ...", flush=True)
+        cells_out[cell["name"]] = compute_robust_cell(plan_sha, cell, P_frozen)
+
+    def grid_verdict(holds_path):
+        per_cell = {name: holds_path(res) for name, res in cells_out.items()}
+        bools = [v for v in per_cell.values() if isinstance(v, bool)]  # excludes S5's not_applicable
+        failing = [n for n, v in per_cell.items() if v is False]
+        return dict(per_cell=per_cell, holds_across_grid=bool(bools) and all(bools),
+                    failing_cells=failing)
+
+    summary = {
+        "S1": grid_verdict(lambda r: r["S1"]["holds"]),
+        "S2": grid_verdict(lambda r: r["S2"]["holds"]),
+        "S3": grid_verdict(lambda r: r["S3_S4"]["S3_holds"]),
+        "S4": grid_verdict(lambda r: r["S3_S4"]["S4_holds"]),
+        "S5": grid_verdict(lambda r: (r["S5"]["holds"] if r["S5"]["applicable"] else "not_applicable")),
+        "S6": grid_verdict(lambda r: r["S6"]["holds"]),
+    }
+
+    out = dict(status="EXPLORATORY, not frozen -- see sim/ROBUSTNESS-PLAN.md; no P1-P10 verdict changes",
+               plan_sha256=plan_sha,
+               grid=[{"name": c["name"], "dimension": c["dimension"], "value": c["value"]}
+                     for c in grid],
+               cells=cells_out, summary=summary, wall_seconds=time.time() - t0)
+    (HERE / "robustness.json").write_text(json.dumps(out, indent=2, default=float))
+
+    lines = ["# sim/ROBUSTNESS.md", "",
+             "EXPLORATORY, not frozen -- this grid is not part of sim/PREREG.md and changes no "
+             "P1-P10 verdict. See sim/ROBUSTNESS-PLAN.md for the grid, the expectations stated "
+             "before running, and the success rule.", "",
+             "## Summary: does each structural finding hold across the grid?", "",
+              "```json", json.dumps(summary, indent=2, default=float), "```", ""]
+    for name, res in cells_out.items():
+        lines += [f"## Cell: {name}", "", "```json", json.dumps(res, indent=2, default=float), "```", ""]
+    (HERE / "ROBUSTNESS.md").write_text("\n".join(lines))
+    print(f"wrote sim/robustness.json and sim/ROBUSTNESS.md in {out['wall_seconds']:.1f}s")
+    return out
+
+
+# ----------------------------------------------------------------------------------------------
 # CLI
 # ----------------------------------------------------------------------------------------------
 def main():
@@ -2588,15 +2957,14 @@ def main():
     if args and args[0] == "tune":
         run_tune()
         return
-    if args and args[0] in ("score", "metrics"):
+    if args and args[0] in ("score", "metrics", "robust"):
         cmd = args[0]
-        sha = None
-        if "--prereg-sha" in args:
-            sha = args[args.index("--prereg-sha") + 1]
+        flag = "--plan-sha" if cmd == "robust" else "--prereg-sha"
+        sha = args[args.index(flag) + 1] if flag in args else None
         if not sha:
-            print(f"{cmd} requires --prereg-sha <sha256>", file=sys.stderr)
+            print(f"{cmd} requires {flag} <sha256>", file=sys.stderr)
             sys.exit(2)
-        (score if cmd == "score" else metrics)(sha)
+        {"score": score, "metrics": metrics, "robust": run_robust}[cmd](sha)
         return
     print(__doc__)
 

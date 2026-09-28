@@ -186,3 +186,19 @@ rule" table, and no run-1 FAIL becomes a PASS.
 
 - reporting-only addition: `metrics` subcommand outputs the PREREG section 5 metrics that score() omitted; no verdict depends on them; run after the run-2 results commit 6c17e0c.
 - (p), (q) added after referee round 2
+
+## 8. Reproducibility note: score output at later commits (recorded 2026-09-27 ~23:30)
+
+`sim/results.json` is the record produced by `score` at commit 5bc2310 and reproduces from it byte for byte
+(checked by re-running 5bc2310 from `git archive`). The refactor in 33f9912 routed P6's attenuation formula
+through the shared `_att` helper, which changed floating-point operation order. Running `score` at later
+commits therefore changes 9 P6 `se`/`lo`/`hi` fields, by at most 5.6e-17 (one unit in the last place), and no
+verdict or reported digit. Two runs at a later HEAD are identical to each other.
+
+## 9. Robustness grid: two cells computed before the plan commit (disclosed)
+
+`sim/ROBUSTNESS-PLAN.md` (sha256 e1dbc8b7..., the exploratory grid, not part of PREREG) was committed after a
+cleanup agent ran `compute_robust_cell` for the cells `default` and `m1_15` under the real plan hash, to show
+that its refactor left the outputs identical. Those values were compared only against each other and were not
+reported to the orchestrator. The plan text did not change afterwards: the committed hash is the one the
+cells were run under. The grid is exploratory and changes no P1-P10 verdict.

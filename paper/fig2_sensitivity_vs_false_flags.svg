@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 740" width="1200" height="740" font-family='system-ui, -apple-system, "Segoe UI", sans-serif' role="img" aria-labelledby="svgtitle svgdesc">
+<title id="svgtitle">Detecting a planted drift: sensitivity vs. false flags</title>
+<desc id="svgdesc">Sensitivity within 21 days of a planted drift's onset against false flags per tracked person-month, swept over the detection threshold, for the fixed-baseline and naive architectures. Shaded bands are bootstrap intervals on sensitivity. Diamonds mark each architecture's chance baseline at its own realized false-flag rate.</desc>
+<rect x="0" y="0" width="1200" height="740" fill="#fcfcfb"/>
+<text x="600.00" y="36.00" font-size="20" fill="#0b0b0b" text-anchor="middle" font-weight="600" style="">Detecting a planted drift: sensitivity vs. false flags</text>
+<text x="600.00" y="58.00" font-size="12.5" fill="#898781" text-anchor="middle" font-weight="normal" style="font-style:italic;">Threshold swept from strict to loose; shaded bands are bootstrap intervals on sensitivity</text>
+<line x1="84.00" y1="650.00" x2="1000.00" y2="650.00" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="72.00" y="654.00" font-size="12" fill="#898781" text-anchor="end" font-weight="normal" style="">0</text>
+<line x1="84.00" y1="465.51" x2="1000.00" y2="465.51" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="72.00" y="469.51" font-size="12" fill="#898781" text-anchor="end" font-weight="normal" style="">0.1</text>
+<line x1="84.00" y1="281.01" x2="1000.00" y2="281.01" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="72.00" y="285.01" font-size="12" fill="#898781" text-anchor="end" font-weight="normal" style="">0.2</text>
+<line x1="84.00" y1="116.00" x2="84.00" y2="650.00" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="84.00" y="672.00" font-size="12" fill="#898781" text-anchor="middle" font-weight="normal" style="">0</text>
+<line x1="267.03" y1="116.00" x2="267.03" y2="650.00" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="267.03" y="672.00" font-size="12" fill="#898781" text-anchor="middle" font-weight="normal" style="">0.25</text>
+<line x1="450.05" y1="116.00" x2="450.05" y2="650.00" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="450.05" y="672.00" font-size="12" fill="#898781" text-anchor="middle" font-weight="normal" style="">0.5</text>
+<line x1="633.08" y1="116.00" x2="633.08" y2="650.00" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="633.08" y="672.00" font-size="12" fill="#898781" text-anchor="middle" font-weight="normal" style="">0.75</text>
+<line x1="816.10" y1="116.00" x2="816.10" y2="650.00" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="816.10" y="672.00" font-size="12" fill="#898781" text-anchor="middle" font-weight="normal" style="">1</text>
+<line x1="999.13" y1="116.00" x2="999.13" y2="650.00" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<text x="999.13" y="672.00" font-size="12" fill="#898781" text-anchor="middle" font-weight="normal" style="">1.25</text>
+<line x1="84.00" y1="650.00" x2="1000.00" y2="650.00" stroke="#c3c2b7" stroke-width="1.5" stroke-linecap="round"/>
+<line x1="84.00" y1="116.00" x2="84.00" y2="650.00" stroke="#c3c2b7" stroke-width="1.5" stroke-linecap="round"/>
+<text x="542.00" y="706.00" font-size="14" fill="#52514e" text-anchor="middle" font-weight="normal" style="">false flags per tracked person-month</text>
+<text x="28.00" y="383.00" font-size="14" fill="#52514e" text-anchor="middle" transform="rotate(-90 28.00 383.00)">sensitivity within 21 days of onset</text>
+<polygon points="938.57,517.16 825.29,467.35 714.96,395.40 603.64,319.76 508.47,229.35 416.97,192.45 335.01,155.56 266.27,177.69 209.51,227.51 170.36,325.29 139.05,365.88 119.47,450.75 104.31,528.23 95.74,566.98 91.83,596.50 91.83,627.86 95.74,607.57 104.31,578.05 119.47,515.32 139.05,443.37 170.36,404.67 209.51,323.45 266.27,275.48 335.01,255.18 416.97,288.39 508.47,321.60 603.64,400.93 714.96,467.40 825.29,530.12 938.57,570.67" fill="#2a78d6" fill-opacity="0.12" stroke="none"/>
+<path d="M 938.57 544.84 L 825.29 500.56 L 714.96 432.30 L 603.64 360.34 L 508.47 275.48 L 416.97 240.42 L 335.01 207.21 L 266.27 227.51 L 209.51 277.32 L 170.36 365.88 L 139.05 404.62 L 119.47 483.96 L 104.31 554.06 L 95.74 587.27 L 91.83 613.10" fill="none" stroke="#2a78d6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="938.57" cy="544.84" r="3.60" fill="#2a78d6" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="825.29" cy="500.56" r="3.60" fill="#2a78d6" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="714.96" cy="432.30" r="3.60" fill="#2a78d6" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="603.64" cy="360.34" r="3.60" fill="#2a78d6" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="508.47" cy="275.48" r="3.60" fill="#2a78d6" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="416.97" cy="240.42" r="3.60" fill="#2a78d6" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="335.01" cy="207.21" r="3.60" fill="#2a78d6" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="266.27" cy="227.51" r="3.60" fill="#2a78d6" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="209.51" cy="277.32" r="3.60" fill="#2a78d6" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="170.36" cy="365.88" r="3.60" fill="#2a78d6" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="139.05" cy="404.62" r="3.60" fill="#2a78d6" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="119.47" cy="483.96" r="3.60" fill="#2a78d6" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="104.31" cy="554.06" r="3.60" fill="#2a78d6" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="95.74" cy="587.27" r="3.60" fill="#2a78d6" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="91.83" cy="613.10" r="3.60" fill="#2a78d6" stroke="#fcfcfb" stroke-width="1.2"/>
+<text x="952.57" y="534.84" font-size="13.5" fill="#2a78d6" text-anchor="start" font-weight="600" style="">A-fixed</text>
+<polygon points="194.58,545.22 201.58,552.22 194.58,559.22 187.58,552.22" fill="#ffffff" stroke="#2a78d6" stroke-width="2.5"/>
+<polygon points="815.75,557.75 737.46,507.94 655.50,432.30 558.13,369.57 467.61,295.77 387.12,262.56 322.04,255.18 261.62,236.73 211.22,303.10 171.58,362.14 145.41,426.76 120.94,483.96 106.75,526.39 97.94,566.98 92.56,587.27 92.56,622.33 97.94,609.41 106.75,576.20 120.94,542.99 145.41,495.02 171.58,437.83 211.22,388.02 261.62,327.18 322.04,343.74 387.12,351.12 467.61,382.48 558.13,445.21 655.50,496.92 737.46,565.13 815.75,602.03" fill="#eb6834" fill-opacity="0.12" stroke="none"/>
+<path d="M 815.75 579.89 L 737.46 537.46 L 655.50 465.51 L 558.13 408.31 L 467.61 340.05 L 387.12 306.84 L 322.04 299.46 L 261.62 284.70 L 211.22 347.43 L 171.58 400.93 L 145.41 461.82 L 120.94 513.47 L 106.75 552.22 L 97.94 589.12 L 92.56 605.72" fill="none" stroke="#eb6834" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="815.75" cy="579.89" r="3.60" fill="#eb6834" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="737.46" cy="537.46" r="3.60" fill="#eb6834" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="655.50" cy="465.51" r="3.60" fill="#eb6834" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="558.13" cy="408.31" r="3.60" fill="#eb6834" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="467.61" cy="340.05" r="3.60" fill="#eb6834" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="387.12" cy="306.84" r="3.60" fill="#eb6834" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="322.04" cy="299.46" r="3.60" fill="#eb6834" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="261.62" cy="284.70" r="3.60" fill="#eb6834" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="211.22" cy="347.43" r="3.60" fill="#eb6834" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="171.58" cy="400.93" r="3.60" fill="#eb6834" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="145.41" cy="461.82" r="3.60" fill="#eb6834" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="120.94" cy="513.47" r="3.60" fill="#eb6834" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="106.75" cy="552.22" r="3.60" fill="#eb6834" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="97.94" cy="589.12" r="3.60" fill="#eb6834" stroke="#fcfcfb" stroke-width="1.2"/>
+<circle cx="92.56" cy="605.72" r="3.60" fill="#eb6834" stroke="#fcfcfb" stroke-width="1.2"/>
+<text x="829.75" y="569.89" font-size="13.5" fill="#eb6834" text-anchor="start" font-weight="600" style="">A-naive</text>
+<polygon points="197.52,526.77 204.52,533.77 197.52,540.77 190.52,533.77" fill="#ffffff" stroke="#eb6834" stroke-width="2.5"/>
+<text x="212.58" y="546.99" font-size="11.5" fill="#898781" text-anchor="start" font-weight="normal" style="font-style:italic;">chance baseline: random flags at each</text>
+<text x="212.58" y="562.99" font-size="11.5" fill="#898781" text-anchor="start" font-weight="normal" style="font-style:italic;">architecture's own false-flag rate</text>
+<line x1="84.00" y1="88.00" x2="102.00" y2="88.00" stroke="#2a78d6" stroke-width="3" stroke-linecap="round"/>
+<text x="108.00" y="92.00" font-size="12" fill="#52514e" text-anchor="start" font-weight="normal" style="">A-fixed</text>
+<line x1="214.00" y1="88.00" x2="232.00" y2="88.00" stroke="#eb6834" stroke-width="3" stroke-linecap="round"/>
+<text x="238.00" y="92.00" font-size="12" fill="#52514e" text-anchor="start" font-weight="normal" style="">A-naive</text>
+</svg>
