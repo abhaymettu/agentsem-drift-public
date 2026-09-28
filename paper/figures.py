@@ -15,8 +15,8 @@ Inputs (read-only, committed):
 Outputs:
   paper/fig1_validity_chain.svg
   paper/fig2_sensitivity_vs_false_flags.svg
-  paper/fig3_contamination.svg
-  paper/fig4_selection_and_authorship.svg
+  paper/fig3_selection_and_authorship.svg
+  paper/fig4_contamination.svg
 
 Palette, marks and accessibility rules follow the dataviz skill's reference
 palette (references/palette.md): the 8-hue categorical order validated for
@@ -411,10 +411,10 @@ def fig2_sensitivity_vs_false_flags(out_path):
 
 
 # --------------------------------------------------------------------------
-# Figure 3: contamination
+# Figure 4: contamination
 # --------------------------------------------------------------------------
 
-def fig3_contamination(out_path):
+def fig4_contamination(out_path):
     pilot = load("pilot", "results.json")
     agg = pilot["aggregates"]
     by_class = agg["by_class"]
@@ -567,10 +567,10 @@ def fig3_contamination(out_path):
 
 
 # --------------------------------------------------------------------------
-# Figure 4: selection and authorship
+# Figure 3: selection and authorship
 # --------------------------------------------------------------------------
 
-def fig4_selection_and_authorship(out_path):
+def fig3_selection_and_authorship(out_path):
     results = load("sim", "results.json")
     metrics = load("sim", "metrics.json")["metrics"]
 
@@ -710,8 +710,8 @@ def main():
     figs = [
         (fig1_validity_chain, "fig1_validity_chain.svg"),
         (fig2_sensitivity_vs_false_flags, "fig2_sensitivity_vs_false_flags.svg"),
-        (fig3_contamination, "fig3_contamination.svg"),
-        (fig4_selection_and_authorship, "fig4_selection_and_authorship.svg"),
+        (fig3_selection_and_authorship, "fig3_selection_and_authorship.svg"),
+        (fig4_contamination, "fig4_contamination.svg"),
     ]
     for fn, name in figs:
         out = os.path.join(HERE, name)

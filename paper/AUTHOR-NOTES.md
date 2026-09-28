@@ -1,7 +1,7 @@
-# Author notes for paper/DRAFT.md (v2)
+# Author notes for paper/DRAFT.md (v3)
 
 Kept out of the manuscript on purpose: provenance, local paths, verification status of references, the
-referee-response map, and open items. v0 is `a497ae3`, v1 is `d0db495`; v2 is uncommitted.
+referee-response map, and open items. v0 `a497ae3`, v1 `d0db495`, v2 `3fb50cd`; v3 is uncommitted.
 
 ## 1. Provenance
 
@@ -20,6 +20,8 @@ referee-response map, and open items. v0 is `a497ae3`, v1 is `d0db495`; v2 is un
 | retention setting | `~/.claude/settings.json`, `cleanupPeriodDays: 45` |
 | program studies cited as Mettu (2026b) | Study 1a `~/code/agentsem-trap-world` commit `21ec751` (`MORNING-HANDOFF.md`); Study 2 S1 `~/code/agentsem-study2-integration` commit `41d6774`; Study 5 `~/code/agentsem-study5-feasibility` commit `3dfe3c2` (`FALSIFICATION-PLAN.md`) |
 | Mettu (2026a) | `~/code/ghost-respondents/paper/GHOST-RESPONDENTS-DRAFT.md`, section 2.2 (E5, E7) |
+| exploratory robustness grid | plan `sim/ROBUSTNESS-PLAN.md`, sha256 `e1dbc8b74be6b3067e9433b76a1d1b24b01b705994b6a248771ad65f11836606`, committed in `3fb50cd` (2026-09-27 23:43:25 CDT); results `sim/robustness.json`, `sim/ROBUSTNESS.md`; two cells (`default`, `m1_15`) computed before the commit for a refactor check, disclosed as `sim/POSTFREEZE-DEVIATIONS.md` item 9 |
+| figures | `paper/figures.py` renders `paper/fig1` to `fig4` (.svg) from `sim/results.json`, `sim/metrics.json` and `pilot/results.json`. File numbers match figure numbers in the draft (renamed 2026-09-27) |
 | citation verification files | `~/lanes/bridge-jobs/agentsem-overnight-20260927/paper-citations.md`, `prior-art-passive.md`, `lit-verify.md` |
 
 ### Where each number comes from
@@ -31,6 +33,11 @@ referee-response map, and open items. v0 is `a497ae3`, v1 is `d0db495`; v2 is un
   chance baselines; `i` realized false flags; `j` reset cost; `k` current; `l` pop; `m` kappa cell; `n`
   indicator-5 validity; `o` analytic attenuation; `p` person-level validity; `q` current beside
   triggered, used for the P4 paragraph in 3.9).
+- Section 3.10: `sim/robustness.json` (`cells.<cell>.S1`, `S2`, `S3_S4.by_architecture`, `S5`, `S6`;
+  `summary`). S2 indicator-4 SE in the failing cells: 0.0817 (lam_low), 0.0555 (phi_D_high), 0.1794
+  (rising_slope_10) against 0.0115 in the default, ratios 7.1, 4.8 and 15.6 ("5 to 16 times").
+- Figure captions: Figure 3's -0.08 and 0.29 are `P6.pi_rises_with_D.ind5_att_mc_mean` and
+  `ind5_att_formula_mean`; Figure 4's 73,955 is `pilot/results.json` aggregates.
 - Section 3.3 thresholds, 3.4 schedule values: `sim/tuning.json`; `pi' = 0.365` and the SD 0.109 vs 0.174
   note: `sim/PREREG.md`.
 - Section 4: only post-cutoff aggregates from `pilot/results.json` (`aggregates`: 73,955 user-role entries,
@@ -92,9 +99,15 @@ From the three citation files. The manuscript carries no status tags.
 | FDA (2026) General Wellness guidance | verified |
 | Mettu (2026a, 2026b) | own unpublished work; not retrievable until deposited |
 
-Not cited because unverified: Molenaar (2004) and Fisher, Medaglia and Jeronimus (2018) on ergodicity;
-Mohr, Zhang and Schueller (2017) on personal sensing; intensive-longitudinal invariance literature;
-Qian et al. (2021) (partly verified only).
+Added in v3, all verified in `paper-citations.md` ("Ergodicity and person-level generalization (round
+2)"): Molenaar (2004); Fisher, Medaglia and Jeronimus (2018); Adolf and Fried (2019), a PNAS letter;
+Hamaker (2025, Annual Review of Clinical Psychology); Hamaker's chapter in Mehl and Conner's handbook,
+cited as 2012 (the year used in most citations and in APA PsycNet), while Guilford's page lists the book
+as 2011 hardcover and 2013 paperback. Its pages (43 to 61) come only from a secondary source, so the
+reference gives none.
+
+Not cited because unverified: Mohr, Zhang and Schueller (2017) on personal sensing; the
+intensive-longitudinal invariance literature; Qian et al. (2021) (partly verified only).
 
 ## 3. Referee responses
 
@@ -111,11 +124,11 @@ Required revisions:
 | 7 overreach | addressed | list of what appeared and what did not; "not fixable" reworded; indicator-5 validity with interval, labelled non-frozen and dependent on invented values |
 | 8 run disclosure | addressed | audit described as run by an AI agent in the same project; AI-use statement; run 1 P8 beside run 2; timestamps; section 10 reframing disclosed |
 | 9 Kane structure | addressed | section 2 recast as scoring, generalization, extrapolation, backing and use, with a mapping column to the earlier links |
-| 10 missing inferences | done in v2 except citations | person-level validity distribution now reported (3.8, metrics item p); ergodicity citations deferred until verified |
+| 10 missing inferences | done | person-level validity distribution in 3.8 (metrics item p); ergodicity and person-level citations added in v3 (2.3, 3.8) |
 | 11 Borsboom sentence | addressed | rewritten in 2.2 as the referee proposed |
 | 12 construct and direction | addressed | 2.1 |
 | 13 one primary link per threat | addressed | context and usage missingness placed under extrapolation, with a cross-reference to generalization |
-| 14 structure vs magnitude | partly | v2 states the conditions (phi_D > 0, score-dependent trigger, non-zero coupling and gap) and that no grid was run; the grid itself is deferred (new runs) |
+| 14 structure vs magnitude | done | v3 adds the exploratory one-at-a-time grid (3.10), committed and hashed before the run; conditions updated in 3.9 |
 | 15 corpus scope | addressed | title changed from "everyday agent conversations" to "agent conversation traces"; abstract and 4.1 scope the corpus to one heavy-automation user's coding-agent transcripts; "existence proof and measurement protocol" wording used |
 | 16 middle series | done in v2 | naive, middle and typed correlations in 4.2 (contamination quantities only) |
 | 17 journal form | partly | ethics placeholder added in v2; cite comments kept for claims_lint and stripped at export (section 4); DOI deposit and external timestamp are author actions (section 5) |
@@ -157,19 +170,26 @@ Strip them for submission with:
 2. Make Mettu (2026a, 2026b) retrievable (deposit or preprint).
 3. Confirm or replace the bracketed ethics sentence in Statements.
 
+### Round 3 (coordinator, v3)
+
+| item | status |
+|---|---|
+| robustness grid (item 14 / N5) | done: 3.10 "Exploratory robustness (not frozen)", plan hashed before the run, POSTFREEZE item 9 disclosed; S3, S5, S6 hold in every cell; S1 holds for `triggered` everywhere, fails for `current` in lam_low only; S2 direction holds on points in all 11 cells, indicator 4's interval crosses zero in three cells (precision); S4 surfaced probe-only below chance at `m1 = 1.5`, reported as unplanned |
+| figures | done: four figures referenced at first use, with method-language captions |
+| ergodicity citations (item 10) | done |
+
+Deferred: only the optional N1 check (`triggered` on the previous day's statistic in the homogeneous
+isolate), which needs a new run.
+
 ## 6. Open items for the author
 
 1. Affiliation, corresponding address, acknowledgements, and a conflicts statement.
 2. AI-use statement: add what the author personally checked, if the venue asks for it.
-3. New runs, all labelled post-scoring if done: the parameter grid (round 1 item 14), IPW checks
-   (suggestion 3), `triggered` on the previous day's statistic in the homogeneous isolate (N1, optional),
-   the G3-reading curve, and the P9 check (BD ramps still rising after day 28).
+3. Optional, not required by the referees and not done: the IPW checks from round-1 suggestion 3, the
+   G3-reading curve, and a check of the P9 candidate explanation.
 4. P1b's lower bound is exactly 0.500; check whether it is a bootstrap quantile or a floor.
-5. Citations still to verify before adding: ergodicity (Molenaar; Fisher et al.), personal sensing
-   (Mohr et al.), longitudinal invariance; Begg and Greenes (1983) full text.
-6. Figures: class shares, autonomous-session shares, change-point base rate, Table 1 as an interval
-   plot, the sensitivity against false-flag curve.
-7. Venue word limit (Advances in Methods and Practices in Psychological Science) against the 8,000-word
-   body.
+5. Begg and Greenes (1983) full text; the unverified list is in section 4.
+6. Venue word limit (Advances in Methods and Practices in Psychological Science) against the body
+   (about 8,320 words excluding Appendix A and references).
 8. Retention: whether to raise `cleanupPeriodDays` above 45.
 9. The spec's pasted-draft check says "earlier assistant message"; the code checks the last five turns.
