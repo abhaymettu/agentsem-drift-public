@@ -10,8 +10,8 @@ Manuscript draft v1, 2026-09-27. Author notes, provenance and open items are kep
 
 It is tempting to read a change in a score computed from a person's conversations with an AI agent as a
 change in the person. I argue that this inference has not been validated, and I set out what validating
-it would take. The interpretation is laid out as an argument-based validity argument with scoring,
-generalization, extrapolation and use inferences, and the threats specific to agents are placed on it:
+it would take. I lay out the interpretation as an argument-based validity argument with scoring,
+generalization, extrapolation and use inferences, and place the threats specific to agents on it:
 machine-authored text in the "user" stream, score-contingent agent help, silent agent and model version
 changes, and criterion samples triggered by the score itself. A simulation, frozen and hashed before
 scoring, tests these threats on eleven families of synthetic persons against eleven frozen predictions,
@@ -165,7 +165,7 @@ agent, in the help it gives, in the mix of work, or in whether the person used t
 
 ### 2.5 Backing for extrapolation: how the criterion is sampled
 
-Extrapolation is backed by the score's relation to an independent criterion; how that criterion is
+The score's relation to an independent criterion backs extrapolation; how that criterion is
 sampled threatens the backing and is not an inference of its own.
 
 **Criterion sampling.** If which days get a criterion depends on the score, the estimated validity is
@@ -227,7 +227,7 @@ sampling and criterion non-response, is drawn inside extrapolation.
 
 The design, metrics and predictions were frozen before scoring as a committed file with sha256
 `60db6dd195942387e5572a640224c4cb13836f29c37c1b611b14c70598678f17` (supplementary repository,
-`sim/PREREG.md`), at 21:21 CDT on 2026-09-27. Every evaluation seed is derived from that hash. The
+`sim/PREREG.md`), at 21:21 CDT on 2026-09-27. Every evaluation seed derives from that hash. The
 freeze is a local commit, not an external registration. The design was written for a change-detection
 layer; seven minutes after the freeze, the project's direction was recorded as a measurement-validity
 study, and the simulation is read here as validity evidence. That reframing changed nothing in the frozen
@@ -302,8 +302,8 @@ a "within X" clause, inside plus or minus X), in the default cell unless another
 from a 2,000-draw person bootstrap, paired within a panel and independent across panels. A failed
 prediction is reported as failed, and nothing is re-tuned after scoring. The frozen text's
 standard-error formula divides by the square root of 200, a leftover from an earlier design; the
-literal reading would change neither verdict that holds. The eleven predictions and their thresholds
-are given in Table 1. P1, P1b, P2 and P3 are construction checks, which test whether each component of `A-fixed` does what it was built to do; they
+literal reading would change neither verdict that holds. Table 1 gives the eleven predictions and their
+thresholds. P1, P1b, P2 and P3 are construction checks, which test whether each component of `A-fixed` does what it was built to do; they
 are not findings.
 
 ### 3.6 Scoring runs and post-freeze fixes
@@ -413,7 +413,7 @@ frozen reset cost cannot be computed: no frozen family has both a drift onset an
 ### 3.9 What the results show
 
 Some results follow from the generator's structure: selection attenuation when the criterion schedule
-depends on the score; state-dependent non-response not being removed by weighting on observables; and
+depends on the score; weighting on observables not removing state-dependent non-response; and
 the sign of state-coupled contamination, which follows from `X = H + pi (M - H)`. They are expected
 whenever `phi_D > 0`, the trigger depends on the score, the loadings are non-zero, and the coupling and
 mean gap are non-zero; section 3.10 checks their direction on an exploratory grid. The magnitudes (0.197, 17.8 points, 24.8 percent) are set by invented values and say
