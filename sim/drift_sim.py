@@ -2461,6 +2461,92 @@ def metrics(prereg_sha):
              "pilot/indicator4_params.json, not hard-coded.",
         params=o_out)
 
+    # ---- (p) person-level validity; see note. ----
+    def _person_r_dist(vals, tracked, D):
+        r_list = []
+        for i in range(N_PERSONS):
+            ok = tracked[i] & ~np.isnan(vals[i]) & ~np.isnan(D[i])
+            if ok.sum() < 10:
+                continue
+            d, v = D[i, ok], vals[i, ok]
+            if d.std() < 1e-9 or v.std() < 1e-9:
+                continue
+            r_list.append(float(np.corrcoef(v, d)[0, 1]))
+        r = np.array(r_list)
+        quantiles = dict(zip(("p5", "p25", "p50", "p75", "p95"),
+                              (float(x) for x in np.percentile(r, [5, 25, 50, 75, 95]))))
+        return dict(quantiles=quantiles,
+                    share_r_le_0=float(np.mean(r <= 0)),
+                    mean_r=mc_stat(lambda idx, r=r: np.nanmean(r[idx]), [r.size], seed=9),
+                    n_persons=int(r.size))
+
+    def person_validity_block(family):
+        panel_p = panel_for(family, "default")
+        Cp, reason_p, _, _ = arch_run(family, "default", "A-fixed")
+        tracked_p = np.zeros_like(reason_p, dtype=bool)
+        tracked_p[:, BASELINE_DAYS:] = reason_p[:, BASELINE_DAYS:] == 0
+        Dp = panel_p["D"]
+        indicators = {"indicator4": IDX_MSGLEN, "indicator5": IDX_NEGSELF}
+        return dict(composite_A_fixed=_person_r_dist(Cp, tracked_p, Dp),
+                    **{f"{name}_{kind}": _person_r_dist(panel_p[key][:, :, idx], tracked_p, Dp)
+                       for name, idx in indicators.items()
+                       for kind, key in (("raw", "X"), ("filtered", "X_filtered"))})
+
+    out["p_person_level_validity"] = dict(
+        note="Within-person correlation of the A-fixed composite (and the raw/authorship-"
+             "filtered single indicators 4 and 5, IDX_MSGLEN/IDX_NEGSELF) with the true D, over "
+             "tracked (post-baseline, reason==0) days; frozen default-cell panels, families S "
+             "and DR. Distribution across qualifying persons (>=10 tracked days, non-degenerate "
+             "D and indicator variance): quantiles 5/25/50/75/95, share of persons with r <= 0, "
+             "and the person-averaged mean with a 2000-draw person bootstrap interval (mc_stat, "
+             "the same variable-length-list pattern as item (n)).",
+        S=person_validity_block("S"),
+        DR=person_validity_block("DR"))
+
+    # (q) triggered reuses P4's rng (eval_seed+1, drawn first); current uses unused offset +6200.
+    panel_q = panel_for("S", "default")
+    Cq, reason_q, _, band_q = arch_run("S", "default", "A-fixed")
+    Yq, resp_q = panel_q["Y"], panel_q["responded"]
+    post_mask_q = np.zeros_like(reason_q, dtype=bool)
+    post_mask_q[:, BASELINE_DAYS:] = True
+    all_mask_q = post_mask_q & ~np.isnan(Cq)
+
+    rng_trig_q = np.random.default_rng(eval_seed(prereg_sha, "S", "default") + 1)
+    probed_tq, _, id_tq = probe_schedule(rng_trig_q, "triggered", Cq, band_q, p_trig=P["p_trig"])
+    obs_tq = probed_tq & resp_q & ~np.isnan(Cq) & post_mask_q
+
+    rng_cur_q = np.random.default_rng(eval_seed(prereg_sha, "S", "default") + 6200)
+    probed_cq, _, id_cq = probe_schedule(rng_cur_q, "current", Cq, band_q, c_star=P["c_star"])
+    obs_cq = probed_cq & resp_q & ~np.isnan(Cq) & post_mask_q
+
+    sa_q = _pstats(all_mask_q, Cq, Yq)
+    st_q = _pstats(obs_tq, Cq, Yq)
+    sc_q = _pstats(obs_cq, Cq, Yq)
+
+    def _q_block(s):
+        return dict(
+            slope=mc_stat(lambda idx: _pslope(s, idx), [N_PERSONS]),
+            corr=mc_stat(lambda idx: _pcorr_unweighted(s, idx), [N_PERSONS]),
+            corr_deflation=mc_stat(lambda idx: _pcorr_unweighted(sa_q, idx) - _pcorr_unweighted(s, idx),
+                                    [N_PERSONS]),
+            slope_attenuation_rel=mc_stat(
+                lambda idx: (_pslope(sa_q, idx) - _pslope(s, idx)) / _pslope(sa_q, idx), [N_PERSONS]))
+
+    out["q_current_vs_triggered_P4"] = dict(
+        note="`current` control (probe when C_t > c*) computed on exactly the same S/A-fixed/"
+             "default panel, composite, all-days mask and person-centred sufficient statistics "
+             "as P4's triggered schedule; triggered here reproduces P4's own numbers bit-for-bit "
+             "(same rng offset, drawn first from a fresh rng). Reported without a threshold, per "
+             "PREREG P4's own text ('in the default cell its value is reported without a "
+             "threshold'). corr_deflation and slope_attenuation_rel are signed, vs all-days, "
+             "exactly as P4's own fields.",
+        all_days=dict(slope=mc_stat(lambda idx: _pslope(sa_q, idx), [N_PERSONS]),
+                       corr=mc_stat(lambda idx: _pcorr_unweighted(sa_q, idx), [N_PERSONS])),
+        triggered=_q_block(st_q),
+        current=_q_block(sc_q),
+        ipw_identified_triggered=bool(id_tq),
+        ipw_identified_current=bool(id_cq))
+
     metrics_out = {"prereg_sha256": prereg_sha, "pi_bar": pi_bar, "kappa_a4": kappa_a4,
                    "mu_m4": mu_m4, "reporting_only": True, "metrics": out}
     (HERE / "metrics.json").write_text(json.dumps(metrics_out, indent=2, default=float))

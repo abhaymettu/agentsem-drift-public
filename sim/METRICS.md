@@ -2420,3 +2420,261 @@ for a CUSUM alarm; "tracked" person-months count only days the layer did not abs
   }
 }
 ```
+
+## p_person_level_validity
+
+```json
+{
+  "note": "Within-person correlation of the A-fixed composite (and the raw/authorship-filtered single indicators 4 and 5, IDX_MSGLEN/IDX_NEGSELF) with the true D, over tracked (post-baseline, reason==0) days; frozen default-cell panels, families S and DR. Distribution across qualifying persons (>=10 tracked days, non-degenerate D and indicator variance): quantiles 5/25/50/75/95, share of persons with r <= 0, and the person-averaged mean with a 2000-draw person bootstrap interval (mc_stat, the same variable-length-list pattern as item (n)).",
+  "S": {
+    "composite_A_fixed": {
+      "quantiles": {
+        "p5": 0.410269959150298,
+        "p25": 0.5077038688524983,
+        "p50": 0.574462789945325,
+        "p75": 0.6301568353735714,
+        "p95": 0.694789399718627
+      },
+      "share_r_le_0": 0.0,
+      "mean_r": {
+        "point": 0.5654233472202821,
+        "se": 0.0028265840570721188,
+        "lo": 0.5595557675857614,
+        "hi": 0.5709224480911474
+      },
+      "n_persons": 1000
+    },
+    "indicator4_raw": {
+      "quantiles": {
+        "p5": -0.09404707007150773,
+        "p25": 0.02054738688806792,
+        "p50": 0.08995281331901525,
+        "p75": 0.1660886200130802,
+        "p95": 0.26517194565576274
+      },
+      "share_r_le_0": 0.209,
+      "mean_r": {
+        "point": 0.09065640019410304,
+        "se": 0.003553367539988997,
+        "lo": 0.08357750966478332,
+        "hi": 0.0975368341850706
+      },
+      "n_persons": 1000
+    },
+    "indicator4_filtered": {
+      "quantiles": {
+        "p5": 0.10457659541406665,
+        "p25": 0.20679530269136479,
+        "p50": 0.28131282952235903,
+        "p75": 0.35652179217283936,
+        "p95": 0.4495960067952846
+      },
+      "share_r_le_0": 0.006,
+      "mean_r": {
+        "point": 0.28129691443294436,
+        "se": 0.0034735342457583667,
+        "lo": 0.27408266694774963,
+        "hi": 0.2879637638670361
+      },
+      "n_persons": 1000
+    },
+    "indicator5_raw": {
+      "quantiles": {
+        "p5": -0.09331242141484905,
+        "p25": 0.024090675967273364,
+        "p50": 0.09336563425620374,
+        "p75": 0.16266081785564313,
+        "p95": 0.2616318201075489
+      },
+      "share_r_le_0": 0.191,
+      "mean_r": {
+        "point": 0.09098020205726289,
+        "se": 0.0033024393327196937,
+        "lo": 0.08445075133719797,
+        "hi": 0.09764727034377747
+      },
+      "n_persons": 1000
+    },
+    "indicator5_filtered": {
+      "quantiles": {
+        "p5": 0.07323723400609114,
+        "p25": 0.19071605670586342,
+        "p50": 0.2713434298999778,
+        "p75": 0.3437331820600148,
+        "p95": 0.4461060500408208
+      },
+      "share_r_le_0": 0.008,
+      "mean_r": {
+        "point": 0.2673342131728689,
+        "se": 0.003451773104158404,
+        "lo": 0.26055025924672726,
+        "hi": 0.27388114190384416
+      },
+      "n_persons": 1000
+    }
+  },
+  "DR": {
+    "composite_A_fixed": {
+      "quantiles": {
+        "p5": 0.442712102455801,
+        "p25": 0.5422326349776487,
+        "p50": 0.603259776168207,
+        "p75": 0.6578570554828356,
+        "p95": 0.7263397707390916
+      },
+      "share_r_le_0": 0.0,
+      "mean_r": {
+        "point": 0.5957770264576253,
+        "se": 0.0028178046325303126,
+        "lo": 0.5904283895700021,
+        "hi": 0.6014073663827408
+      },
+      "n_persons": 1000
+    },
+    "indicator4_raw": {
+      "quantiles": {
+        "p5": -0.08518882882736756,
+        "p25": 0.017742655628561185,
+        "p50": 0.08533530242183351,
+        "p75": 0.15670788064343263,
+        "p95": 0.2711711780842393
+      },
+      "share_r_le_0": 0.215,
+      "mean_r": {
+        "point": 0.08664266634023145,
+        "se": 0.003398822230886799,
+        "lo": 0.08019149188555401,
+        "hi": 0.0933727027978605
+      },
+      "n_persons": 1000
+    },
+    "indicator4_filtered": {
+      "quantiles": {
+        "p5": 0.11380888564853842,
+        "p25": 0.22486005004672202,
+        "p50": 0.297250081030064,
+        "p75": 0.366402862599173,
+        "p95": 0.4733602412236682
+      },
+      "share_r_le_0": 0.004,
+      "mean_r": {
+        "point": 0.2949360654646425,
+        "se": 0.0034710931218572987,
+        "lo": 0.28814269612095816,
+        "hi": 0.3019592070770397
+      },
+      "n_persons": 1000
+    },
+    "indicator5_raw": {
+      "quantiles": {
+        "p5": -0.08189289103754127,
+        "p25": 0.02434188184963458,
+        "p50": 0.09616147366719793,
+        "p75": 0.1685522116778135,
+        "p95": 0.2841607668692206
+      },
+      "share_r_le_0": 0.188,
+      "mean_r": {
+        "point": 0.09642574694922004,
+        "se": 0.0036454568576113474,
+        "lo": 0.08927790746981713,
+        "hi": 0.10361615356758387
+      },
+      "n_persons": 1000
+    },
+    "indicator5_filtered": {
+      "quantiles": {
+        "p5": 0.09572246356364708,
+        "p25": 0.20173049822583672,
+        "p50": 0.28523796959383174,
+        "p75": 0.3658329266016223,
+        "p95": 0.46694769751612075
+      },
+      "share_r_le_0": 0.006,
+      "mean_r": {
+        "point": 0.28225405745483395,
+        "se": 0.0036129166932495137,
+        "lo": 0.2752989786391091,
+        "hi": 0.28936334618461995
+      },
+      "n_persons": 1000
+    }
+  }
+}
+```
+
+## q_current_vs_triggered_P4
+
+```json
+{
+  "note": "`current` control (probe when C_t > c*) computed on exactly the same S/A-fixed/default panel, composite, all-days mask and person-centred sufficient statistics as P4's triggered schedule; triggered here reproduces P4's own numbers bit-for-bit (same rng offset, drawn first from a fresh rng). Reported without a threshold, per PREREG P4's own text ('in the default cell its value is reported without a threshold'). corr_deflation and slope_attenuation_rel are signed, vs all-days, exactly as P4's own fields.",
+  "all_days": {
+    "slope": {
+      "point": 0.9304749233110137,
+      "se": 0.007396286164540217,
+      "lo": 0.9164760886983816,
+      "hi": 0.9451462034887382
+    },
+    "corr": {
+      "point": 0.4709082772906699,
+      "se": 0.0031497176873031417,
+      "lo": 0.46482534709628753,
+      "hi": 0.4772074667781008
+    }
+  },
+  "triggered": {
+    "slope": {
+      "point": 0.6996234257358064,
+      "se": 0.030771762841690215,
+      "lo": 0.6397653011463426,
+      "hi": 0.7593680933190593
+    },
+    "corr": {
+      "point": 0.3668823740719293,
+      "se": 0.01427653919281652,
+      "lo": 0.33816605246980713,
+      "hi": 0.3951425572144558
+    },
+    "corr_deflation": {
+      "point": 0.10402590321874061,
+      "se": 0.014141819191468941,
+      "lo": 0.07633083413862982,
+      "hi": 0.1327326061543352
+    },
+    "slope_attenuation_rel": {
+      "point": 0.24810071909702028,
+      "se": 0.03255815830740188,
+      "lo": 0.18537044229647787,
+      "hi": 0.31319920203348167
+    }
+  },
+  "current": {
+    "slope": {
+      "point": 0.6937019665754508,
+      "se": 0.0551821036744326,
+      "lo": 0.5883364484193828,
+      "hi": 0.8019046226017402
+    },
+    "corr": {
+      "point": 0.19022645488603157,
+      "se": 0.014595448636377942,
+      "lo": 0.1623028997332941,
+      "hi": 0.21935699014824792
+    },
+    "corr_deflation": {
+      "point": 0.28068182240463835,
+      "se": 0.014280349601872987,
+      "lo": 0.2539774959651168,
+      "hi": 0.3085715124061233
+    },
+    "slope_attenuation_rel": {
+      "point": 0.2544646296248662,
+      "se": 0.058216670705629324,
+      "lo": 0.14075281301962794,
+      "hi": 0.3670061294346538
+    }
+  },
+  "ipw_identified_triggered": false,
+  "ipw_identified_current": false
+}
+```

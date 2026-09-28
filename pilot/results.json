@@ -1,20 +1,20 @@
 {
   "stats": {
-    "files_found": 2311,
-    "files_opened": 2310,
+    "files_found": 2315,
+    "files_opened": 2314,
     "files_failed_to_open": 1,
-    "lines_read": 581664,
-    "user_entries": 76192,
-    "assistant_entries": 127670,
+    "lines_read": 582899,
+    "user_entries": 76359,
+    "assistant_entries": 127967,
     "parse_errors": 0,
     "unparseable_timestamps": 0,
     "provenance_coverage": {
-      "promptSource": 3425,
-      "turnOrigin": 1637,
-      "entrypoint": 76192,
-      "userType": 76192
+      "promptSource": 3433,
+      "turnOrigin": 1644,
+      "entrypoint": 76359,
+      "userType": 76359
     },
-    "elapsed_seconds": 12.265456914901733,
+    "elapsed_seconds": 9.100870132446289,
     "lane_prompt_files": 326,
     "until": "2026-09-28T01:32:31Z"
   },
@@ -142,6 +142,44 @@
       "share_days_naive_only": 0.125,
       "n_naive_days": 24,
       "n_filtered_days": 21
+    },
+    "indicators_middle_series_contamination": {
+      "note": "middle = user-role entries minus tool-result and sidechain (injected and lane-prompt entries kept). Contamination quantities only: correlation and mean absolute difference, no levels, no per-day series.",
+      "n_middle_days": 24,
+      "naive_vs_middle": {
+        "late_share": {
+          "n_paired_days": 24,
+          "correlation": 0.9364967253124683,
+          "mean_abs_difference": 0.04445900680220233
+        },
+        "fragmentation": {
+          "n_paired_days": 24,
+          "correlation": 0.9994510535998525,
+          "mean_abs_difference": 0.07562676723082744
+        },
+        "mean_log_len": {
+          "n_paired_days": 24,
+          "correlation": -0.01726063065449201,
+          "mean_abs_difference": 0.7740408625902636
+        }
+      },
+      "middle_vs_filtered": {
+        "late_share": {
+          "n_paired_days": 21,
+          "correlation": 0.9006895081016616,
+          "mean_abs_difference": 0.077752089773529
+        },
+        "fragmentation": {
+          "n_paired_days": 21,
+          "correlation": 0.10996292172431675,
+          "mean_abs_difference": 2.585287652779432
+        },
+        "mean_log_len": {
+          "n_paired_days": 21,
+          "correlation": 0.24355205694979296,
+          "mean_abs_difference": 1.2677416632447067
+        }
+      }
     },
     "train_test_split": {
       "cutoff_date_local": "2026-09-21",
@@ -463,10 +501,10 @@
       "share_of_fragmentation_session_hours": 0.7461538461538462
     },
     "provenance_field_coverage": {
-      "promptSource": 3425,
-      "turnOrigin": 1637,
-      "entrypoint": 76192,
-      "userType": 76192
+      "promptSource": 3433,
+      "turnOrigin": 1644,
+      "entrypoint": 76359,
+      "userType": 76359
     }
   }
 }

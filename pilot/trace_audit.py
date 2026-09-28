@@ -566,9 +566,11 @@ def safe_correlation(xs, ys):
         return None
 
 
-def build_day_indicator_series(rows, only_human_typed=False):
+def build_day_indicator_series(rows, only_human_typed=False, middle=False):
     """Return {date: {'late_share', 'fragmentation', 'mean_log_len'}} using either all
-    rows that day (naive) or human-typed rows only (filtered)."""
+    rows that day (naive), human-typed rows only (filtered), or -- the referee's requested
+    "middle" series -- every row except tool-result and sidechain (so injected and
+    lane-prompt entries, which the filtered series also drops, are kept here)."""
     buckets = defaultdict(lambda: {"late": 0, "n": 0, "chars_log": [], "hour_sessions": defaultdict(set)})
     for r in rows:
         date = r["date_local"]
@@ -576,6 +578,8 @@ def build_day_indicator_series(rows, only_human_typed=False):
         if date is None or hour is None:
             continue
         if only_human_typed and r["class"] != "human-typed":
+            continue
+        if middle and r["class"] in ("tool-result", "sidechain"):
             continue
         b = buckets[date]
         b["n"] += 1
@@ -630,6 +634,29 @@ def indicator_correlation_report(naive_by_day, filtered_by_day):
         len(naive_days - filtered_days) / len(naive_days) if naive_days else None
     )
     return report, share_naive_only, len(naive_days), len(filtered_days)
+
+
+def contamination_report(a_by_day, b_by_day):
+    """Day-level correlation and mean absolute difference between two indicator series
+    (e.g. naive-vs-middle, middle-vs-filtered), for each of the 3 indicators. Contamination
+    quantities ONLY -- no level/distribution stats and no per-day series, per the same
+    Opus review item (f) restriction `indicator_correlation_report` already observes."""
+    a_days = set(a_by_day)
+    b_days = set(b_by_day)
+    report = {}
+    for key in ("late_share", "fragmentation", "mean_log_len"):
+        paired_days = sorted(d for d in a_days if d in b_days
+                              and a_by_day[d][key] is not None and b_by_day[d][key] is not None)
+        a_vals = [a_by_day[d][key] for d in paired_days]
+        b_vals = [b_by_day[d][key] for d in paired_days]
+        corr = safe_correlation(a_vals, b_vals)
+        mad = statistics.fmean(abs(x - y) for x, y in zip(a_vals, b_vals)) if paired_days else None
+        report[key] = {
+            "n_paired_days": len(paired_days),
+            "correlation": corr,
+            "mean_abs_difference": mad,
+        }
+    return report
 
 
 # --------------------------------------------------------------------------
@@ -840,6 +867,11 @@ def aggregate(rows, infra):
     indicator_report_all, share_naive_only_all, naive_days_all, filtered_days_all = \
         indicator_correlation_report(naive_by_day_all, filtered_by_day_all)
 
+    # middle series (referee round 2): user-role entries minus tool-result/sidechain, kept vs naive/filtered as contamination-only quantities.
+    middle_by_day_all = build_day_indicator_series(rows, middle=True)
+    naive_vs_middle_all = contamination_report(naive_by_day_all, middle_by_day_all)
+    middle_vs_filtered_all = contamination_report(middle_by_day_all, filtered_by_day_all)
+
     # train/test split: first 70% of days (chronological) that have >=1 human-typed entry
     human_days_sorted = sorted(human_days)
     n_human_days = len(human_days_sorted)
@@ -963,6 +995,14 @@ def aggregate(rows, infra):
             "share_days_naive_only": share_naive_only_all,
             "n_naive_days": naive_days_all,
             "n_filtered_days": filtered_days_all,
+        },
+        "indicators_middle_series_contamination": {
+            "note": "middle = user-role entries minus tool-result and sidechain (injected and "
+                    "lane-prompt entries kept). Contamination quantities only: correlation and "
+                    "mean absolute difference, no levels, no per-day series.",
+            "n_middle_days": len(middle_by_day_all),
+            "naive_vs_middle": naive_vs_middle_all,
+            "middle_vs_filtered": middle_vs_filtered_all,
         },
         "train_test_split": {
             "cutoff_date_local": cutoff_date,
@@ -1359,6 +1399,26 @@ def render_results_md(agg, stats):
         f"- Days where naive has data but filtered has none: {_fmt(ov['share_days_naive_only'])} "
         f"of {ov['n_naive_days']} naive-active days ({ov['n_filtered_days']} days have >=1 human-typed entry).\n"
     )
+
+    lines.append(
+        "## Middle-series indicators -- CONTAMINATION only (overall, all data)\n\n"
+        "Referee round 2: a third series between naive and filtered. middle = user-role "
+        "entries MINUS tool-result and sidechain entries (injected and lane-prompt entries "
+        "are kept, unlike in the filtered series). Reported as contamination quantities "
+        f"only -- correlation and mean absolute difference -- no levels, no per-day series. "
+        f"Days with middle-series data: {agg['indicators_middle_series_contamination']['n_middle_days']}.\n"
+    )
+    mid = agg["indicators_middle_series_contamination"]
+    for key in ("late_share", "fragmentation", "mean_log_len"):
+        nm = mid["naive_vs_middle"][key]
+        mf = mid["middle_vs_filtered"][key]
+        lines.append(f"### {key}")
+        lines.append(
+            f"- naive vs middle: correlation={_fmt(nm['correlation'])}, "
+            f"mean_abs_diff={_fmt(nm['mean_abs_difference'])}, paired_days={nm['n_paired_days']}\n"
+            f"- middle vs filtered: correlation={_fmt(mf['correlation'])}, "
+            f"mean_abs_diff={_fmt(mf['mean_abs_difference'])}, paired_days={mf['n_paired_days']}\n"
+        )
 
     tt = agg["train_test_split"]
     lines.append("## Train / test split\n")

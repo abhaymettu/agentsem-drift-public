@@ -6,16 +6,16 @@ What was measured: how much of Abhay's own "user"-role stream in `~/.claude/proj
 
 ## Run stats
 
-- Files found under `~/.claude/projects`: 2311
-- Files opened: 2310 (failed to open: 1)
-- Lines read: 581664
-- `user`-role entries parsed: 76192
-- `assistant`-role entries parsed (text/model/tool-name only): 127670
+- Files found under `~/.claude/projects`: 2315
+- Files opened: 2314 (failed to open: 1)
+- Lines read: 582899
+- `user`-role entries parsed: 76359
+- `assistant`-role entries parsed (text/model/tool-name only): 127967
 - JSON parse errors (line skipped): 0
 - User entries with unparseable/missing timestamp: 0
 - Lane-prompt files loaded: 326
-- Provenance field coverage (share of user entries non-null): promptSource=3425/76192 (0.0450), turnOrigin=1637/76192 (0.0215), entrypoint=76192/76192 (1.0000), userType=76192/76192 (1.0000)
-- Elapsed: 12.27s
+- Provenance field coverage (share of user entries non-null): promptSource=3433/76359 (0.0450), turnOrigin=1644/76359 (0.0215), entrypoint=76359/76359 (1.0000), userType=76359/76359 (1.0000)
+- Elapsed: 9.10s
 
 ## Classification rules (exactly as implemented, in priority order)
 
@@ -169,6 +169,22 @@ Per Opus review item (f): only naive distributions, naive-vs-filtered correlatio
 - mean absolute difference (naive - filtered): 1.2098
 
 - Days where naive has data but filtered has none: 0.1250 of 24 naive-active days (21 days have >=1 human-typed entry).
+
+## Middle-series indicators -- CONTAMINATION only (overall, all data)
+
+Referee round 2: a third series between naive and filtered. middle = user-role entries MINUS tool-result and sidechain entries (injected and lane-prompt entries are kept, unlike in the filtered series). Reported as contamination quantities only -- correlation and mean absolute difference -- no levels, no per-day series. Days with middle-series data: 24.
+
+### late_share
+- naive vs middle: correlation=0.9365, mean_abs_diff=0.0445, paired_days=24
+- middle vs filtered: correlation=0.9007, mean_abs_diff=0.0778, paired_days=21
+
+### fragmentation
+- naive vs middle: correlation=0.9995, mean_abs_diff=0.0756, paired_days=24
+- middle vs filtered: correlation=0.1100, mean_abs_diff=2.5853, paired_days=21
+
+### mean_log_len
+- naive vs middle: correlation=-0.0173, mean_abs_diff=0.7740, paired_days=24
+- middle vs filtered: correlation=0.2436, mean_abs_diff=1.2677, paired_days=21
 
 ## Train / test split
 

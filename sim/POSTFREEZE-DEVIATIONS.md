@@ -185,3 +185,4 @@ rule" table, and no run-1 FAIL becomes a PASS.
 ## 7. `metrics` subcommand (reporting only, added after run-2)
 
 - reporting-only addition: `metrics` subcommand outputs the PREREG section 5 metrics that score() omitted; no verdict depends on them; run after the run-2 results commit 6c17e0c.
+- (p), (q) added after referee round 2
