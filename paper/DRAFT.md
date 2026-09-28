@@ -10,8 +10,9 @@ Where the numbers come from. Section 3's design values and tuned constants are r
 `60db6dd195942387e5572a640224c4cb13836f29c37c1b611b14c70598678f17`) and `sim/tuning.json`. Section 4's
 numbers are read from `pilot/RESULTS.md`, `pilot/results.json`, `pilot/INVENTORY.md` and
 `pilot/indicator4_params.json`, all from the corpus snapshot reproduced by
-`python3 pilot/trace_audit.py --until 2026-09-28T01:32:31Z`. Simulation results are not in this draft;
-they are marked [SIM RESULTS] and [PENDING RUN 2]. Every simulation number is synthetic. Prior agentSEM
+`python3 pilot/trace_audit.py --until 2026-09-28T01:32:31Z`. Simulation results are read from
+`sim/results.json` (score run 2, code at commit `5bc2310`); code changes after the freeze are listed in
+`sim/POSTFREEZE-DEVIATIONS.md`. Every simulation number is synthetic. Prior agentSEM
 work is cited by repository and commit. Unresolved items are listed at the end.
 
 ---
@@ -25,9 +26,16 @@ argument-based validity chain with four links: trace to indicator (whose behavio
 indicators to a within-person score (is the score invariant across contexts, agent versions and agent
 help?), score to change claim (against what baseline, with what missing days?), and change claim to
 criterion evidence (how was the criterion sampled?). For each link I name the threat and the evidence
-that would support the inference. I then report the design of a pre-registered simulation in which
-three candidate scoring rules and five criterion-sampling designs are scored on eleven families of
-synthetic persons, with ten predictions frozen before scoring. [SIM RESULTS]. Last, I audit the first
+that would support the inference. I then report a simulation, frozen and hashed before scoring, in
+which three candidate scoring rules and five criterion-sampling designs are scored on eleven families
+of synthetic persons against eleven frozen predictions. Only two hold. The mechanisms the chain names
+appear, but most do not clear their frozen thresholds on 95 percent intervals at 1,000 persons per
+family. A criterion schedule triggered by the change statistic attenuated the validity slope by 24.8
+percent, and weighting a schedule with a random floor did not demonstrably recover it. Criterion
+non-response tied to the state biased the slope by 14 to 40 percent, and weighting on observables made
+it worse. When the agent-authored share of text rose with the state, one indicator's validity reversed
+sign. At one false flag per six tracked person-months, the fixed rule flagged 20 percent of planted
+drifts within 21 days, still 17.8 points more than a criterion-only rule. Last, I audit the first
 link on my own agent transcripts, using metadata only. Of 73,955 user-role entries, 0.93 percent (1.44
 percent of characters) were typed by me; the rest were tool results, subagent traffic, injected text
 and lane prompts. 84 percent of sessions had no typed entry, and those sessions supplied 75 percent of
@@ -82,8 +90,8 @@ does next, and the agent's software changes under the person every few days. A s
 any of those moved.
 
 The contribution has three parts: a validity chain with the threats to each link (section 2); a
-pre-registered simulation of those threats, in which the probe schedules are designs for sampling a
-criterion in a future validation study (section 3; design reported, results pending); and a
+simulation of those threats, frozen and hashed before scoring, in which the probe schedules are designs
+for sampling a criterion in a future validation study (section 3); and a
 metadata-only audit of the first link on my own agent transcripts, which reports contamination and
 estimates no state (section 4). Section 5 turns these into requirements for a consented validation
 study, section 6 states the scope, and section 7 is the single translational paragraph.
@@ -228,8 +236,9 @@ range restriction and their corrections are standard in personnel selection (Tho
 and III [unverified: case labels confirmed only in secondary sources]; Sackett and Yang, 2000). The
 structure closest to the one here is verification bias: when a positive index test raises the chance
 that the reference standard is applied, accuracy estimates are biased, and weighting each verified case
-by the inverse of its verification probability corrects them (Begg and Greenes, 1983). Outcome-dependent
-two-phase designs use the same family of corrections (Tao et al., 2021; Zhou et al., 2002 [unverified]).
+by the inverse of its verification probability corrects them (Begg and Greenes, 1983 [unverified at
+full-text level]). Outcome-dependent
+two-phase designs use the same family of corrections (Tao et al., 2021; Zhou et al., 2002).
 In experience sampling, trigger design has been shown to change which contexts are sampled (Lathia et
 al., 2013), though without an attenuation result or a correction.
 
@@ -238,9 +247,8 @@ past scores is high selects on a statistic of past scores, which predict the cur
 current score, so the slope is biased and the correlation range-restricted. A random floor with every
 occasion's selection probability logged makes inverse-probability weighting possible; a trigger-only
 or fixed schedule does not, because some days have zero probability. This is a known result in a new
-setting, not a discovery (`paper-citations.md`, verdict). The event-contingent and adaptive sampling
-literature has been searched but not read in full (see Open items), and until it is, the paper does
-not call the dynamic-trigger case new.
+setting, not a discovery (`paper-citations.md`, verdict); section 3.10 states what a full read of the
+nearest work found.
 
 A second threat is criterion non-response: if the person answers less often when their state is worse,
 answered occasions are missing not at random (Rubin, 1976), and a propensity model built from
@@ -262,7 +270,7 @@ unweighted estimates side by side; response rates by trace-score level; a stated
 
 ---
 
-## 3. Pre-registered simulation
+## 3. Simulation, frozen and hashed before scoring
 
 ### 3.1 Status and reading
 
@@ -336,7 +344,8 @@ on family S (tuning seed 20260927) to one false flag per six tracked person-mont
 
 Context is not adjusted by any rule; family CS measures that cost. A language-model evidence reader is
 specified as future work and not run, so it is not compared. Tuned thresholds (`sim/tuning.json`):
-`h` = 1.125 (`pop`), 1.739 (`A-naive`), 3.334 (`A-fixed`), 6.539 (`probe-only`).
+`h` = 1.125 (`pop`), 1.739 (`A-naive`), 3.334 (`A-fixed`), and 22.949 (`probe-only`, after the
+post-freeze re-tune in section 3.8; 6.539 at the freeze).
 
 ### 3.4 Criterion-sampling designs
 
@@ -366,7 +375,11 @@ person-month in every family, with the spread across persons; abstention share w
 criterion occasions per person-month; for the confirmation rule, positive predictive value; on
 criterion occasions, the person-centred slope and correlation of criterion on composite against the
 all-days values, unweighted and weighted where identified; and a sensitivity against false-flag curve
-from sweeping `h`. Monte Carlo standard errors are reported beside every number.
+from sweeping `h`. Every reported number carries a 95 percent interval from a 2,000-draw person
+bootstrap, paired within a panel and independent across panels. The PREREG's standard-error formula
+divides by sqrt(200), a leftover from an earlier design with 200 persons; the bootstrap corresponds to
+dividing by sqrt(1000). The audit found that the literal reading changes neither verdict that holds.
+Of these metrics, run 2's outputs contain only those the predictions use (see Open items).
 
 ### 3.6 Predictions
 
@@ -415,12 +428,118 @@ scoring function was called once on a non-evaluation seed for timing, with outpu
 unread; (4) conventions the spec left open, including that P4 to P6 are scored on family S; (5)
 `probe-only`'s `h` was re-tuned so that tuning and scoring use the same schedule (12.206 to 6.539).
 
-### Results [PENDING RUN 2]
+### 3.8 Scoring runs and post-freeze fixes
 
-[SIM RESULTS: P1 to P10 with Monte Carlo intervals, per family and cell; ablations; sensitivity against
-false-flag curve; abstention shares; criterion-sampling calibration table. To be filled from
-`sim/results.json` after run 2, with any post-freeze change to scoring code listed as a deviation with
-before and after values.]
+Run 1 was scored first, at the freeze. An independent fidelity audit of the scoring code against the
+frozen text (`score-fidelity-audit.md` in the lane directory) found that run 1 decided every prediction
+on point estimates rather than on the frozen 95 percent interval rule, and that the code departed from
+the frozen text in four places: P1b divided by tracked rather than total person-months; P4 mixed the
+baseline probe block into the triggered and mixed samples, conditioned the all-days reference on
+response, and computed an unweighted correlation for the weighted estimate; P5 conditioned its
+reference slope on response; and P8's criterion-only rule z-scored on about 22 baseline-window answers
+that the random schedule never administers, instead of the four-probe baseline block. Run 1 is kept
+unedited in `sim/superseded-run1/` and is superseded. Run 2 applies those fixes and nothing else
+(`sim/POSTFREEZE-DEVIATIONS.md`). The P8 fix changes what the criterion-only threshold must be, so the
+frozen tuning procedure was re-run on the corrected code, on the tuning seed and target, which moved
+its `h` from 6.539 to 22.949; no evaluation-seed number was used to choose it. Every verdict the fixes
+changed went from PASS to FAIL (P6 and P10); none went the other way. Where the audit found the frozen
+text open to two readings, both are computed; the verdict uses the as-run reading, and the alternative
+is given beside it.
+
+### 3.9 Results
+
+Only P1b and P8 hold. The other nine fail under the frozen interval rule, including three of the four
+construction checks. Table 1 gives every prediction.
+
+**Table 1. Predictions, score run 2.** Point estimate [95% Monte Carlo interval]; 1,000 synthetic
+persons per family per cell. "cc" marks a construction check. Alternative readings are the audit's
+(G2: pooled rather than person-averaged false-flag rate; G3: a flag before onset does not cancel a
+later detection; P4: trigger on yesterday's rather than today's statistic; P6: validity rather than
+attenuation scale).
+
+| | statistic | frozen threshold | run 2 | verdict | alternative reading |
+|---|---|---|---|---|---|
+| P1 (cc) | SP false flags, A-naive / A-fixed | >= 2 | 1.23 [1.13, 1.35] | FAIL | G2: 1.23 [1.13, 1.35], FAIL |
+| | VA, same ratio | in [0.5, 2] | 1.03 [0.92, 1.16] | holds | G2: 1.03 [0.92, 1.16] |
+| | DE, same ratio | in [0.5, 2] | 1.00 [0.89, 1.14] | holds | G2: 0.99 [0.88, 1.12] |
+| | BI, same ratio | in [0.5, 2] | 0.80 [0.72, 0.87] | holds | G2: 0.80 [0.72, 0.87] |
+| P1b (cc) | DE / S false flags per total person-month | <= 1.5 | 0.60 [0.50, 0.73] | PASS | none |
+| P2 (cc) | DR sensitivity gap, A-fixed minus A-naive, targeted state-dependent help (points) | >= 10 | 9.2 [6.7, 11.9] | FAIL | G3: 12.4 [9.6, 15.2], FAIL |
+| | margin by which removing (i) exceeds half the gap | >= 0 | 0.007 [-0.009, 0.022] | fails | G3: 0.023 [0.007, 0.039] |
+| P3 (cc) | logged AV false flags, without (iv) / with | >= 2 | 1.85 [1.66, 2.06] | FAIL | G2: 1.85 [1.67, 2.07], FAIL |
+| | AV2 / S false flags, A-fixed | >= 2 | 1.75 [1.50, 2.03] | fails | G2: 1.76 [1.51, 2.04] |
+| P4 | triggered: correlation deflation | >= 0.05 | 0.104 [0.076, 0.133] | holds | 0.049 [0.021, 0.077] |
+| | triggered: relative slope attenuation | >= 10% | 24.8% [18.5, 31.3] | holds | 16.1% [10.0, 22.1] |
+| | mixed, weighted: slope minus all-days slope | within 0.03 | -0.055 [-0.124, 0.018] | FAIL | 0.067 [0.001, 0.132], FAIL |
+| | mixed, weighted: correlation minus all-days | within 0.03 | -0.014 [-0.048, 0.020] | fails | 0.016 [-0.015, 0.046] |
+| P5 | relative slope bias, `m1 = 0.5`, random | within 5% | -0.8% [-5.7, 3.9] | FAIL | none |
+| | added bias, `m1 = 1.5` over `m1 = 0`: fixed / random / triggered / mixed | >= 10% each | 13.1% [6.9, 18.2] / 13.5% [7.0, 17.5] / 15.5% [6.1, 24.6] / 12.2% [5.3, 18.8] | fails | none |
+| | share of bias removed by response-propensity weighting | < 0.5 | -0.107 [-0.231, -0.011] | holds | lags 1 to 3: -0.103 [-0.224, -0.008]; added bias only: -0.114 [-0.298, -0.005] |
+| P6 | indicator 4, simulated minus formula attenuation, unfiltered / filtered | within 0.03 | 0.023 [0.002, 0.046] / 0.013 [-0.002, 0.029] | FAIL / holds | validity scale, rising share: 0.043 [0.037, 0.049], fails >= 0.05 |
+| | indicator 5, same, unfiltered / filtered | within 0.03 | 0.011 [-0.027, 0.054] / 0.002 [-0.021, 0.024] | fails / holds | |
+| | Bernoulli cell, indicator 4 / indicator 5 | within 0.03 | -0.019 [-0.046, 0.006] / -0.003 [-0.025, 0.018] | fails / holds | |
+| | share rising with `D`, indicator 4, simulated minus formula | >= 0.05 | 0.151 [0.119, 0.192] | holds | |
+| P7 | DR minus DV sensitivity, A-fixed (points) | >= 15 | 11.0 [8.0, 14.1] | FAIL | G3: 14.7 [11.3, 18.1], FAIL |
+| P8 | DR sensitivity, A-fixed minus probe-only (points) | >= 10 | 17.8 [15.2, 20.4] | PASS | G3: 23.7 [20.9, 26.5], PASS |
+| | restricted mean time to flag, probe-only minus A-fixed (days) | >= 3 | 7.73 [6.94, 8.49] | holds | G3: 9.98 [9.11, 10.77] |
+| P9 | BD sensitivity minus half of DR sensitivity | <= 0 | 0.174 [0.144, 0.203] | FAIL | G3: 0.142 [0.112, 0.173], FAIL |
+| P10 | CS / S false flags, A-fixed | >= 1.5 | 1.71 [1.48, 1.99] | FAIL | none |
+
+A prediction's verdict is FAIL if any of its parts fails. P1's SP ablation ratio (A-naive against
+A-fixed without (iii)) is 1.047, so the workload component did not account for the SP difference either.
+
+### 3.10 What the failures show
+
+The verdicts and the mechanisms have to be read separately. A failed prediction here usually means a
+threshold chosen before scoring was not cleared on the interval at 1,000 persons, not that the
+mechanism was absent.
+
+**Criterion sampling (P4).** The selection mechanism appears. Under the triggered design, the slope of
+criterion on composite was 0.700 [0.640, 0.759] against an all-days slope of 0.930, a relative
+attenuation of 24.8 percent [18.5, 31.3], and the correlation fell by 0.104 [0.076, 0.133] from 0.471.
+What fails is the recovery: under the mixed design, the propensity-weighted slope differed from the
+all-days slope by -0.055 [-0.124, 0.018], an interval too wide to show recovery within 0.03. The
+attenuation is an instance of Thorndike's Case III selection (Sackett and Yang, 2000; Lamp and
+MacKinnon, 2024), in which the selection variable is the predictor's own history, and it is
+structurally the verification bias of Begg and Greenes (1983). I found no prior treatment of this
+dynamic, history-dependent trigger in validity estimation. The history-conditional weighting from
+micro-randomized trials (Boruvka et al., 2018) applies, but at N = 1,000 its interval is too wide to
+show recovery. In experience sampling, trigger design is known to change what is sampled (Lathia et
+al., 2013), without an attenuation result or a correction.
+
+**Criterion non-response (P5).** At `m1 = 1.5`, when the chance of answering falls steeply with the
+state, the relative slope bias was -15.3 percent (fixed), -14.3 percent (random), -40.3 percent
+(triggered) and -18.3 percent (mixed). A response-propensity weight fitted on observables (the current
+composite, a lagged composite, day of week) did not remove it; it made it worse, removing -0.107
+[-0.231, -0.011] of the bias. Non-response that depends on the state beyond what the composite carries
+is not fixable from the trace.
+
+**Authorship (P6).** The contamination formula tracks the simulated attenuation in expectation: the
+largest point difference in the default and Bernoulli cells is 0.023. On intervals at N = 1,000, three of
+the six comparisons in Table 1 fall outside plus or minus 0.03, so the "within 0.03" prediction fails. The larger
+finding is the cell in which the agent-authored share rises with the state. There, message length's
+attenuation factor exceeded the formula by +0.151 [0.119, 0.192], validity supplied by delegation
+rather than by the person's behaviour. For negative self-reference, where agent text sits below human
+text, the attenuation factor was -0.082 against a formula value of 0.285, a difference of -0.367
+[-0.394, -0.343]: the indicator's validity changed sign. Filtering did not fix it (filtered difference
+-0.573 [-0.602, -0.546]). This is the largest validity threat the simulation found, and it is the one
+the corpus audit bears on: the indicator-4 cell ran at the audit's measured day-mean machine share of
+0.845, where even a good filter leaves a residual share of 0.365.
+
+**Non-state controls (P3, P10).** The negative controls behaved in the predicted direction and missed
+their bars. An unlogged version change raised false flags 1.75 times over the stable rate, a context
+shift 1.71 times, and the logged reset lowered false flags by a factor of 1.85; none cleared its 2x or
+1.5x bar on the interval.
+
+**Drift inside the baseline (P9).** P9 fails in the opposite direction from the prediction. Sensitivity
+in the first 21 tracked days for drift that began inside the baseline was 0.272, above A-fixed's DR
+sensitivity of 0.197, so it was not halved. This result is not interpreted further here.
+
+**Detection and the criterion-only comparison (P8).** At the tuning target of one false flag per six
+tracked person-months, A-fixed flagged 0.197 of planted drifts within 21 days of onset. The
+passive-only rule beat the criterion-only rule, whose sensitivity was 0.019, by 17.8 points [15.2, 20.4]
+and 7.73 days [6.94, 8.49] of restricted mean time to flag. That is the one comparison that holds, and
+it is between two weak rules. Combining the two was not tested.
 
 ---
 
@@ -603,8 +722,8 @@ These limits bind the whole paper.
    questions, and the simulation does not model them.
 5. **The false-flag target is high.** One false flag per six tracked person-months is a tuning target
    for comparing rules, and it is high for any setting in which a flag would reach a person. The
-   sensitivity against false-flag curve is reported alongside it so that other operating points can be
-   read off.
+   frozen metrics include a sensitivity against false-flag curve for reading other operating points;
+   run 2's outputs do not yet contain it (Open items).
 6. **One rule is not compared.** A language-model evidence reader is described as future work and not
    run, and no conclusion about it is drawn.
 7. **The corpus audit is n = 1 and descriptive.** It measures authorship contamination in one person's
@@ -645,7 +764,8 @@ Status tags: [VERIFIED] means a primary page was opened and matched, per the lan
 
 - AERA, APA and NCME (2014). *Standards for Educational and Psychological Testing.* American Educational Research Association. [VERIFIED]
 - Anthropic (2025, June 27). How people use Claude for support, advice, and companionship. anthropic.com/research. [VERIFIED]
-- Begg, C. B., and Greenes, R. A. (1983). Assessment of diagnostic tests when disease verification is subject to selection bias. *Biometrics*, 39(1), 207-215. [VERIFIED] <!-- cite: -->
+- Begg, C. B., and Greenes, R. A. (1983). Assessment of diagnostic tests when disease verification is subject to selection bias. *Biometrics*, 39(1), 207-215. [unverified at full-text level: PubMed abstract and secondary summaries only; JSTOR full text not read] <!-- cite: -->
+- Boruvka, A., Almirall, D., Witkiewitz, K., and Murphy, S. A. (2018). Assessing time-varying causal effect moderation in mobile health. *Journal of the American Statistical Association*, 113(523), 1112-1121. [VERIFIED]
 - Bolger, N., and Laurenceau, J.-P. (2013). *Intensive Longitudinal Methods: An Introduction to Diary and Experience Sampling Research.* Guilford Press. [VERIFIED]
 - Borsboom, D., Mellenbergh, G. J., and van Heerden, J. (2004). The concept of validity. *Psychological Review*, 111(4), 1061-1071. [VERIFIED]
 - Curran, P. J., and Bauer, D. J. (2011). The disaggregation of within-person and between-person effects in longitudinal models of change. *Annual Review of Psychology*, 62, 583-619. [VERIFIED]
@@ -656,7 +776,8 @@ Status tags: [VERIFIED] means a primary page was opened and matched, per the lan
 - Horiuchi, S. (2026). Governing mental-state inference: Source-neutral regulatory triggers and tiered obligations. arXiv:2608.00936. [VERIFIED, abstract only]
 - Kane, M. T. (2013). Validating the interpretations and uses of test scores. *Journal of Educational Measurement*, 50(1), 1-73. [VERIFIED]
 - Klasnja, P., Hekler, E. B., Shiffman, S., Boruvka, A., Almirall, D., Tewari, A., and Murphy, S. A. (2015). Microrandomized trials: An experimental design for developing just-in-time adaptive interventions. *Health Psychology*, 34(Suppl), 1220-1228. [VERIFIED]
-- Lathia, N., Rachuri, K. K., Mascolo, C., and Rentfrow, P. J. (2013). Contextual dissonance: Design bias in sensor-based experience sampling methods. *UbiComp '13.* [VERIFIED]
+- Lamp, S. J., and MacKinnon, D. P. (2024). Correcting regression coefficients for collider bias in psychological research. *Multivariate Behavioral Research*, 59(3), 647-648. [VERIFIED; page span not reconciled with the publisher]
+- Lathia, N., Rachuri, K. K., Mascolo, C., and Rentfrow, P. J. (2013). Contextual dissonance: Design bias in sensor-based experience sampling methods. *UbiComp '13*, 183-192. [VERIFIED]
 - Lawley, D. N. (1944). A note on Karl Pearson's selection formulae. *Proceedings of the Royal Society of Edinburgh, Section A*, 62(1), 28-30. [VERIFIED; volume year 1944]
 - Messick, S. (1995). Validity of psychological assessment: Validation of inferences from persons' responses and performances as scientific inquiry into score meaning. *American Psychologist*, 50(9), 741-749. [VERIFIED]
 - Mettu, A. (2026). Ghost respondents: A boundary map for covert AI authorship in open-ended survey data. Working paper, draft 2, `~/code/ghost-respondents/paper/GHOST-RESPONDENTS-DRAFT.md`, section 2.2 (E5, E7). [own work, unpublished]
@@ -677,30 +798,28 @@ Status tags: [VERIFIED] means a primary page was opened and matched, per the lan
 - Varadarajan, V., Xu, H., Boehme, R. A., Mirstrom, M. M., Sikström, S., and Schwartz, H. A. (2026). MAQuA: Multi-outcome adaptive question-asking for mental health using item response theory. *EACL 2026.* aclanthology.org/2026.eacl-long.313. [VERIFIED]
 - Xu et al. (2023). GLOBEM: multi-year, multi-site passive-sensing and wellbeing dataset and cross-dataset generalization benchmark. arXiv:2211.02733; *IMWUT / UbiComp 2023.* doi:10.1145/3569485. [VERIFIED, summary]
 - Yun, H. S., Arjmand, M., Sherlock, P., Paasche-Orlow, M. K., Griffith, J. W., and Bickmore, T. (2024). Keeping users engaged during repeated administration of the same questionnaire: Using large language models to reliably diversify questions. *ACM IVA 2024.* arXiv:2311.12707. [VERIFIED]
-- Zhou, H., Weaver, M. A., Qin, J., Longnecker, M. P., and Wang, M. C. (2002). A semiparametric empirical likelihood method for biased sampling schemes with auxiliary covariates. *Biometrics.* [unverified: found via search snippets only; volume and pages not confirmed]
+- Zhou, H., Weaver, M. A., Qin, J., Longnecker, M. P., and Wang, M. C. (2002). A semiparametric empirical likelihood method for data from an outcome-dependent sampling scheme with a continuous outcome. *Biometrics*, 58(2), 413-421. [VERIFIED, abstract page]
 
 ---
 
 ## Open items for the author
 
 1. **Affiliation, address, acknowledgements** are placeholders.
-2. **Simulation results.** Section 3 has no results; the abstract has [SIM RESULTS]. Score run 1 at the
-   freeze is preserved but was flagged by an audit before reporting (receipts, 21:22), and run 2 is
-   pending. Any code fix between the freeze and run 2 must be listed in section 3.7 as a post-freeze
-   deviation with before and after values.
-3. **Monte Carlo SE denominator.** The PREREG says 1,000 persons per family per cell but gives the MC SE
-   as the SD across persons over sqrt(200). The draft does not repeat the formula. Decide which is
-   intended and state it.
-4. **Triggered and event-contingent sampling prior art.** Spec N2 requires reading this literature
-   before the paper calls the dynamic-trigger case new. Only searches exist. Unread items include
-   arXiv 2609.06269 (adaptive EMA with a hybrid language model, search-only), the per-decision
-   inverse-probability-weighting literature for micro-randomized trials (no single confirmed citation),
-   and a PMC paper recasting Case III as collider bias (PMC11187666, authors and venue unconfirmed).
-   None of these is cited in the body.
+2. **Metrics not in run 2's outputs.** `sim/results.json` holds the predictions only. The other frozen
+   metrics in section 3.5 (sensitivity against false-flag curve, abstention shares and reasons,
+   confirmation-rule PPV, realized budget per family, spread of person-level false-flag rates) are not
+   reported; section 6 item 5 now says so. Decide whether to compute them from the run 2 panels, labelled
+   as post-scoring additions.
+3. **One rounding difference.** For P5's share of bias removed, the coordinator's note and
+   `POSTFREEZE-DEVIATIONS.md` give the lower bound as -0.232 (-23.2 percent); `sim/results.json` has
+   -0.23146, which the draft reports as -0.231.
+4. **P9 is unexplained.** Drift inside the baseline was flagged more often than DR, not less. The draft
+   does not interpret it; a mechanism check would be needed before saying why.
 5. **Thorndike Case II and III labels** are confirmed only in secondary sources; the body carries an
    [unverified] tag. A primary check, or citing Sackett and Yang (2000) alone for the labels, would
    remove it.
-6. **Zhou et al. (2002)** is tagged [unverified]; confirm or drop.
+6. **Begg and Greenes (1983)** is now tagged unverified at full-text level (JSTOR only); Zhou et al.
+   (2002) is now verified at the abstract page, with its corrected title.
 7. **Horiuchi (2026)** was read at abstract level only; whether it addresses general-purpose assistants
    is unconfirmed.
 8. **Pilot parameters for indicators 1 and 2.** Spec section 7 asks for `pi`, `kappa` and `delta` for
@@ -713,11 +832,11 @@ Status tags: [VERIFIED] means a primary page was opened and matched, per the lan
     longitudinal own-corpus work and every day of delay loses the oldest day.
 11. **Dictation share.** The share of typed-class entries that were dictated is unknown from metadata.
     If it matters for the length and latency indicators, a source-level record is needed (R1).
-12. **External registration.** The freeze is a hashed commit in a local repository, not an external
-    registry, and run 1 was already scored at it, so an external registration now would post-date
-    scoring. Decide whether "pre-registered" should read "frozen and hashed before scoring".
+12. **Wording of the freeze.** The draft now says "frozen and hashed before scoring" throughout; the
+    freeze is a local commit, not an external registration.
 13. **Figures.** Spec section 10 says visuals become paper figures. None exist yet. Candidates: the
     class-share bar, the autonomous-session share of each naive indicator, the change-point base-rate
-    plot, and the sensitivity against false-flag curve after run 2.
-14. **Venue and length.** Target venue not chosen. The body is about 6,950 words by whitespace count
-    (tables and formulas included), excluding references; results from run 2 will add to it.
+    plot, Table 1 as an interval plot, and the sensitivity against false-flag curve once computed.
+14. **Venue and length.** Target venue not chosen. With run 2 added, the body is about 8,750 words by
+    whitespace count (tables and formulas included, Table 1 alone about 700), above the 7,000 target.
+    The simplest cut is section 3.6, whose thresholds Table 1 now repeats.
