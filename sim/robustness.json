@@ -1,0 +1,3615 @@
+{
+  "status": "EXPLORATORY, not frozen -- see sim/ROBUSTNESS-PLAN.md; no P1-P10 verdict changes",
+  "plan_sha256": "e1dbc8b74be6b3067e9433b76a1d1b24b01b705994b6a248771ad65f11836606",
+  "grid": [
+    {
+      "name": "default",
+      "dimension": "(baseline)",
+      "value": "frozen default"
+    },
+    {
+      "name": "lam_low",
+      "dimension": "lam_range",
+      "value": [
+        0.1,
+        0.25
+      ]
+    },
+    {
+      "name": "lam_high",
+      "dimension": "lam_range",
+      "value": [
+        0.5,
+        0.8
+      ]
+    },
+    {
+      "name": "phi_D_low",
+      "dimension": "phi_D",
+      "value": 0.3
+    },
+    {
+      "name": "phi_D_high",
+      "dimension": "phi_D",
+      "value": 0.9
+    },
+    {
+      "name": "psi_low",
+      "dimension": "psi",
+      "value": 0.25
+    },
+    {
+      "name": "psi_high",
+      "dimension": "psi",
+      "value": 1.0
+    },
+    {
+      "name": "ind4_daylevel",
+      "dimension": "indicator4_contamination",
+      "value": "day-level pilot"
+    },
+    {
+      "name": "rising_slope_025",
+      "dimension": "rising_share_logit_slope",
+      "value": 0.25
+    },
+    {
+      "name": "rising_slope_10",
+      "dimension": "rising_share_logit_slope",
+      "value": 1.0
+    },
+    {
+      "name": "m1_15",
+      "dimension": "m1",
+      "value": 1.5
+    }
+  ],
+  "cells": {
+    "default": {
+      "tuned_h": {
+        "pop": {
+          "h": 1.135916559427142,
+          "fa_per_month": 0.16694229651812453,
+          "se": 0.007093207248728188
+        },
+        "A-naive": {
+          "h": 1.7481316670125575,
+          "fa_per_month": 0.1664173940219211,
+          "se": 0.009311168157945575
+        },
+        "A-fixed": {
+          "h": 3.2093584754612046,
+          "fa_per_month": 0.16667224472037218,
+          "se": 0.009296544738995572
+        },
+        "A-fixed-minus-i": {
+          "h": 2.546191702002898,
+          "fa_per_month": 0.1669101004582502,
+          "se": 0.00891938156551353
+        },
+        "A-fixed-minus-ii": {
+          "h": 1.5410890005284728,
+          "fa_per_month": 0.16649764295505456,
+          "se": 0.008942762593433821
+        },
+        "A-fixed-minus-iii": {
+          "h": 3.64391062046393,
+          "fa_per_month": 0.16666107776399183,
+          "se": 0.009854180106435753
+        },
+        "A-fixed-minus-iv": {
+          "h": 3.1843943788625904,
+          "fa_per_month": 0.1664601266034766,
+          "se": 0.009606022849171215
+        },
+        "A-fixed-minus-v": {
+          "h": 3.187918904122717,
+          "fa_per_month": 0.1668490764110697,
+          "se": 0.009704023325819341
+        },
+        "probe-only": {
+          "h": 23.61246692775753,
+          "fa_per_month": 0.16653713778172533,
+          "se": 0.03388873936549685
+        }
+      },
+      "S1": {
+        "triggered": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.8291328490196619,
+            "se": 0.03117559406471498,
+            "lo": 0.770063203549167,
+            "hi": 0.8904633775798825
+          },
+          "holds": true
+        },
+        "current": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.8033367291038271,
+            "se": 0.05037282396356778,
+            "lo": 0.707243850067666,
+            "hi": 0.9028907184801238
+          },
+          "holds": true
+        },
+        "holds": true
+      },
+      "S2": {
+        "indicator4": {
+          "diff_mc_minus_formula": {
+            "point": 0.13283111353702998,
+            "se": 0.01146606905501256,
+            "lo": 0.11005941228034549,
+            "hi": 0.15485318837550313
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "indicator5": {
+          "diff_mc_minus_formula": {
+            "point": -0.38941002916303685,
+            "se": 0.01299796857423169,
+            "lo": -0.4148916937282668,
+            "hi": -0.364331410121558
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "holds": true
+      },
+      "S3_S4": {
+        "by_architecture": {
+          "pop": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16890908683874722,
+            "observed_sensitivity_within_21d": {
+              "point": 0.169,
+              "se": 0.011751110247377607,
+              "lo": 0.146,
+              "hi": 0.192
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.072,
+              "se": 0.008231949556256304,
+              "lo": 0.056,
+              "hi": 0.089
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.09700000000000002,
+              "se": 0.014505611470464318,
+              "lo": 0.069,
+              "hi": 0.125
+            },
+            "holds_s3": true
+          },
+          "A-naive": {
+            "realized_fa_per_tracked_person_month_on_S": 0.15211891916093936,
+            "observed_sensitivity_within_21d": {
+              "point": 0.153,
+              "se": 0.011431635530205106,
+              "lo": 0.131,
+              "hi": 0.175
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.05,
+              "se": 0.0068087009740828855,
+              "lo": 0.037,
+              "hi": 0.064
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.103,
+              "se": 0.013330522360853178,
+              "lo": 0.07700000000000001,
+              "hi": 0.129
+            },
+            "holds_s3": true
+          },
+          "A-fixed": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17764196245676483,
+            "observed_sensitivity_within_21d": {
+              "point": 0.193,
+              "se": 0.012180803955096572,
+              "lo": 0.169,
+              "hi": 0.217
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.084,
+              "se": 0.00882546566318662,
+              "lo": 0.067,
+              "hi": 0.101
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.109,
+              "se": 0.015219068952465194,
+              "lo": 0.07899999999999999,
+              "hi": 0.13899999999999998
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-i": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1833506833674737,
+            "observed_sensitivity_within_21d": {
+              "point": 0.203,
+              "se": 0.01231233612318983,
+              "lo": 0.179,
+              "hi": 0.226
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.075,
+              "se": 0.008403131205510747,
+              "lo": 0.059,
+              "hi": 0.092
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.128,
+              "se": 0.014911505499047508,
+              "lo": 0.09899999999999999,
+              "hi": 0.158
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-ii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.18536552604184156,
+            "observed_sensitivity_within_21d": {
+              "point": 0.173,
+              "se": 0.011920304802449122,
+              "lo": 0.151,
+              "hi": 0.197
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.085,
+              "se": 0.008628221027480086,
+              "lo": 0.068,
+              "hi": 0.101
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.08799999999999998,
+              "se": 0.014683957540613064,
+              "lo": 0.06097499999999999,
+              "hi": 0.117
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1682393633097149,
+            "observed_sensitivity_within_21d": {
+              "point": 0.189,
+              "se": 0.012398315777437618,
+              "lo": 0.165,
+              "hi": 0.213
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.069,
+              "se": 0.007966849712852225,
+              "lo": 0.054,
+              "hi": 0.086
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.12,
+              "se": 0.014447641716750448,
+              "lo": 0.092,
+              "hi": 0.148
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iv": {
+            "realized_fa_per_tracked_person_month_on_S": 0.18100003358071123,
+            "observed_sensitivity_within_21d": {
+              "point": 0.194,
+              "se": 0.012180616064216618,
+              "lo": 0.17,
+              "hi": 0.218
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.062,
+              "se": 0.007596567229139318,
+              "lo": 0.048,
+              "hi": 0.07702499999999986
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.132,
+              "se": 0.01441677180941359,
+              "lo": 0.104,
+              "hi": 0.159
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-v": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1803264008596566,
+            "observed_sensitivity_within_21d": {
+              "point": 0.193,
+              "se": 0.012149270652541014,
+              "lo": 0.17,
+              "hi": 0.217
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.08,
+              "se": 0.008796681749665749,
+              "lo": 0.062,
+              "hi": 0.097
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.113,
+              "se": 0.014952038848694397,
+              "lo": 0.08499999999999999,
+              "hi": 0.143
+            },
+            "holds_s3": true
+          },
+          "probe-only": {
+            "realized_fa_per_tracked_person_month_on_S": 0.18179777802715744,
+            "observed_sensitivity_within_21d": {
+              "point": 0.011,
+              "se": 0.003333296443851236,
+              "lo": 0.005,
+              "hi": 0.018
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.012,
+              "se": 0.0033696569994803734,
+              "lo": 0.006,
+              "hi": 0.019
+            },
+            "diff_obs_minus_chance": {
+              "point": -0.0010000000000000009,
+              "se": 0.004794834613361001,
+              "lo": -0.010000000000000002,
+              "hi": 0.008
+            },
+            "holds_s4": true
+          }
+        },
+        "S3_holds": true,
+        "S4_holds": true
+      },
+      "S5": {
+        "applicable": false,
+        "reason": "this cell's m1 is 0 (frozen default); no m1 axis to compare against"
+      },
+      "S6": {
+        "fa_ratio_CS_over_S": {
+          "point": 1.4263577941269239,
+          "se": 0.1007093445305962,
+          "lo": 1.2505101971652235,
+          "hi": 1.647961418807368
+        },
+        "holds": true
+      }
+    },
+    "lam_low": {
+      "tuned_h": {
+        "pop": {
+          "h": 0.8233046121188181,
+          "fa_per_month": 0.16669264859808922,
+          "se": 0.006799093098026634
+        },
+        "A-naive": {
+          "h": 1.1389158227604184,
+          "fa_per_month": 0.1664657020364416,
+          "se": 0.009800146696434638
+        },
+        "A-fixed": {
+          "h": 1.8916059433303873,
+          "fa_per_month": 0.166755960353603,
+          "se": 0.009284732463483695
+        },
+        "A-fixed-minus-i": {
+          "h": 1.528413084515023,
+          "fa_per_month": 0.16685986891970217,
+          "se": 0.009520507610519953
+        },
+        "A-fixed-minus-ii": {
+          "h": 1.1033529130631454,
+          "fa_per_month": 0.16679319430179074,
+          "se": 0.008418406086103461
+        },
+        "A-fixed-minus-iii": {
+          "h": 2.2995962171091824,
+          "fa_per_month": 0.16648243057649145,
+          "se": 0.009183003331084042
+        },
+        "A-fixed-minus-iv": {
+          "h": 1.9299608897699272,
+          "fa_per_month": 0.1664173940219211,
+          "se": 0.009442424919183822
+        },
+        "A-fixed-minus-v": {
+          "h": 1.9126452383151897,
+          "fa_per_month": 0.16643922954743742,
+          "se": 0.009581040432639154
+        },
+        "probe-only": {
+          "h": 29.999999999986404,
+          "fa_per_month": 0.20183081504356457,
+          "se": 0.03823855755678019
+        }
+      },
+      "S1": {
+        "triggered": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.5495822087881067,
+            "se": 0.068369438559392,
+            "lo": 0.41622535569419217,
+            "hi": 0.681900976952665
+          },
+          "holds": true
+        },
+        "current": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.8850566048369128,
+            "se": 0.14202599664593857,
+            "lo": 0.6224333765307184,
+            "hi": 1.1758630053922032
+          },
+          "holds": false
+        },
+        "holds": false
+      },
+      "S2": {
+        "indicator4": {
+          "diff_mc_minus_formula": {
+            "point": 0.14333519267879646,
+            "se": 0.08168172052624403,
+            "lo": -0.02610477502354614,
+            "hi": 0.3031950414038157
+          },
+          "n_persons": 1000,
+          "holds": false
+        },
+        "indicator5": {
+          "diff_mc_minus_formula": {
+            "point": -2.706926798705302,
+            "se": 1.648340354905353,
+            "lo": -6.263840667233607,
+            "hi": -0.7073003473428133
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "holds": false
+      },
+      "S3_S4": {
+        "by_architecture": {
+          "pop": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1758519047831718,
+            "observed_sensitivity_within_21d": {
+              "point": 0.121,
+              "se": 0.010466816522900458,
+              "lo": 0.1,
+              "hi": 0.142
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.087,
+              "se": 0.00902644522260443,
+              "lo": 0.07,
+              "hi": 0.105
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.034,
+              "se": 0.013711768022073068,
+              "lo": 0.007000000000000006,
+              "hi": 0.060999999999999985
+            },
+            "holds_s3": true
+          },
+          "A-naive": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17116252065562057,
+            "observed_sensitivity_within_21d": {
+              "point": 0.105,
+              "se": 0.009622734344152346,
+              "lo": 0.088,
+              "hi": 0.125
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.068,
+              "se": 0.007977490594045789,
+              "lo": 0.053,
+              "hi": 0.084
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.03699999999999999,
+              "se": 0.012484865785696032,
+              "lo": 0.013999999999999999,
+              "hi": 0.062
+            },
+            "holds_s3": true
+          },
+          "A-fixed": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16715237999531035,
+            "observed_sensitivity_within_21d": {
+              "point": 0.109,
+              "se": 0.009931291269172231,
+              "lo": 0.091,
+              "hi": 0.129
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.068,
+              "se": 0.007762489669747488,
+              "lo": 0.052,
+              "hi": 0.084
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.040999999999999995,
+              "se": 0.01270845199566269,
+              "lo": 0.017,
+              "hi": 0.067
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-i": {
+            "realized_fa_per_tracked_person_month_on_S": 0.15040364452483837,
+            "observed_sensitivity_within_21d": {
+              "point": 0.103,
+              "se": 0.00978322808565189,
+              "lo": 0.085,
+              "hi": 0.123
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.067,
+              "se": 0.007770543203073735,
+              "lo": 0.052,
+              "hi": 0.083
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.03599999999999999,
+              "se": 0.012461886868053171,
+              "lo": 0.010999999999999996,
+              "hi": 0.06099999999999999
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-ii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16614745586708202,
+            "observed_sensitivity_within_21d": {
+              "point": 0.097,
+              "se": 0.00932066613277073,
+              "lo": 0.078,
+              "hi": 0.115
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.063,
+              "se": 0.007537623341134552,
+              "lo": 0.048,
+              "hi": 0.078
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.034,
+              "se": 0.012026719918414912,
+              "lo": 0.009974999999999996,
+              "hi": 0.057
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1651425317388537,
+            "observed_sensitivity_within_21d": {
+              "point": 0.105,
+              "se": 0.009905645102791199,
+              "lo": 0.087,
+              "hi": 0.124
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.075,
+              "se": 0.008412556407100716,
+              "lo": 0.059,
+              "hi": 0.092
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.03,
+              "se": 0.012738344494487111,
+              "lo": 0.0040000000000000036,
+              "hi": 0.05500000000000001
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iv": {
+            "realized_fa_per_tracked_person_month_on_S": 0.15944796167889325,
+            "observed_sensitivity_within_21d": {
+              "point": 0.106,
+              "se": 0.009848170806506002,
+              "lo": 0.088,
+              "hi": 0.126
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.069,
+              "se": 0.008126339178512186,
+              "lo": 0.053,
+              "hi": 0.085
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.03699999999999999,
+              "se": 0.013015231379961594,
+              "lo": 0.011999999999999997,
+              "hi": 0.063
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-v": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16278862042785047,
+            "observed_sensitivity_within_21d": {
+              "point": 0.106,
+              "se": 0.009811801336795215,
+              "lo": 0.088,
+              "hi": 0.126
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.07,
+              "se": 0.008075511807029492,
+              "lo": 0.055,
+              "hi": 0.087
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.03599999999999999,
+              "se": 0.012472168907155818,
+              "lo": 0.010999999999999996,
+              "hi": 0.061
+            },
+            "holds_s3": true
+          },
+          "probe-only": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17348754448398576,
+            "observed_sensitivity_within_21d": {
+              "point": 0.011,
+              "se": 0.0033106851735190826,
+              "lo": 0.005,
+              "hi": 0.018
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.011,
+              "se": 0.003304380307199415,
+              "lo": 0.005,
+              "hi": 0.018
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.0,
+              "se": 0.004704931023720643,
+              "lo": -0.009000000000000001,
+              "hi": 0.009999999999999998
+            },
+            "holds_s4": true
+          }
+        },
+        "S3_holds": true,
+        "S4_holds": true
+      },
+      "S5": {
+        "applicable": false,
+        "reason": "this cell's m1 is 0 (frozen default); no m1 axis to compare against"
+      },
+      "S6": {
+        "fa_ratio_CS_over_S": {
+          "point": 1.9325194178777405,
+          "se": 0.13850148732165027,
+          "lo": 1.6904426936595154,
+          "hi": 2.235878008048015
+        },
+        "holds": true
+      }
+    },
+    "lam_high": {
+      "tuned_h": {
+        "pop": {
+          "h": 1.8443300864971663,
+          "fa_per_month": 0.1664280601288475,
+          "se": 0.0072339126033188405
+        },
+        "A-naive": {
+          "h": 2.9234307123343113,
+          "fa_per_month": 0.16657542816923437,
+          "se": 0.009972031759982052
+        },
+        "A-fixed": {
+          "h": 6.069874608604141,
+          "fa_per_month": 0.16669636096387688,
+          "se": 0.009570761041118377
+        },
+        "A-fixed-minus-i": {
+          "h": 5.368039162351351,
+          "fa_per_month": 0.16683824187628682,
+          "se": 0.009978185982275553
+        },
+        "A-fixed-minus-ii": {
+          "h": 2.856546547553398,
+          "fa_per_month": 0.1664861484864388,
+          "se": 0.01006628757979058
+        },
+        "A-fixed-minus-iii": {
+          "h": 5.949330320845229,
+          "fa_per_month": 0.1663524082607192,
+          "se": 0.00972559882842505
+        },
+        "A-fixed-minus-iv": {
+          "h": 5.77811168143703,
+          "fa_per_month": 0.16639882148118387,
+          "se": 0.008775615141112489
+        },
+        "A-fixed-minus-v": {
+          "h": 5.935513488971947,
+          "fa_per_month": 0.1669026568405561,
+          "se": 0.00951870636403525
+        },
+        "probe-only": {
+          "h": 24.84207457266388,
+          "fa_per_month": 0.16819914779098452,
+          "se": 0.036043317983563646
+        }
+      },
+      "S1": {
+        "triggered": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.8929343402389277,
+            "se": 0.018643459887879785,
+            "lo": 0.8560774288781018,
+            "hi": 0.9283669475191226
+          },
+          "holds": true
+        },
+        "current": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.8083741772081705,
+            "se": 0.02652393538159723,
+            "lo": 0.7583348683361978,
+            "hi": 0.8615435984301079
+          },
+          "holds": true
+        },
+        "holds": true
+      },
+      "S2": {
+        "indicator4": {
+          "diff_mc_minus_formula": {
+            "point": 0.10060235717954219,
+            "se": 0.005995192000554806,
+            "lo": 0.0885892747883511,
+            "hi": 0.11277736870077051
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "indicator5": {
+          "diff_mc_minus_formula": {
+            "point": -0.19337709174942458,
+            "se": 0.005833463209719998,
+            "lo": -0.20497555650724864,
+            "hi": -0.18240678342062414
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "holds": true
+      },
+      "S3_S4": {
+        "by_architecture": {
+          "pop": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1838395338713458,
+            "observed_sensitivity_within_21d": {
+              "point": 0.252,
+              "se": 0.013459663034954009,
+              "lo": 0.226,
+              "hi": 0.2780249999999999
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.097,
+              "se": 0.009397657260242604,
+              "lo": 0.079,
+              "hi": 0.115
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.155,
+              "se": 0.016263158946510356,
+              "lo": 0.125,
+              "hi": 0.18700000000000003
+            },
+            "holds_s3": true
+          },
+          "A-naive": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1647523691524629,
+            "observed_sensitivity_within_21d": {
+              "point": 0.212,
+              "se": 0.012992758786741375,
+              "lo": 0.186,
+              "hi": 0.238
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.07,
+              "se": 0.008266736082803863,
+              "lo": 0.055,
+              "hi": 0.087
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.142,
+              "se": 0.015830455857818282,
+              "lo": 0.11,
+              "hi": 0.173
+            },
+            "holds_s3": true
+          },
+          "A-fixed": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1707856138235885,
+            "observed_sensitivity_within_21d": {
+              "point": 0.246,
+              "se": 0.013676859215075462,
+              "lo": 0.22,
+              "hi": 0.273
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.077,
+              "se": 0.008424671361173199,
+              "lo": 0.061,
+              "hi": 0.093
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.16899999999999998,
+              "se": 0.01595312448520415,
+              "lo": 0.138,
+              "hi": 0.202
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-i": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1674368762976358,
+            "observed_sensitivity_within_21d": {
+              "point": 0.247,
+              "se": 0.013530588842220012,
+              "lo": 0.220975,
+              "hi": 0.273
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.066,
+              "se": 0.007695101187843183,
+              "lo": 0.051,
+              "hi": 0.081
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.181,
+              "se": 0.01582403712949189,
+              "lo": 0.14900000000000002,
+              "hi": 0.21100000000000002
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-ii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16475788627687363,
+            "observed_sensitivity_within_21d": {
+              "point": 0.215,
+              "se": 0.012746121245437832,
+              "lo": 0.19,
+              "hi": 0.24
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.051,
+              "se": 0.007192680886092792,
+              "lo": 0.037,
+              "hi": 0.066
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.164,
+              "se": 0.014555677582130534,
+              "lo": 0.134975,
+              "hi": 0.192
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.19054316522670955,
+            "observed_sensitivity_within_21d": {
+              "point": 0.255,
+              "se": 0.013769743422335749,
+              "lo": 0.228,
+              "hi": 0.28202499999999986
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.075,
+              "se": 0.008307335608512286,
+              "lo": 0.059,
+              "hi": 0.092
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.18,
+              "se": 0.016348949815815087,
+              "lo": 0.14800000000000002,
+              "hi": 0.21200000000000002
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iv": {
+            "realized_fa_per_tracked_person_month_on_S": 0.18552005893778048,
+            "observed_sensitivity_within_21d": {
+              "point": 0.256,
+              "se": 0.013917097175664852,
+              "lo": 0.229,
+              "hi": 0.283
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.087,
+              "se": 0.009028998901350043,
+              "lo": 0.07,
+              "hi": 0.105
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.169,
+              "se": 0.016622406442749916,
+              "lo": 0.135,
+              "hi": 0.2
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-v": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17680742055386262,
+            "observed_sensitivity_within_21d": {
+              "point": 0.25,
+              "se": 0.013685291176927832,
+              "lo": 0.224,
+              "hi": 0.2760249999999999
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.086,
+              "se": 0.009054107765744609,
+              "lo": 0.06897500000000001,
+              "hi": 0.104
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.164,
+              "se": 0.016303180083665277,
+              "lo": 0.133,
+              "hi": 0.196
+            },
+            "holds_s3": true
+          },
+          "probe-only": {
+            "realized_fa_per_tracked_person_month_on_S": 0.2057749751078659,
+            "observed_sensitivity_within_21d": {
+              "point": 0.013,
+              "se": 0.0035084404765206786,
+              "lo": 0.007,
+              "hi": 0.02
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.012,
+              "se": 0.0033830875898830065,
+              "lo": 0.006,
+              "hi": 0.019
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.0009999999999999992,
+              "se": 0.004898117472804087,
+              "lo": -0.009,
+              "hi": 0.010000000000000002
+            },
+            "holds_s4": true
+          }
+        },
+        "S3_holds": true,
+        "S4_holds": true
+      },
+      "S5": {
+        "applicable": false,
+        "reason": "this cell's m1 is 0 (frozen default); no m1 axis to compare against"
+      },
+      "S6": {
+        "fa_ratio_CS_over_S": {
+          "point": 1.6656937879030598,
+          "se": 0.12075533082457904,
+          "lo": 1.4396832816264096,
+          "hi": 1.9179426333972576
+        },
+        "holds": true
+      }
+    },
+    "phi_D_low": {
+      "tuned_h": {
+        "pop": {
+          "h": 1.0133816165847294,
+          "fa_per_month": 0.1668882161727416,
+          "se": 0.006981627127425694
+        },
+        "A-naive": {
+          "h": 1.370162229596235,
+          "fa_per_month": 0.16668712135581118,
+          "se": 0.009425959797919922
+        },
+        "A-fixed": {
+          "h": 2.3534709185739757,
+          "fa_per_month": 0.16680595019221126,
+          "se": 0.009168578346529841
+        },
+        "A-fixed-minus-i": {
+          "h": 1.9755176122478133,
+          "fa_per_month": 0.16634869632158517,
+          "se": 0.009617387162461584
+        },
+        "A-fixed-minus-ii": {
+          "h": 1.282362822272489,
+          "fa_per_month": 0.16676526728208335,
+          "se": 0.008440120677231436
+        },
+        "A-fixed-minus-iii": {
+          "h": 2.714841515774925,
+          "fa_per_month": 0.1666294891813518,
+          "se": 0.009064489694693843
+        },
+        "A-fixed-minus-iv": {
+          "h": 2.375283114347849,
+          "fa_per_month": 0.16639828234031132,
+          "se": 0.009510630820034734
+        },
+        "A-fixed-minus-v": {
+          "h": 2.4779547990578523,
+          "fa_per_month": 0.16692871240758705,
+          "se": 0.009336751498206775
+        },
+        "probe-only": {
+          "h": 25.070117719067593,
+          "fa_per_month": 0.16826129990102276,
+          "se": 0.037386082737635454
+        }
+      },
+      "S1": {
+        "triggered": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.8456728529400445,
+            "se": 0.0332112425879288,
+            "lo": 0.7802488257089956,
+            "hi": 0.9113952655192328
+          },
+          "holds": true
+        },
+        "current": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.7795230730507212,
+            "se": 0.05243673601008573,
+            "lo": 0.6772453040790333,
+            "hi": 0.8793951803073454
+          },
+          "holds": true
+        },
+        "holds": true
+      },
+      "S2": {
+        "indicator4": {
+          "diff_mc_minus_formula": {
+            "point": 0.1355799134170994,
+            "se": 0.010744069604780943,
+            "lo": 0.11496352555317191,
+            "hi": 0.15552983268846077
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "indicator5": {
+          "diff_mc_minus_formula": {
+            "point": -0.4570778893806796,
+            "se": 0.05456003635079197,
+            "lo": -0.5879434397708915,
+            "hi": -0.38416048335531017
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "holds": true
+      },
+      "S3_S4": {
+        "by_architecture": {
+          "pop": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16003474658380942,
+            "observed_sensitivity_within_21d": {
+              "point": 0.222,
+              "se": 0.013099420871305029,
+              "lo": 0.197,
+              "hi": 0.24902499999999986
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.073,
+              "se": 0.00837343877916918,
+              "lo": 0.057,
+              "hi": 0.09
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.14900000000000002,
+              "se": 0.0159614969126284,
+              "lo": 0.12,
+              "hi": 0.181
+            },
+            "holds_s3": true
+          },
+          "A-naive": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16003474658380942,
+            "observed_sensitivity_within_21d": {
+              "point": 0.169,
+              "se": 0.012128897098351986,
+              "lo": 0.146,
+              "hi": 0.193
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.075,
+              "se": 0.008477348197769932,
+              "lo": 0.059,
+              "hi": 0.092
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.09400000000000001,
+              "se": 0.015154462341648158,
+              "lo": 0.064,
+              "hi": 0.125
+            },
+            "holds_s3": true
+          },
+          "A-fixed": {
+            "realized_fa_per_tracked_person_month_on_S": 0.15970598062145006,
+            "observed_sensitivity_within_21d": {
+              "point": 0.234,
+              "se": 0.013900964513558172,
+              "lo": 0.207,
+              "hi": 0.262
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.08,
+              "se": 0.008391863361932358,
+              "lo": 0.064,
+              "hi": 0.096
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.15400000000000003,
+              "se": 0.016327428807553647,
+              "lo": 0.122,
+              "hi": 0.18702499999999986
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-i": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16104243234213164,
+            "observed_sensitivity_within_21d": {
+              "point": 0.245,
+              "se": 0.013975807359350403,
+              "lo": 0.217,
+              "hi": 0.272
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.081,
+              "se": 0.008614059728868046,
+              "lo": 0.064,
+              "hi": 0.097
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.16399999999999998,
+              "se": 0.01652165458678829,
+              "lo": 0.132,
+              "hi": 0.196
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-ii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16872702973605078,
+            "observed_sensitivity_within_21d": {
+              "point": 0.186,
+              "se": 0.012623356222144553,
+              "lo": 0.162,
+              "hi": 0.211
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.086,
+              "se": 0.00881799174921618,
+              "lo": 0.069,
+              "hi": 0.104
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.1,
+              "se": 0.015225428223281313,
+              "lo": 0.07100000000000001,
+              "hi": 0.13
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1540260608085533,
+            "observed_sensitivity_within_21d": {
+              "point": 0.217,
+              "se": 0.013216600433300038,
+              "lo": 0.192,
+              "hi": 0.245
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.065,
+              "se": 0.007959810113219992,
+              "lo": 0.05,
+              "hi": 0.081
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.152,
+              "se": 0.015560053137017669,
+              "lo": 0.12200000000000001,
+              "hi": 0.183
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iv": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1533578349482125,
+            "observed_sensitivity_within_21d": {
+              "point": 0.232,
+              "se": 0.013829037236389334,
+              "lo": 0.205,
+              "hi": 0.26
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.063,
+              "se": 0.007763553705170496,
+              "lo": 0.048,
+              "hi": 0.078
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.169,
+              "se": 0.01604321250042107,
+              "lo": 0.139,
+              "hi": 0.202
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-v": {
+            "realized_fa_per_tracked_person_month_on_S": 0.13798402993551837,
+            "observed_sensitivity_within_21d": {
+              "point": 0.219,
+              "se": 0.013512501354169155,
+              "lo": 0.193,
+              "hi": 0.247
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.059,
+              "se": 0.007309526273102012,
+              "lo": 0.045,
+              "hi": 0.074
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.16,
+              "se": 0.015656819464625438,
+              "lo": 0.13,
+              "hi": 0.192
+            },
+            "holds_s3": true
+          },
+          "probe-only": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16527104451300131,
+            "observed_sensitivity_within_21d": {
+              "point": 0.014,
+              "se": 0.0039036922466529414,
+              "lo": 0.007,
+              "hi": 0.022
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.012,
+              "se": 0.0035492797076620507,
+              "lo": 0.005,
+              "hi": 0.019
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.002,
+              "se": 0.0052768552757111314,
+              "lo": -0.008000000000000002,
+              "hi": 0.013
+            },
+            "holds_s4": true
+          }
+        },
+        "S3_holds": true,
+        "S4_holds": true
+      },
+      "S5": {
+        "applicable": false,
+        "reason": "this cell's m1 is 0 (frozen default); no m1 axis to compare against"
+      },
+      "S6": {
+        "fa_ratio_CS_over_S": {
+          "point": 1.6499793416071469,
+          "se": 0.11193906928618877,
+          "lo": 1.4450407671342391,
+          "hi": 1.8795865999022416
+        },
+        "holds": true
+      }
+    },
+    "phi_D_high": {
+      "tuned_h": {
+        "pop": {
+          "h": 1.2265128858300618,
+          "fa_per_month": 0.16635486798032867,
+          "se": 0.007540191691286854
+        },
+        "A-naive": {
+          "h": 2.12338637918615,
+          "fa_per_month": 0.16695419889810229,
+          "se": 0.010414165078592308
+        },
+        "A-fixed": {
+          "h": 4.842170589979694,
+          "fa_per_month": 0.16681024355861854,
+          "se": 0.009577199029933321
+        },
+        "A-fixed-minus-i": {
+          "h": 3.727309627689783,
+          "fa_per_month": 0.16699947568634887,
+          "se": 0.010127742691571651
+        },
+        "A-fixed-minus-ii": {
+          "h": 2.1732269607079155,
+          "fa_per_month": 0.1664657020364416,
+          "se": 0.01063166981299776
+        },
+        "A-fixed-minus-iii": {
+          "h": 4.840664355649779,
+          "fa_per_month": 0.16681710293183566,
+          "se": 0.010149417334219554
+        },
+        "A-fixed-minus-iv": {
+          "h": 4.723190814202508,
+          "fa_per_month": 0.16659962456422633,
+          "se": 0.009892663249258702
+        },
+        "A-fixed-minus-v": {
+          "h": 4.661678399690346,
+          "fa_per_month": 0.16639882148118387,
+          "se": 0.009883564981857103
+        },
+        "probe-only": {
+          "h": 25.826060613973237,
+          "fa_per_month": 0.16966067864271456,
+          "se": 0.03744965364708849
+        }
+      },
+      "S1": {
+        "triggered": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.6471051185816948,
+            "se": 0.03445830531525805,
+            "lo": 0.5804705114996214,
+            "hi": 0.7160387161596503
+          },
+          "holds": true
+        },
+        "current": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.7931423888747694,
+            "se": 0.059533146880084896,
+            "lo": 0.681922840013732,
+            "hi": 0.914919407515099
+          },
+          "holds": true
+        },
+        "holds": true
+      },
+      "S2": {
+        "indicator4": {
+          "diff_mc_minus_formula": {
+            "point": 0.08248365521838041,
+            "se": 0.05547711334390748,
+            "lo": -0.04632836571456614,
+            "hi": 0.1670606122102003
+          },
+          "n_persons": 1000,
+          "holds": false
+        },
+        "indicator5": {
+          "diff_mc_minus_formula": {
+            "point": -0.3265400413691486,
+            "se": 0.10694322387473669,
+            "lo": -0.4907068040738966,
+            "hi": -0.08512698106704
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "holds": false
+      },
+      "S3_S4": {
+        "by_architecture": {
+          "pop": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16259799930856816,
+            "observed_sensitivity_within_21d": {
+              "point": 0.141,
+              "se": 0.011008163963028459,
+              "lo": 0.119975,
+              "hi": 0.163
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.064,
+              "se": 0.007869934922719752,
+              "lo": 0.048,
+              "hi": 0.08
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.07699999999999999,
+              "se": 0.01334957300064874,
+              "lo": 0.051000000000000004,
+              "hi": 0.103
+            },
+            "holds_s3": true
+          },
+          "A-naive": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16761645607735115,
+            "observed_sensitivity_within_21d": {
+              "point": 0.12,
+              "se": 0.0102810879475225,
+              "lo": 0.1,
+              "hi": 0.14
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.087,
+              "se": 0.008899310569606342,
+              "lo": 0.069,
+              "hi": 0.104
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.033,
+              "se": 0.013558011564709422,
+              "lo": 0.006974999999999994,
+              "hi": 0.05900000000000001
+            },
+            "holds_s3": true
+          },
+          "A-fixed": {
+            "realized_fa_per_tracked_person_month_on_S": 0.14922210450008364,
+            "observed_sensitivity_within_21d": {
+              "point": 0.144,
+              "se": 0.0113195608231333,
+              "lo": 0.122,
+              "hi": 0.16602499999999987
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.084,
+              "se": 0.008687799875880064,
+              "lo": 0.068,
+              "hi": 0.102
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.059999999999999984,
+              "se": 0.01453815830060282,
+              "lo": 0.032,
+              "hi": 0.08700000000000001
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-i": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17866503094853065,
+            "observed_sensitivity_within_21d": {
+              "point": 0.16,
+              "se": 0.011702511285411889,
+              "lo": 0.137,
+              "hi": 0.183
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.078,
+              "se": 0.008354895459493765,
+              "lo": 0.062,
+              "hi": 0.094
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.082,
+              "se": 0.014199139120942788,
+              "lo": 0.054000000000000006,
+              "hi": 0.10899999999999999
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-ii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.15323704901578095,
+            "observed_sensitivity_within_21d": {
+              "point": 0.121,
+              "se": 0.010379428561757836,
+              "lo": 0.1,
+              "hi": 0.141
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.061,
+              "se": 0.007468935164817548,
+              "lo": 0.047,
+              "hi": 0.075
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.06,
+              "se": 0.013145453680882916,
+              "lo": 0.034,
+              "hi": 0.086
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17665755869068198,
+            "observed_sensitivity_within_21d": {
+              "point": 0.146,
+              "se": 0.011438771207755301,
+              "lo": 0.124,
+              "hi": 0.168
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.06,
+              "se": 0.007710752726148201,
+              "lo": 0.045,
+              "hi": 0.076
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.086,
+              "se": 0.013984632019340307,
+              "lo": 0.058974999999999986,
+              "hi": 0.113
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iv": {
+            "realized_fa_per_tracked_person_month_on_S": 0.15691741482183683,
+            "observed_sensitivity_within_21d": {
+              "point": 0.151,
+              "se": 0.011453371069446201,
+              "lo": 0.129,
+              "hi": 0.174
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.066,
+              "se": 0.007819876932383195,
+              "lo": 0.051,
+              "hi": 0.082
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.08499999999999999,
+              "se": 0.014412810397412988,
+              "lo": 0.05600000000000001,
+              "hi": 0.11299999999999999
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-v": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16159430795481158,
+            "observed_sensitivity_within_21d": {
+              "point": 0.153,
+              "se": 0.011441664371576187,
+              "lo": 0.131,
+              "hi": 0.176
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.059,
+              "se": 0.007457180483962099,
+              "lo": 0.045,
+              "hi": 0.074
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.094,
+              "se": 0.01321087019448938,
+              "lo": 0.068,
+              "hi": 0.11902499999999988
+            },
+            "holds_s3": true
+          },
+          "probe-only": {
+            "realized_fa_per_tracked_person_month_on_S": 0.22972972972972974,
+            "observed_sensitivity_within_21d": {
+              "point": 0.016,
+              "se": 0.004039819806877037,
+              "lo": 0.008,
+              "hi": 0.024
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.015,
+              "se": 0.003941544352908257,
+              "lo": 0.008,
+              "hi": 0.023
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.0010000000000000009,
+              "se": 0.005673799079805259,
+              "lo": -0.011,
+              "hi": 0.012000000000000002
+            },
+            "holds_s4": true
+          }
+        },
+        "S3_holds": true,
+        "S4_holds": true
+      },
+      "S5": {
+        "applicable": false,
+        "reason": "this cell's m1 is 0 (frozen default); no m1 axis to compare against"
+      },
+      "S6": {
+        "fa_ratio_CS_over_S": {
+          "point": 1.5475525701449666,
+          "se": 0.123940755481548,
+          "lo": 1.3323164734390782,
+          "hi": 1.813074736333708
+        },
+        "holds": true
+      }
+    },
+    "psi_low": {
+      "tuned_h": {
+        "pop": {
+          "h": 1.1270466726059112,
+          "fa_per_month": 0.1665366179913053,
+          "se": 0.006745704104009451
+        },
+        "A-naive": {
+          "h": 1.7367178563551984,
+          "fa_per_month": 0.16651589774516704,
+          "se": 0.010220231061191116
+        },
+        "A-fixed": {
+          "h": 2.9225918698661646,
+          "fa_per_month": 0.16643643331402344,
+          "se": 0.008989786717543781
+        },
+        "A-fixed-minus-i": {
+          "h": 2.728139215795591,
+          "fa_per_month": 0.16662763074246328,
+          "se": 0.009281895754346419
+        },
+        "A-fixed-minus-ii": {
+          "h": 1.5195168436039692,
+          "fa_per_month": 0.16682825716291666,
+          "se": 0.009038253044290354
+        },
+        "A-fixed-minus-iii": {
+          "h": 3.387114882346804,
+          "fa_per_month": 0.16654961372529348,
+          "se": 0.009601353739488092
+        },
+        "A-fixed-minus-iv": {
+          "h": 3.171222229096247,
+          "fa_per_month": 0.16683383483784686,
+          "se": 0.009574280536177593
+        },
+        "A-fixed-minus-v": {
+          "h": 3.0652615866470576,
+          "fa_per_month": 0.16670935554639912,
+          "se": 0.009869439789418911
+        },
+        "probe-only": {
+          "h": 29.999999999986404,
+          "fa_per_month": 0.1719000687600275,
+          "se": 0.04071800061713394
+        }
+      },
+      "S1": {
+        "triggered": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.7469977595579496,
+            "se": 0.03390139726742813,
+            "lo": 0.6799632760972781,
+            "hi": 0.8145715460537244
+          },
+          "holds": true
+        },
+        "current": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.7899770211456524,
+            "se": 0.052694952349864106,
+            "lo": 0.6850135399949647,
+            "hi": 0.8905943273857013
+          },
+          "holds": true
+        },
+        "holds": true
+      },
+      "S2": {
+        "indicator4": {
+          "diff_mc_minus_formula": {
+            "point": 0.22908597479456666,
+            "se": 0.09512801350766212,
+            "lo": 0.11747953410136114,
+            "hi": 0.43202921464773425
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "indicator5": {
+          "diff_mc_minus_formula": {
+            "point": -0.36615024894127246,
+            "se": 0.011198166891077254,
+            "lo": -0.389049284091839,
+            "hi": -0.3449507282605529
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "holds": true
+      },
+      "S3_S4": {
+        "by_architecture": {
+          "pop": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17226768949445845,
+            "observed_sensitivity_within_21d": {
+              "point": 0.175,
+              "se": 0.012432358566247994,
+              "lo": 0.151,
+              "hi": 0.199
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.077,
+              "se": 0.00836626110711686,
+              "lo": 0.061,
+              "hi": 0.093
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.09799999999999999,
+              "se": 0.014920781174436803,
+              "lo": 0.069,
+              "hi": 0.129
+            },
+            "holds_s3": true
+          },
+          "A-naive": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16156367772004548,
+            "observed_sensitivity_within_21d": {
+              "point": 0.154,
+              "se": 0.011459005428164408,
+              "lo": 0.132,
+              "hi": 0.177
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.064,
+              "se": 0.007712651311003406,
+              "lo": 0.049,
+              "hi": 0.079
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.09,
+              "se": 0.01333048651345264,
+              "lo": 0.064,
+              "hi": 0.11699999999999999
+            },
+            "holds_s3": true
+          },
+          "A-fixed": {
+            "realized_fa_per_tracked_person_month_on_S": 0.18498489122799192,
+            "observed_sensitivity_within_21d": {
+              "point": 0.215,
+              "se": 0.01291056700420958,
+              "lo": 0.191,
+              "hi": 0.242
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.061,
+              "se": 0.007604367623509317,
+              "lo": 0.046,
+              "hi": 0.076
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.154,
+              "se": 0.014621731951880268,
+              "lo": 0.126,
+              "hi": 0.183
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-i": {
+            "realized_fa_per_tracked_person_month_on_S": 0.15722043196592442,
+            "observed_sensitivity_within_21d": {
+              "point": 0.209,
+              "se": 0.012629522246153376,
+              "lo": 0.186,
+              "hi": 0.235
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.068,
+              "se": 0.007944315708482261,
+              "lo": 0.053,
+              "hi": 0.084
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.141,
+              "se": 0.014515464412258802,
+              "lo": 0.113,
+              "hi": 0.17
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-ii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16792480180190225,
+            "observed_sensitivity_within_21d": {
+              "point": 0.173,
+              "se": 0.012156353738605546,
+              "lo": 0.15,
+              "hi": 0.198
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.076,
+              "se": 0.00830795695850744,
+              "lo": 0.06,
+              "hi": 0.092
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.09699999999999999,
+              "se": 0.014488417032721588,
+              "lo": 0.06897500000000001,
+              "hi": 0.127
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17628759073625994,
+            "observed_sensitivity_within_21d": {
+              "point": 0.176,
+              "se": 0.011506569615752606,
+              "lo": 0.154,
+              "hi": 0.199
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.089,
+              "se": 0.00906522183255527,
+              "lo": 0.07,
+              "hi": 0.107
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.087,
+              "se": 0.014207396984125284,
+              "lo": 0.05800000000000001,
+              "hi": 0.11599999999999999
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iv": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16391066311341057,
+            "observed_sensitivity_within_21d": {
+              "point": 0.199,
+              "se": 0.012375316641645597,
+              "lo": 0.176,
+              "hi": 0.223
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.071,
+              "se": 0.008184270944650338,
+              "lo": 0.056,
+              "hi": 0.088
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.128,
+              "se": 0.01531550329961965,
+              "lo": 0.09899999999999999,
+              "hi": 0.158
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-v": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17126418839060722,
+            "observed_sensitivity_within_21d": {
+              "point": 0.208,
+              "se": 0.01258682342022426,
+              "lo": 0.185,
+              "hi": 0.233
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.083,
+              "se": 0.008649635012121694,
+              "lo": 0.067,
+              "hi": 0.1
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.12499999999999999,
+              "se": 0.015282923800109064,
+              "lo": 0.096,
+              "hi": 0.15400000000000003
+            },
+            "holds_s3": true
+          },
+          "probe-only": {
+            "realized_fa_per_tracked_person_month_on_S": 0.09946949602122016,
+            "observed_sensitivity_within_21d": {
+              "point": 0.015,
+              "se": 0.003779791318473231,
+              "lo": 0.008,
+              "hi": 0.023
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.009,
+              "se": 0.0030534586217562188,
+              "lo": 0.003,
+              "hi": 0.015
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.006,
+              "se": 0.004774436235901087,
+              "lo": -0.003000000000000001,
+              "hi": 0.015024999999999865
+            },
+            "holds_s4": true
+          }
+        },
+        "S3_holds": true,
+        "S4_holds": true
+      },
+      "S5": {
+        "applicable": false,
+        "reason": "this cell's m1 is 0 (frozen default); no m1 axis to compare against"
+      },
+      "S6": {
+        "fa_ratio_CS_over_S": {
+          "point": 1.632079063761426,
+          "se": 0.11141795908760446,
+          "lo": 1.4336523630389058,
+          "hi": 1.86562089976328
+        },
+        "holds": true
+      }
+    },
+    "psi_high": {
+      "tuned_h": {
+        "pop": {
+          "h": 1.1172832775846016,
+          "fa_per_month": 0.16675392378554799,
+          "se": 0.006972476825451181
+        },
+        "A-naive": {
+          "h": 1.6329914621620902,
+          "fa_per_month": 0.16682671907452487,
+          "se": 0.010188045508118698
+        },
+        "A-fixed": {
+          "h": 3.548461446345982,
+          "fa_per_month": 0.16698084795484713,
+          "se": 0.008726585875730693
+        },
+        "A-fixed-minus-i": {
+          "h": 2.5855300663649814,
+          "fa_per_month": 0.16665737074014167,
+          "se": 0.00971670176298119
+        },
+        "A-fixed-minus-ii": {
+          "h": 1.6074532630538212,
+          "fa_per_month": 0.1667710616974632,
+          "se": 0.009249324308892665
+        },
+        "A-fixed-minus-iii": {
+          "h": 3.709889201216493,
+          "fa_per_month": 0.16653263637582094,
+          "se": 0.009752670246493594
+        },
+        "A-fixed-minus-iv": {
+          "h": 3.458077690133768,
+          "fa_per_month": 0.16637712147534411,
+          "se": 0.009480536155209565
+        },
+        "A-fixed-minus-v": {
+          "h": 3.450190493608125,
+          "fa_per_month": 0.1665737540416992,
+          "se": 0.00952707413510393
+        },
+        "probe-only": {
+          "h": 25.383952739496408,
+          "fa_per_month": 0.16909814323607425,
+          "se": 0.03641368782168286
+        }
+      },
+      "S1": {
+        "triggered": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.7915532464745824,
+            "se": 0.02997316095258834,
+            "lo": 0.73341038472737,
+            "hi": 0.8488690264091815
+          },
+          "holds": true
+        },
+        "current": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.8732961084476508,
+            "se": 0.04842402881135073,
+            "lo": 0.7824055195154432,
+            "hi": 0.9725083391561588
+          },
+          "holds": true
+        },
+        "holds": true
+      },
+      "S2": {
+        "indicator4": {
+          "diff_mc_minus_formula": {
+            "point": 0.13019917669462755,
+            "se": 0.016982252046523736,
+            "lo": 0.09625009091899975,
+            "hi": 0.162602920932731
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "indicator5": {
+          "diff_mc_minus_formula": {
+            "point": -0.4009413510070903,
+            "se": 0.013058681388996908,
+            "lo": -0.4265529686572494,
+            "hi": -0.3762545026452043
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "holds": true
+      },
+      "S3_S4": {
+        "by_architecture": {
+          "pop": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1771877721456803,
+            "observed_sensitivity_within_21d": {
+              "point": 0.186,
+              "se": 0.012307928280148315,
+              "lo": 0.162,
+              "hi": 0.21
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.079,
+              "se": 0.008670306618478334,
+              "lo": 0.062,
+              "hi": 0.096
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.107,
+              "se": 0.01497097220471594,
+              "lo": 0.07700000000000001,
+              "hi": 0.13599999999999998
+            },
+            "holds_s3": true
+          },
+          "A-naive": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17651787508652836,
+            "observed_sensitivity_within_21d": {
+              "point": 0.156,
+              "se": 0.01116988984814129,
+              "lo": 0.134,
+              "hi": 0.178
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.069,
+              "se": 0.00806995364459505,
+              "lo": 0.054,
+              "hi": 0.085
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.087,
+              "se": 0.013840288094446181,
+              "lo": 0.059,
+              "hi": 0.11300000000000002
+            },
+            "holds_s3": true
+          },
+          "A-fixed": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1781985864698592,
+            "observed_sensitivity_within_21d": {
+              "point": 0.188,
+              "se": 0.01222506048254572,
+              "lo": 0.164,
+              "hi": 0.212
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.07,
+              "se": 0.008270742263472752,
+              "lo": 0.054,
+              "hi": 0.087
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.118,
+              "se": 0.01479694537890416,
+              "lo": 0.08900000000000001,
+              "hi": 0.14502499999999988
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-i": {
+            "realized_fa_per_tracked_person_month_on_S": 0.18925225818697453,
+            "observed_sensitivity_within_21d": {
+              "point": 0.205,
+              "se": 0.012559509131921413,
+              "lo": 0.18,
+              "hi": 0.23
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.1,
+              "se": 0.009429790783846351,
+              "lo": 0.082,
+              "hi": 0.119
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.10499999999999998,
+              "se": 0.015522545617946517,
+              "lo": 0.07400000000000001,
+              "hi": 0.136
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-ii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.19226689592800597,
+            "observed_sensitivity_within_21d": {
+              "point": 0.168,
+              "se": 0.012039510482421125,
+              "lo": 0.144,
+              "hi": 0.192
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.066,
+              "se": 0.007834206941305521,
+              "lo": 0.051,
+              "hi": 0.08102499999999986
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.10200000000000001,
+              "se": 0.014619346099952458,
+              "lo": 0.074,
+              "hi": 0.131
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1972912921630584,
+            "observed_sensitivity_within_21d": {
+              "point": 0.205,
+              "se": 0.012657075828731814,
+              "lo": 0.18,
+              "hi": 0.23
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.076,
+              "se": 0.008143014926674763,
+              "lo": 0.06,
+              "hi": 0.09102499999999986
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.129,
+              "se": 0.015383960254646991,
+              "lo": 0.098,
+              "hi": 0.16
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iv": {
+            "realized_fa_per_tracked_person_month_on_S": 0.18724249969295356,
+            "observed_sensitivity_within_21d": {
+              "point": 0.195,
+              "se": 0.012563782086225274,
+              "lo": 0.17,
+              "hi": 0.22
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.095,
+              "se": 0.00904828688193234,
+              "lo": 0.077975,
+              "hi": 0.113
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.1,
+              "se": 0.015111390432730049,
+              "lo": 0.06999999999999999,
+              "hi": 0.13
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-v": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1882410736216868,
+            "observed_sensitivity_within_21d": {
+              "point": 0.194,
+              "se": 0.012546737476756869,
+              "lo": 0.16997500000000001,
+              "hi": 0.219
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.073,
+              "se": 0.008489236792589798,
+              "lo": 0.057,
+              "hi": 0.09002499999999986
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.12100000000000001,
+              "se": 0.015388219403108312,
+              "lo": 0.09,
+              "hi": 0.15100000000000002
+            },
+            "holds_s3": true
+          },
+          "probe-only": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1779319606087735,
+            "observed_sensitivity_within_21d": {
+              "point": 0.008,
+              "se": 0.0027610655083446832,
+              "lo": 0.003,
+              "hi": 0.014
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.01,
+              "se": 0.0031463344879963375,
+              "lo": 0.004,
+              "hi": 0.016
+            },
+            "diff_obs_minus_chance": {
+              "point": -0.002,
+              "se": 0.004173512801532095,
+              "lo": -0.009999999999999998,
+              "hi": 0.006
+            },
+            "holds_s4": true
+          }
+        },
+        "S3_holds": true,
+        "S4_holds": true
+      },
+      "S5": {
+        "applicable": false,
+        "reason": "this cell's m1 is 0 (frozen default); no m1 axis to compare against"
+      },
+      "S6": {
+        "fa_ratio_CS_over_S": {
+          "point": 1.7110224082657859,
+          "se": 0.12650854485781104,
+          "lo": 1.4822553991442373,
+          "hi": 1.9791107545192357
+        },
+        "holds": true
+      }
+    },
+    "ind4_daylevel": {
+      "tuned_h": {
+        "pop": {
+          "h": 1.2173157842933053,
+          "fa_per_month": 0.1667372079035887,
+          "se": 0.00696973070656191
+        },
+        "A-naive": {
+          "h": 1.8242557813855,
+          "fa_per_month": 0.1669367003743226,
+          "se": 0.010508037147312263
+        },
+        "A-fixed": {
+          "h": 4.4266876265185156,
+          "fa_per_month": 0.1665700396913883,
+          "se": 0.009172626843879124
+        },
+        "A-fixed-minus-i": {
+          "h": 3.9348847498368276,
+          "fa_per_month": 0.16655309927279632,
+          "se": 0.008677731201633366
+        },
+        "A-fixed-minus-ii": {
+          "h": 1.7494681920425592,
+          "fa_per_month": 0.1664178938222648,
+          "se": 0.009047493798837764
+        },
+        "A-fixed-minus-iii": {
+          "h": 4.924156642818663,
+          "fa_per_month": 0.16647647177284017,
+          "se": 0.009404465931564703
+        },
+        "A-fixed-minus-iv": {
+          "h": 4.458941716411709,
+          "fa_per_month": 0.16699267870116807,
+          "se": 0.008504980490402589
+        },
+        "A-fixed-minus-v": {
+          "h": 4.5788954564813595,
+          "fa_per_month": 0.16681554265297008,
+          "se": 0.009409227994678582
+        },
+        "probe-only": {
+          "h": 26.829013608622287,
+          "fa_per_month": 0.16969831410825198,
+          "se": 0.029847833329807616
+        }
+      },
+      "S1": {
+        "triggered": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.7753082608181917,
+            "se": 0.02818021731822395,
+            "lo": 0.7192976216571553,
+            "hi": 0.8308178322717409
+          },
+          "holds": true
+        },
+        "current": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.7779792527256109,
+            "se": 0.042317785446395376,
+            "lo": 0.6961659354732869,
+            "hi": 0.8635125649463722
+          },
+          "holds": true
+        },
+        "holds": true
+      },
+      "S2": {
+        "indicator4": {
+          "diff_mc_minus_formula": {
+            "point": 0.19733159186350857,
+            "se": 0.01788885948975664,
+            "lo": 0.1676266352334966,
+            "hi": 0.2354832322046689
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "indicator5": {
+          "diff_mc_minus_formula": {
+            "point": -0.4306340738112525,
+            "se": 0.037931545728491604,
+            "lo": -0.5066358512584467,
+            "hi": -0.3526194653719581
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "holds": true
+      },
+      "S3_S4": {
+        "by_architecture": {
+          "pop": {
+            "realized_fa_per_tracked_person_month_on_S": 0.15613133794951978,
+            "observed_sensitivity_within_21d": {
+              "point": 0.203,
+              "se": 0.012669125744247774,
+              "lo": 0.179,
+              "hi": 0.228
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.076,
+              "se": 0.008387229373176767,
+              "lo": 0.06,
+              "hi": 0.093
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.127,
+              "se": 0.014968163646936814,
+              "lo": 0.098,
+              "hi": 0.158
+            },
+            "holds_s3": true
+          },
+          "A-naive": {
+            "realized_fa_per_tracked_person_month_on_S": 0.15847665847665848,
+            "observed_sensitivity_within_21d": {
+              "point": 0.154,
+              "se": 0.01166459279668846,
+              "lo": 0.130975,
+              "hi": 0.177
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.068,
+              "se": 0.008017306879794635,
+              "lo": 0.053,
+              "hi": 0.08402499999999986
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.086,
+              "se": 0.013911499727287896,
+              "lo": 0.05700000000000001,
+              "hi": 0.11299999999999999
+            },
+            "holds_s3": true
+          },
+          "A-fixed": {
+            "realized_fa_per_tracked_person_month_on_S": 0.14173703256936068,
+            "observed_sensitivity_within_21d": {
+              "point": 0.196,
+              "se": 0.012608531696266932,
+              "lo": 0.172,
+              "hi": 0.221
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.064,
+              "se": 0.007607702844570472,
+              "lo": 0.049975000000000006,
+              "hi": 0.079
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.132,
+              "se": 0.014745690682258613,
+              "lo": 0.103,
+              "hi": 0.161
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-i": {
+            "realized_fa_per_tracked_person_month_on_S": 0.11459589867310012,
+            "observed_sensitivity_within_21d": {
+              "point": 0.188,
+              "se": 0.012191206113557906,
+              "lo": 0.164,
+              "hi": 0.212
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.053,
+              "se": 0.007250446088637728,
+              "lo": 0.04,
+              "hi": 0.068
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.135,
+              "se": 0.014294903283336336,
+              "lo": 0.10697499999999999,
+              "hi": 0.16299999999999998
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-ii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.15748559174373408,
+            "observed_sensitivity_within_21d": {
+              "point": 0.165,
+              "se": 0.011628975031366265,
+              "lo": 0.143,
+              "hi": 0.187
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.083,
+              "se": 0.008638845905518262,
+              "lo": 0.067,
+              "hi": 0.101
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.082,
+              "se": 0.014086169993740183,
+              "lo": 0.05499999999999999,
+              "hi": 0.11
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.13671089666264574,
+            "observed_sensitivity_within_21d": {
+              "point": 0.189,
+              "se": 0.012594895531393794,
+              "lo": 0.165,
+              "hi": 0.215
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.069,
+              "se": 0.008199685873508333,
+              "lo": 0.053,
+              "hi": 0.085
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.12,
+              "se": 0.0149593255349374,
+              "lo": 0.09100000000000001,
+              "hi": 0.15
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iv": {
+            "realized_fa_per_tracked_person_month_on_S": 0.13872135102533173,
+            "observed_sensitivity_within_21d": {
+              "point": 0.194,
+              "se": 0.012548836625373892,
+              "lo": 0.17,
+              "hi": 0.219
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.052,
+              "se": 0.007121438158175663,
+              "lo": 0.039,
+              "hi": 0.06602499999999986
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.14200000000000002,
+              "se": 0.014699748885904624,
+              "lo": 0.11299999999999999,
+              "hi": 0.17099999999999999
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-v": {
+            "realized_fa_per_tracked_person_month_on_S": 0.130332812150994,
+            "observed_sensitivity_within_21d": {
+              "point": 0.192,
+              "se": 0.012475778944825053,
+              "lo": 0.168,
+              "hi": 0.216
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.065,
+              "se": 0.007847743149228835,
+              "lo": 0.05,
+              "hi": 0.081
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.127,
+              "se": 0.014913107997499134,
+              "lo": 0.09899999999999999,
+              "hi": 0.156
+            },
+            "holds_s3": true
+          },
+          "probe-only": {
+            "realized_fa_per_tracked_person_month_on_S": 0.12988454706927177,
+            "observed_sensitivity_within_21d": {
+              "point": 0.012,
+              "se": 0.003410443565382123,
+              "lo": 0.006,
+              "hi": 0.019
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.007,
+              "se": 0.0026680774105213418,
+              "lo": 0.002,
+              "hi": 0.013
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.005,
+              "se": 0.0043430669019780856,
+              "lo": -0.003000000000000001,
+              "hi": 0.013999999999999999
+            },
+            "holds_s4": true
+          }
+        },
+        "S3_holds": true,
+        "S4_holds": true
+      },
+      "S5": {
+        "applicable": false,
+        "reason": "this cell's m1 is 0 (frozen default); no m1 axis to compare against"
+      },
+      "S6": {
+        "fa_ratio_CS_over_S": {
+          "point": 1.6124748539259615,
+          "se": 0.10993214132292371,
+          "lo": 1.4157525831354654,
+          "hi": 1.852202546657124
+        },
+        "holds": true
+      }
+    },
+    "rising_slope_025": {
+      "tuned_h": {
+        "pop": {
+          "h": 1.1175818561805047,
+          "fa_per_month": 0.16668154230631918,
+          "se": 0.0071847965904615905
+        },
+        "A-naive": {
+          "h": 1.6841816820706754,
+          "fa_per_month": 0.16694360495589433,
+          "se": 0.009545736016527206
+        },
+        "A-fixed": {
+          "h": 3.2752528383631665,
+          "fa_per_month": 0.1669473285081801,
+          "se": 0.010269791664451383
+        },
+        "A-fixed-minus-i": {
+          "h": 2.5818566314880167,
+          "fa_per_month": 0.16676360057265568,
+          "se": 0.00886013547065504
+        },
+        "A-fixed-minus-ii": {
+          "h": 1.5945684735872871,
+          "fa_per_month": 0.16665924474527966,
+          "se": 0.009514595507578943
+        },
+        "A-fixed-minus-iii": {
+          "h": 3.472289866911659,
+          "fa_per_month": 0.166560541573109,
+          "se": 0.009735776705868046
+        },
+        "A-fixed-minus-iv": {
+          "h": 3.2491139937666507,
+          "fa_per_month": 0.16641925150402376,
+          "se": 0.009512633322480946
+        },
+        "A-fixed-minus-v": {
+          "h": 3.029391527845428,
+          "fa_per_month": 0.1664290170216558,
+          "se": 0.009219529983631168
+        },
+        "probe-only": {
+          "h": 23.397245840957428,
+          "fa_per_month": 0.16850146034598965,
+          "se": 0.031063943827331984
+        }
+      },
+      "S1": {
+        "triggered": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.6853935494342404,
+            "se": 0.03342359795896483,
+            "lo": 0.6181194252154828,
+            "hi": 0.7503666723143096
+          },
+          "holds": true
+        },
+        "current": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.6929198353830764,
+            "se": 0.05425502299429225,
+            "lo": 0.5833073285516734,
+            "hi": 0.7992192330517978
+          },
+          "holds": true
+        },
+        "holds": true
+      },
+      "S2": {
+        "indicator4": {
+          "diff_mc_minus_formula": {
+            "point": 0.06491134744091648,
+            "se": 0.01095577031349629,
+            "lo": 0.044696736005531854,
+            "hi": 0.08801193627732688
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "indicator5": {
+          "diff_mc_minus_formula": {
+            "point": -0.21023434263174756,
+            "se": 0.011356169160741137,
+            "lo": -0.23307476099354246,
+            "hi": -0.1885461565925933
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "holds": true
+      },
+      "S3_S4": {
+        "by_architecture": {
+          "pop": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17922225565921024,
+            "observed_sensitivity_within_21d": {
+              "point": 0.173,
+              "se": 0.012207470209443773,
+              "lo": 0.148,
+              "hi": 0.198
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.069,
+              "se": 0.007801241291156261,
+              "lo": 0.054,
+              "hi": 0.084
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.10399999999999998,
+              "se": 0.014620904731841623,
+              "lo": 0.075,
+              "hi": 0.13302499999999987
+            },
+            "holds_s3": true
+          },
+          "A-naive": {
+            "realized_fa_per_tracked_person_month_on_S": 0.15481325442204166,
+            "observed_sensitivity_within_21d": {
+              "point": 0.141,
+              "se": 0.010861238753182196,
+              "lo": 0.12,
+              "hi": 0.162
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.062,
+              "se": 0.007594058919012462,
+              "lo": 0.047,
+              "hi": 0.077
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.07899999999999999,
+              "se": 0.012805190762156868,
+              "lo": 0.05399999999999999,
+              "hi": 0.10302499999999987
+            },
+            "holds_s3": true
+          },
+          "A-fixed": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16351416119576,
+            "observed_sensitivity_within_21d": {
+              "point": 0.198,
+              "se": 0.012356729679983781,
+              "lo": 0.174,
+              "hi": 0.222
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.07,
+              "se": 0.008059843688939946,
+              "lo": 0.055,
+              "hi": 0.086
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.128,
+              "se": 0.014708346864408042,
+              "lo": 0.09800000000000002,
+              "hi": 0.156
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-i": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17856147664322258,
+            "observed_sensitivity_within_21d": {
+              "point": 0.217,
+              "se": 0.013268969459805937,
+              "lo": 0.191,
+              "hi": 0.242
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.072,
+              "se": 0.008101032796266356,
+              "lo": 0.057,
+              "hi": 0.089
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.14500000000000002,
+              "se": 0.015520468298930577,
+              "lo": 0.11400000000000002,
+              "hi": 0.176
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-ii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16652362428525253,
+            "observed_sensitivity_within_21d": {
+              "point": 0.144,
+              "se": 0.011185356279419478,
+              "lo": 0.121,
+              "hi": 0.164
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.066,
+              "se": 0.007703838803879406,
+              "lo": 0.051,
+              "hi": 0.081
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.07799999999999999,
+              "se": 0.013165248255571006,
+              "lo": 0.05299999999999999,
+              "hi": 0.10300000000000001
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17321132003968034,
+            "observed_sensitivity_within_21d": {
+              "point": 0.188,
+              "se": 0.012295075932913064,
+              "lo": 0.163,
+              "hi": 0.212
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.077,
+              "se": 0.008583129152763956,
+              "lo": 0.06,
+              "hi": 0.094
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.111,
+              "se": 0.015107544363606853,
+              "lo": 0.082,
+              "hi": 0.13999999999999999
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iv": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16485170034664556,
+            "observed_sensitivity_within_21d": {
+              "point": 0.197,
+              "se": 0.012329090568128639,
+              "lo": 0.173,
+              "hi": 0.221
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.079,
+              "se": 0.008413998614591233,
+              "lo": 0.063,
+              "hi": 0.096
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.11800000000000001,
+              "se": 0.015089795457973638,
+              "lo": 0.08800000000000001,
+              "hi": 0.14700000000000002
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-v": {
+            "realized_fa_per_tracked_person_month_on_S": 0.19159394121777512,
+            "observed_sensitivity_within_21d": {
+              "point": 0.205,
+              "se": 0.012812438459935906,
+              "lo": 0.18,
+              "hi": 0.229
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.083,
+              "se": 0.008788765339801665,
+              "lo": 0.066,
+              "hi": 0.101
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.12199999999999998,
+              "se": 0.01588196755590199,
+              "lo": 0.091,
+              "hi": 0.153
+            },
+            "holds_s3": true
+          },
+          "probe-only": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17660779740086635,
+            "observed_sensitivity_within_21d": {
+              "point": 0.015,
+              "se": 0.003847600032878483,
+              "lo": 0.008,
+              "hi": 0.023
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.02,
+              "se": 0.004349413144017096,
+              "lo": 0.012,
+              "hi": 0.029
+            },
+            "diff_obs_minus_chance": {
+              "point": -0.005000000000000001,
+              "se": 0.0057229293163536445,
+              "lo": -0.016,
+              "hi": 0.006000000000000002
+            },
+            "holds_s4": true
+          }
+        },
+        "S3_holds": true,
+        "S4_holds": true
+      },
+      "S5": {
+        "applicable": false,
+        "reason": "this cell's m1 is 0 (frozen default); no m1 axis to compare against"
+      },
+      "S6": {
+        "fa_ratio_CS_over_S": {
+          "point": 1.6215471401957557,
+          "se": 0.11663884477066995,
+          "lo": 1.4042426014278235,
+          "hi": 1.8652781281724504
+        },
+        "holds": true
+      }
+    },
+    "rising_slope_10": {
+      "tuned_h": {
+        "pop": {
+          "h": 1.0908128574329112,
+          "fa_per_month": 0.16652147691482946,
+          "se": 0.007143812321371376
+        },
+        "A-naive": {
+          "h": 1.7277799684614816,
+          "fa_per_month": 0.16635426429240863,
+          "se": 0.010160792569968992
+        },
+        "A-fixed": {
+          "h": 3.273131817095919,
+          "fa_per_month": 0.1669161843898733,
+          "se": 0.009381316336836235
+        },
+        "A-fixed-minus-i": {
+          "h": 2.7989478636954583,
+          "fa_per_month": 0.16694789303713306,
+          "se": 0.009714073347992132
+        },
+        "A-fixed-minus-ii": {
+          "h": 1.6102025788994525,
+          "fa_per_month": 0.16671130155329406,
+          "se": 0.010144546501820936
+        },
+        "A-fixed-minus-iii": {
+          "h": 3.6137873016911266,
+          "fa_per_month": 0.16680623011220902,
+          "se": 0.008692136185004744
+        },
+        "A-fixed-minus-iv": {
+          "h": 3.2681051161941923,
+          "fa_per_month": 0.16634433724972889,
+          "se": 0.009981516928088286
+        },
+        "A-fixed-minus-v": {
+          "h": 3.110102980550936,
+          "fa_per_month": 0.16643736787356128,
+          "se": 0.009366812145367873
+        },
+        "probe-only": {
+          "h": 29.999999999986404,
+          "fa_per_month": 0.17611874169251218,
+          "se": 0.03530957231115684
+        }
+      },
+      "S1": {
+        "triggered": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.7547343706577649,
+            "se": 0.030351003125971998,
+            "lo": 0.6945617234307455,
+            "hi": 0.8136457039998464
+          },
+          "holds": true
+        },
+        "current": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.815530242937727,
+            "se": 0.04671655215813305,
+            "lo": 0.7191340596843299,
+            "hi": 0.9024433506381979
+          },
+          "holds": true
+        },
+        "holds": true
+      },
+      "S2": {
+        "indicator4": {
+          "diff_mc_minus_formula": {
+            "point": 0.1405364357589008,
+            "se": 0.17935070028105754,
+            "lo": -0.2368793710239981,
+            "hi": 0.34151924650730714
+          },
+          "n_persons": 1000,
+          "holds": false
+        },
+        "indicator5": {
+          "diff_mc_minus_formula": {
+            "point": -1.3848362256576365,
+            "se": 0.6944001818524911,
+            "lo": -2.7738256143532674,
+            "hi": -0.676161961867007
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "holds": false
+      },
+      "S3_S4": {
+        "by_architecture": {
+          "pop": {
+            "realized_fa_per_tracked_person_month_on_S": 0.18544553792595567,
+            "observed_sensitivity_within_21d": {
+              "point": 0.195,
+              "se": 0.012662159171620129,
+              "lo": 0.171,
+              "hi": 0.22
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.084,
+              "se": 0.008485690733441315,
+              "lo": 0.068,
+              "hi": 0.101
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.111,
+              "se": 0.01497897796548367,
+              "lo": 0.08299999999999999,
+              "hi": 0.14
+            },
+            "holds_s3": true
+          },
+          "A-naive": {
+            "realized_fa_per_tracked_person_month_on_S": 0.15933587735154314,
+            "observed_sensitivity_within_21d": {
+              "point": 0.156,
+              "se": 0.0114094069207449,
+              "lo": 0.134,
+              "hi": 0.179
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.095,
+              "se": 0.009252965183244838,
+              "lo": 0.077,
+              "hi": 0.11202499999999986
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.061,
+              "se": 0.014831016503438417,
+              "lo": 0.030000000000000013,
+              "hi": 0.091
+            },
+            "holds_s3": true
+          },
+          "A-fixed": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1596741798705646,
+            "observed_sensitivity_within_21d": {
+              "point": 0.208,
+              "se": 0.012867141073669194,
+              "lo": 0.183,
+              "hi": 0.233
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.069,
+              "se": 0.007927327103602055,
+              "lo": 0.054,
+              "hi": 0.085
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.13899999999999998,
+              "se": 0.015193635749340637,
+              "lo": 0.11099999999999999,
+              "hi": 0.16899999999999998
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-i": {
+            "realized_fa_per_tracked_person_month_on_S": 0.15230975228743585,
+            "observed_sensitivity_within_21d": {
+              "point": 0.211,
+              "se": 0.013007220750253411,
+              "lo": 0.185,
+              "hi": 0.23702499999999985
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.079,
+              "se": 0.008705052367353064,
+              "lo": 0.062,
+              "hi": 0.096
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.132,
+              "se": 0.01543772255349925,
+              "lo": 0.10200000000000001,
+              "hi": 0.163
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-ii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16469538049542512,
+            "observed_sensitivity_within_21d": {
+              "point": 0.167,
+              "se": 0.011653043066356237,
+              "lo": 0.144,
+              "hi": 0.19
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.072,
+              "se": 0.008233956219066795,
+              "lo": 0.056,
+              "hi": 0.088
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.09500000000000001,
+              "se": 0.014565345125994085,
+              "lo": 0.066,
+              "hi": 0.124
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16569962062039723,
+            "observed_sensitivity_within_21d": {
+              "point": 0.194,
+              "se": 0.012567727116803628,
+              "lo": 0.169,
+              "hi": 0.219
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.067,
+              "se": 0.008077510389163453,
+              "lo": 0.052,
+              "hi": 0.08302499999999986
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.127,
+              "se": 0.014753770259443322,
+              "lo": 0.09899999999999999,
+              "hi": 0.15602499999999986
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iv": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1596741798705646,
+            "observed_sensitivity_within_21d": {
+              "point": 0.208,
+              "se": 0.012867141073669194,
+              "lo": 0.183,
+              "hi": 0.233
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.067,
+              "se": 0.008152811902709426,
+              "lo": 0.051,
+              "hi": 0.084
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.141,
+              "se": 0.015373896524537089,
+              "lo": 0.11100000000000002,
+              "hi": 0.171
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-v": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1737296645912834,
+            "observed_sensitivity_within_21d": {
+              "point": 0.219,
+              "se": 0.013131534881885556,
+              "lo": 0.194975,
+              "hi": 0.245
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.074,
+              "se": 0.008451274564873955,
+              "lo": 0.057,
+              "hi": 0.091
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.14500000000000002,
+              "se": 0.01566357075268478,
+              "lo": 0.115,
+              "hi": 0.176
+            },
+            "holds_s3": true
+          },
+          "probe-only": {
+            "realized_fa_per_tracked_person_month_on_S": 0.14634146341463414,
+            "observed_sensitivity_within_21d": {
+              "point": 0.009,
+              "se": 0.0029337844664609944,
+              "lo": 0.004,
+              "hi": 0.015
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.011,
+              "se": 0.0032992514727040846,
+              "lo": 0.005,
+              "hi": 0.018
+            },
+            "diff_obs_minus_chance": {
+              "point": -0.002,
+              "se": 0.004442384313540939,
+              "lo": -0.010000000000000002,
+              "hi": 0.006999999999999999
+            },
+            "holds_s4": true
+          }
+        },
+        "S3_holds": true,
+        "S4_holds": true
+      },
+      "S5": {
+        "applicable": false,
+        "reason": "this cell's m1 is 0 (frozen default); no m1 axis to compare against"
+      },
+      "S6": {
+        "fa_ratio_CS_over_S": {
+          "point": 1.6494674836451508,
+          "se": 0.12365592376976953,
+          "lo": 1.4318718796473318,
+          "hi": 1.908121945866753
+        },
+        "holds": true
+      }
+    },
+    "m1_15": {
+      "tuned_h": {
+        "pop": {
+          "h": 1.111160541322579,
+          "fa_per_month": 0.166333180563163,
+          "se": 0.007155204722286036
+        },
+        "A-naive": {
+          "h": 1.621496708016229,
+          "fa_per_month": 0.16648651058091982,
+          "se": 0.009024937060660043
+        },
+        "A-fixed": {
+          "h": 3.1150915297008845,
+          "fa_per_month": 0.16644340254521098,
+          "se": 0.008619122181190519
+        },
+        "A-fixed-minus-i": {
+          "h": 2.6979918152545457,
+          "fa_per_month": 0.16683941288575344,
+          "se": 0.009725812909992824
+        },
+        "A-fixed-minus-ii": {
+          "h": 1.6239383489908046,
+          "fa_per_month": 0.16648243057649145,
+          "se": 0.00962477050638775
+        },
+        "A-fixed-minus-iii": {
+          "h": 3.661638579094734,
+          "fa_per_month": 0.16690079603986888,
+          "se": 0.009653325757911953
+        },
+        "A-fixed-minus-iv": {
+          "h": 3.2032045674667193,
+          "fa_per_month": 0.16657579365520925,
+          "se": 0.010201116082941998
+        },
+        "A-fixed-minus-v": {
+          "h": 3.1695758799259695,
+          "fa_per_month": 0.1666778455966195,
+          "se": 0.009001757935991055
+        },
+        "probe-only": {
+          "h": 25.553392226841922,
+          "fa_per_month": 0.16332590942835934,
+          "se": 0.03564768268537371
+        }
+      },
+      "S1": {
+        "triggered": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.6750828572271707,
+            "se": 0.03939532626361231,
+            "lo": 0.59671295005075,
+            "hi": 0.7527719299510884
+          },
+          "holds": true
+        },
+        "current": {
+          "slope_ratio_obs_over_all": {
+            "point": 0.5737254113007707,
+            "se": 0.07463752047892071,
+            "lo": 0.42149553773690285,
+            "hi": 0.7206871389518067
+          },
+          "holds": true
+        },
+        "holds": true
+      },
+      "S2": {
+        "indicator4": {
+          "diff_mc_minus_formula": {
+            "point": 0.11561304991781818,
+            "se": 0.018835276269332415,
+            "lo": 0.07440765679644015,
+            "hi": 0.14913182409812767
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "indicator5": {
+          "diff_mc_minus_formula": {
+            "point": -0.3915370655254124,
+            "se": 0.013171547491857255,
+            "lo": -0.4182629362044252,
+            "hi": -0.3661060193080051
+          },
+          "n_persons": 1000,
+          "holds": true
+        },
+        "holds": true
+      },
+      "S3_S4": {
+        "by_architecture": {
+          "pop": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16644154452395038,
+            "observed_sensitivity_within_21d": {
+              "point": 0.191,
+              "se": 0.012280141721101805,
+              "lo": 0.167,
+              "hi": 0.215
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.061,
+              "se": 0.007750034275126325,
+              "lo": 0.046,
+              "hi": 0.076
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.13,
+              "se": 0.014388832275314201,
+              "lo": 0.102,
+              "hi": 0.15799999999999997
+            },
+            "holds_s3": true
+          },
+          "A-naive": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17816278005380606,
+            "observed_sensitivity_within_21d": {
+              "point": 0.148,
+              "se": 0.011444794424091017,
+              "lo": 0.126,
+              "hi": 0.171
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.087,
+              "se": 0.009056104254155374,
+              "lo": 0.07,
+              "hi": 0.105
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.061,
+              "se": 0.01475407795859179,
+              "lo": 0.032000000000000015,
+              "hi": 0.09
+            },
+            "holds_s3": true
+          },
+          "A-fixed": {
+            "realized_fa_per_tracked_person_month_on_S": 0.18318821165438715,
+            "observed_sensitivity_within_21d": {
+              "point": 0.196,
+              "se": 0.012755507927607023,
+              "lo": 0.171,
+              "hi": 0.221
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.076,
+              "se": 0.008397452134497439,
+              "lo": 0.06,
+              "hi": 0.093
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.12000000000000001,
+              "se": 0.015343959668193527,
+              "lo": 0.09,
+              "hi": 0.15000000000000002
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-i": {
+            "realized_fa_per_tracked_person_month_on_S": 0.1651038178164769,
+            "observed_sensitivity_within_21d": {
+              "point": 0.197,
+              "se": 0.012757568489994025,
+              "lo": 0.172,
+              "hi": 0.222
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.08,
+              "se": 0.008721319952326908,
+              "lo": 0.064,
+              "hi": 0.097
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.117,
+              "se": 0.015480671322403826,
+              "lo": 0.086975,
+              "hi": 0.14600000000000002
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-ii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16644340254521098,
+            "observed_sensitivity_within_21d": {
+              "point": 0.149,
+              "se": 0.011378247503817496,
+              "lo": 0.127,
+              "hi": 0.172
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.075,
+              "se": 0.008397225774048842,
+              "lo": 0.059,
+              "hi": 0.092
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.074,
+              "se": 0.013986996605312326,
+              "lo": 0.04697499999999999,
+              "hi": 0.101
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iii": {
+            "realized_fa_per_tracked_person_month_on_S": 0.16912257200267916,
+            "observed_sensitivity_within_21d": {
+              "point": 0.173,
+              "se": 0.012239634556515095,
+              "lo": 0.149,
+              "hi": 0.197
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.085,
+              "se": 0.00896102387980789,
+              "lo": 0.068,
+              "hi": 0.103
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.08799999999999998,
+              "se": 0.014651664867573782,
+              "lo": 0.06,
+              "hi": 0.11699999999999999
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-iv": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17548559946416611,
+            "observed_sensitivity_within_21d": {
+              "point": 0.194,
+              "se": 0.012612899601922791,
+              "lo": 0.169,
+              "hi": 0.219
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.071,
+              "se": 0.00821692878813944,
+              "lo": 0.055,
+              "hi": 0.087
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.12300000000000001,
+              "se": 0.01491518781020564,
+              "lo": 0.09300000000000001,
+              "hi": 0.152
+            },
+            "holds_s3": true
+          },
+          "A-fixed-minus-v": {
+            "realized_fa_per_tracked_person_month_on_S": 0.17849767249751622,
+            "observed_sensitivity_within_21d": {
+              "point": 0.195,
+              "se": 0.012702616353771989,
+              "lo": 0.17,
+              "hi": 0.22
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.076,
+              "se": 0.008208229926071736,
+              "lo": 0.06,
+              "hi": 0.092
+            },
+            "diff_obs_minus_chance": {
+              "point": 0.11900000000000001,
+              "se": 0.015032673402785596,
+              "lo": 0.089,
+              "hi": 0.149
+            },
+            "holds_s3": true
+          },
+          "probe-only": {
+            "realized_fa_per_tracked_person_month_on_S": 0.22561863173216884,
+            "observed_sensitivity_within_21d": {
+              "point": 0.005,
+              "se": 0.0022286505876249105,
+              "lo": 0.001,
+              "hi": 0.01
+            },
+            "chance_sensitivity_within_21d": {
+              "point": 0.015,
+              "se": 0.0038268462375777566,
+              "lo": 0.008,
+              "hi": 0.023
+            },
+            "diff_obs_minus_chance": {
+              "point": -0.009999999999999998,
+              "se": 0.004426622554908178,
+              "lo": -0.019,
+              "hi": -0.0010000000000000009
+            },
+            "holds_s4": false
+          }
+        },
+        "S3_holds": true,
+        "S4_holds": false
+      },
+      "S5": {
+        "applicable": true,
+        "added_bias_m1_15_minus_m1_0": {
+          "point": 0.1619327017434132,
+          "se": 0.029260072691866996,
+          "lo": 0.09110035029416086,
+          "hi": 0.20746420017898795
+        },
+        "bias_raw": {
+          "point": 0.12182492254004096,
+          "se": 0.023714518151746793,
+          "lo": 0.07485488145557102,
+          "hi": 0.16883004044163588
+        },
+        "bias_ipw": {
+          "point": 0.13200036891831424,
+          "se": 0.024289312287472675,
+          "lo": 0.08412833784460311,
+          "hi": 0.18014498730972858
+        },
+        "frac_removed": {
+          "point": -0.08352516189722059,
+          "se": 0.06544052420247318,
+          "lo": -0.22912016322804382,
+          "hi": 0.02749056265152532
+        },
+        "holds": true
+      },
+      "S6": {
+        "fa_ratio_CS_over_S": {
+          "point": 1.663171674501886,
+          "se": 0.11371955722429455,
+          "lo": 1.4579816330871176,
+          "hi": 1.8956337009578852
+        },
+        "holds": true
+      }
+    }
+  },
+  "summary": {
+    "S1": {
+      "per_cell": {
+        "default": true,
+        "lam_low": false,
+        "lam_high": true,
+        "phi_D_low": true,
+        "phi_D_high": true,
+        "psi_low": true,
+        "psi_high": true,
+        "ind4_daylevel": true,
+        "rising_slope_025": true,
+        "rising_slope_10": true,
+        "m1_15": true
+      },
+      "holds_across_grid": false,
+      "failing_cells": [
+        "lam_low"
+      ]
+    },
+    "S2": {
+      "per_cell": {
+        "default": true,
+        "lam_low": false,
+        "lam_high": true,
+        "phi_D_low": true,
+        "phi_D_high": false,
+        "psi_low": true,
+        "psi_high": true,
+        "ind4_daylevel": true,
+        "rising_slope_025": true,
+        "rising_slope_10": false,
+        "m1_15": true
+      },
+      "holds_across_grid": false,
+      "failing_cells": [
+        "lam_low",
+        "phi_D_high",
+        "rising_slope_10"
+      ]
+    },
+    "S3": {
+      "per_cell": {
+        "default": true,
+        "lam_low": true,
+        "lam_high": true,
+        "phi_D_low": true,
+        "phi_D_high": true,
+        "psi_low": true,
+        "psi_high": true,
+        "ind4_daylevel": true,
+        "rising_slope_025": true,
+        "rising_slope_10": true,
+        "m1_15": true
+      },
+      "holds_across_grid": true,
+      "failing_cells": []
+    },
+    "S4": {
+      "per_cell": {
+        "default": true,
+        "lam_low": true,
+        "lam_high": true,
+        "phi_D_low": true,
+        "phi_D_high": true,
+        "psi_low": true,
+        "psi_high": true,
+        "ind4_daylevel": true,
+        "rising_slope_025": true,
+        "rising_slope_10": true,
+        "m1_15": false
+      },
+      "holds_across_grid": false,
+      "failing_cells": [
+        "m1_15"
+      ]
+    },
+    "S5": {
+      "per_cell": {
+        "default": "not_applicable",
+        "lam_low": "not_applicable",
+        "lam_high": "not_applicable",
+        "phi_D_low": "not_applicable",
+        "phi_D_high": "not_applicable",
+        "psi_low": "not_applicable",
+        "psi_high": "not_applicable",
+        "ind4_daylevel": "not_applicable",
+        "rising_slope_025": "not_applicable",
+        "rising_slope_10": "not_applicable",
+        "m1_15": true
+      },
+      "holds_across_grid": true,
+      "failing_cells": []
+    },
+    "S6": {
+      "per_cell": {
+        "default": true,
+        "lam_low": true,
+        "lam_high": true,
+        "phi_D_low": true,
+        "phi_D_high": true,
+        "psi_low": true,
+        "psi_high": true,
+        "ind4_daylevel": true,
+        "rising_slope_025": true,
+        "rising_slope_10": true,
+        "m1_15": true
+      },
+      "holds_across_grid": true,
+      "failing_cells": []
+    }
+  }
+}

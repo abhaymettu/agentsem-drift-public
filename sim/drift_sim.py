@@ -2930,7 +2930,7 @@ def run_robust(plan_sha):
                plan_sha256=plan_sha,
                grid=[{"name": c["name"], "dimension": c["dimension"], "value": c["value"]}
                      for c in grid],
-               cells=cells_out, summary=summary, wall_seconds=time.time() - t0)
+               cells=cells_out, summary=summary)
     (HERE / "robustness.json").write_text(json.dumps(out, indent=2, default=float))
 
     lines = ["# sim/ROBUSTNESS.md", "",
@@ -2938,11 +2938,12 @@ def run_robust(plan_sha):
              "P1-P10 verdict. See sim/ROBUSTNESS-PLAN.md for the grid, the expectations stated "
              "before running, and the success rule.", "",
              "## Summary: does each structural finding hold across the grid?", "",
-              "```json", json.dumps(summary, indent=2, default=float), "```", ""]
-    for name, res in cells_out.items():
-        lines += [f"## Cell: {name}", "", "```json", json.dumps(res, indent=2, default=float), "```", ""]
+             "| finding | holds across grid | failing cells |", "|---|---|---|"]
+    lines += [f"| {k} | {v['holds_across_grid']} | {', '.join(v['failing_cells']) or 'none'} |"
+              for k, v in summary.items()]
+    lines += ["", "Per-cell values with intervals: `sim/robustness.json`, key `cells.<name>`.", ""]
     (HERE / "ROBUSTNESS.md").write_text("\n".join(lines))
-    print(f"wrote sim/robustness.json and sim/ROBUSTNESS.md in {out['wall_seconds']:.1f}s")
+    print(f"wrote sim/robustness.json and sim/ROBUSTNESS.md in {time.time() - t0:.1f}s")
     return out
 
 
