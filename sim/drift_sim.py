@@ -1,0 +1,1530 @@
+"""Drift layer simulation (spec 001, v3). SYNTHETIC ONLY -- no real person's state is estimated.
+
+Passive within-person change detection with sparse probes in a general-purpose agent. One latent `D`;
+a non-diagnostic wellbeing/functioning state; it maps to no clinical condition. Every lam, psi, eta, kappa, gam is invented.
+
+    python3 sim/drift_sim.py --check                       # known-answer self test
+    python3 sim/drift_sim.py tune                          # tuning-seed-only; writes sim/tuning.json
+    python3 sim/drift_sim.py score --prereg-sha <sha>       # NOT to be run pre-freeze; needs a committed PREREG
+
+PRE-FREEZE STAGE: this file may be exercised via --check and tune() only. Evaluation seeds come from
+eval_seed(), which raises unless sim/PREREG.md exists and its sha256 matches --prereg-sha. Tuning uses
+the fixed tuning seed 20260927 and family S (or the S+DR mix), never an evaluation seed.
+
+Ambiguities the spec leaves open, and the choice made here (see also the final report): the "C_{t-1}"
+feedback signal for targeted help during generation; the exact causal bootstrapping of A-fixed's own
+baseline while that baseline is still being formed; the Beta(pi) / current-control isolation; the
+authorship-filter mechanics under continuous daily mixing. Each is flagged at its point of use below with
+a comment starting "CHOICE:".
+"""
+
+import hashlib
+import json
+import re
+import sys
+import time
+import warnings
+from pathlib import Path
+
+import numpy as np
+
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+HERE = Path(__file__).parent
+PREREG_PATH = HERE / "PREREG.md"
+SPEC_PATH = HERE.parent / "specs" / "001-drift-layer" / "spec.md"
+
+# ----------------------------------------------------------------------------------------------
+# Constants (section 3-4 of the spec). N_PERSONS is 1000 per spec v3 E1 (was 200 in v2).
+# ----------------------------------------------------------------------------------------------
+N_PERSONS = 1000
+T_DAYS = 140
+BASELINE_DAYS = 28
+N_IND = 6
+IDX_LATE, IDX_FRAG, IDX_DEFER, IDX_MSGLEN, IDX_NEGSELF, IDX_LATENCY = range(6)
+
+PHI_D = 0.7
+PHI_L = 0.8
+DELTA_D = 1.0
+GAM = np.array([0.3, 0.3, 0.3, 0.0, 0.0, 0.3])
+PSI = np.array([0.0, 0.5, 0.5, 0.0, 0.0, 0.0])
+BETA_CTX_INDICATORS = (IDX_LATE, IDX_MSGLEN, IDX_NEGSELF)
+BETA_BY_CTX = (0.0, 0.3, 0.6)  # code, write, personal
+CTX_CODE, CTX_WRITE, CTX_PERSONAL = 0, 1, 2
+ETA_CTX = 0.1
+K_CUSUM = 0.5
+REFRACTORY = 14
+BAND_LO_FRAC = 0.5  # h/2
+CONFIRM_WINDOW = 7
+CONFIRM_MARGIN = 0.5
+ABSTAIN_USAGE_FRAC = 0.4
+ABSTAIN_WINDOW = 14
+REBASELINE_WINDOW = 14
+BUDGET_TARGET = 3.0  # probes / person-month, post-baseline
+MIX_KAPPA_A5 = 0.5
+MU_M5 = -1.0
+FILTER_SE = 0.9  # P(filter correctly flags true-agent content) -> survival (1-se)
+FILTER_SP = 0.95  # P(filter correctly keeps true-human content)
+TUNING_SEED = 20260927
+
+# Pilot-supplied placeholders for indicator 4 (constitution II: real, non-inferential authorship
+# metadata, not invented). Sourced from pilot/indicator4_params.json ("main_thread", 24 days),
+# 2026-09-27. `score()` reads these back from sim/tuning.json and asserts they match sim/PREREG.md.
+PI_BAR_DEFAULT = 0.845     # day-mean non-human share of indicator-4 text (pi_bar_daymean)
+KAPPA_A4_DEFAULT = 0.547   # agent-text variance for indicator 4 (kappa_a)
+MU_M4_DEFAULT = 0.274      # agent-text mean gap, in units of indicator 4's own within-person SD
+# KNOWN DEVIATION (recorded again in PREREG.md): the pilot's realized day-level SD of pi is 0.174;
+# Beta(10*pi_bar, 10*(1-pi_bar)) at pi_bar=0.845 implies SD = sqrt(pi_bar*(1-pi_bar)/11) = 0.109. The
+# spec fixes the Beta concentration at 10 a priori, so this gap is carried, not corrected.
+
+FAMILIES = ["S", "DR", "VA", "SP", "BI", "AV", "DE", "DV", "CS", "BD", "AV2"]
+CELL_NAMES = ["default", "kappa03", "m1_05", "m1_15", "targeted", "targeted_theta1_05",
+              "bernoulli_mix", "pi_rises_with_D"]
+
+
+def expit(x):
+    return 1.0 / (1.0 + np.exp(-np.clip(x, -30, 30)))
+
+
+def logit(p):
+    return np.log(p / (1 - p))
+
+
+A0_USE = logit(0.8)
+
+
+def safe_div(a, b, fill=0.0):
+    a = np.asarray(a, dtype=float)
+    b = np.asarray(b, dtype=float)
+    shape = np.broadcast(a, b).shape
+    a = np.broadcast_to(a, shape)
+    b = np.broadcast_to(b, shape)
+    out = np.full(shape, fill, dtype=float)
+    ok = np.abs(b) > 1e-12
+    np.divide(a, b, out=out, where=ok)
+    return out
+
+
+def bisect(f, lo, hi, target, n_iter=40):
+    """Bisect a monotonically DECREASING f(x) to the x where f(x) == target, over n_iter
+    halvings of [lo, hi]. For an INCREASING g(x), pass f = lambda x: -g(x) and target = -target
+    (the sign flip preserves the same search direction; see call sites in tune_h/tune_schedules/
+    check_b). Replaces five separately hand-rolled bisection loops with one implementation."""
+    for _ in range(n_iter):
+        mid = (lo + hi) / 2
+        if f(mid) > target:
+            lo = mid
+        else:
+            hi = mid
+    return (lo + hi) / 2
+
+
+def person_slope_corr(mask, C, Y, weight=None):
+    """Person-centered (optionally weighted) slope of Y on C, and the pooled correlation,
+    restricted to `mask`. One implementation shared by check_c, check_e and score()'s P4/P5
+    calibration blocks."""
+    num = den = 0.0
+    cs, ys = [], []
+    for i in range(C.shape[0]):
+        m = mask[i]
+        if m.sum() < 3:
+            continue
+        c, y = C[i, m], Y[i, m]
+        w = np.ones(m.sum()) if weight is None else weight[i, m]
+        wc, wy = np.average(c, weights=w), np.average(y, weights=w)
+        cc, yy = c - wc, y - wy
+        num += (w * cc * yy).sum()
+        den += (w * cc * cc).sum()
+        cs.append(cc)
+        ys.append(yy)
+    b = num / den if den else np.nan
+    if cs:
+        cat_c, cat_y = np.concatenate(cs), np.concatenate(ys)
+        r = np.corrcoef(cat_c, cat_y)[0, 1] if len(cat_c) > 1 else np.nan
+    else:
+        r = np.nan
+    return b, r
+
+
+# ----------------------------------------------------------------------------------------------
+# Cells (section 3): one default cell plus 7 one-at-a-time variations = 8 cells total.
+# ----------------------------------------------------------------------------------------------
+def cell_params(name):
+    p = dict(kappa=0.0, m1=0.0, theta1=0.0, help_mode="constant", mix_mode="beta", pi_rises=False)
+    if name == "default":
+        pass
+    elif name == "kappa03":
+        p["kappa"] = 0.3
+    elif name == "m1_05":
+        p["m1"] = 0.5
+    elif name == "m1_15":
+        p["m1"] = 1.5
+    elif name == "targeted":
+        p["help_mode"] = "targeted"
+    elif name == "targeted_theta1_05":
+        p["help_mode"] = "targeted"
+        p["theta1"] = 0.5
+    elif name == "bernoulli_mix":
+        p["mix_mode"] = "bernoulli"
+    elif name == "pi_rises_with_D":
+        p["mix_mode"] = "beta"
+        p["pi_rises"] = True
+    else:
+        raise ValueError(f"unknown cell {name!r}")
+    return p
+
+
+# ----------------------------------------------------------------------------------------------
+# eval_seed: evaluation seeds are derived from the committed, hashed PREREG. This function is the
+# ONLY sanctioned way to get a family/cell evaluation seed; it refuses to run pre-freeze.
+# ----------------------------------------------------------------------------------------------
+def eval_seed(prereg_sha256, family, cell):
+    if not PREREG_PATH.exists():
+        raise RuntimeError("sim/PREREG.md is missing; cannot derive an evaluation seed pre-freeze.")
+    on_disk = hashlib.sha256(PREREG_PATH.read_bytes()).hexdigest()
+    if on_disk != prereg_sha256:
+        raise RuntimeError(
+            f"--prereg-sha {prereg_sha256!r} does not match sim/PREREG.md's sha256 {on_disk!r}. "
+            "Evaluation seeds are only derived from the committed, frozen PREREG."
+        )
+    tag = f"{prereg_sha256}:{family}:{cell}".encode()
+    return int(hashlib.sha256(tag).hexdigest()[:16], 16) % (2**32 - 1)
+
+
+# ----------------------------------------------------------------------------------------------
+# Family event sampling (section 3). Each family activates only its own mechanism(s); this keeps
+# the 11 families mutually exclusive scenario channels, run one at a time.
+# ----------------------------------------------------------------------------------------------
+def sample_events(rng, family, n):
+    ev = dict(t0=np.full(n, np.nan), ramp=np.full(n, np.nan),
+              vac_start=np.full(n, np.nan), vac_len=np.full(n, np.nan),
+              sprint_start=np.full(n, np.nan), sprint_len=np.full(n, np.nan),
+              bi_start=np.full(n, np.nan), bi_len=np.full(n, np.nan),
+              av_day=np.full(n, np.nan), av_logged=np.zeros(n, dtype=bool),
+              cs_day=np.full(n, np.nan), de_day=np.full(n, np.nan))
+    drift = family in ("DR", "DV", "BD")
+    if drift:
+        if family == "BD":
+            ev["t0"] = rng.integers(10, 26, n).astype(float)  # U[10,25]
+        else:
+            ev["t0"] = rng.integers(50, 101, n).astype(float)  # U[50,100]
+        ev["ramp"] = rng.integers(7, 22, n).astype(float)  # U[7,21]
+    if family in ("VA", "DV"):
+        ev["vac_len"] = rng.integers(7, 15, n).astype(float)  # 7-14 days
+        if family == "DV":
+            lo, hi = ev["t0"] - 5, ev["t0"] + 5
+            ev["vac_start"] = lo + rng.random(n) * (hi - lo)
+        else:
+            ev["vac_start"] = rng.integers(50, 101, n).astype(float)
+    if family == "SP":
+        ev["sprint_len"] = rng.integers(10, 15, n).astype(float)  # 10-14 days
+        ev["sprint_start"] = rng.integers(50, 101, n).astype(float)
+    if family == "BI":
+        ev["bi_len"] = rng.integers(10, 21, n).astype(float)  # 10-20 days
+        ev["bi_start"] = rng.integers(50, 101, n).astype(float)
+    if family in ("AV", "AV2"):
+        ev["av_day"] = rng.integers(50, 101, n).astype(float)
+        if family == "AV":
+            ev["av_logged"] = rng.random(n) < 0.5
+        # AV2 never logged (all False, already the default).
+    if family == "DE":
+        ev["de_day"] = rng.integers(50, 101, n).astype(float)
+    if family == "CS":
+        ev["cs_day"] = rng.integers(50, 101, n).astype(float)
+    return ev
+
+
+def ar1_panel(rng, n, T, phi):
+    """Stationary AR(1), marginal SD 1, shape (n, T)."""
+    z = rng.standard_normal((n, T))
+    x = np.empty((n, T))
+    x[:, 0] = z[:, 0]
+    for t in range(1, T):
+        x[:, t] = phi * x[:, t - 1] + np.sqrt(1 - phi**2) * z[:, t]
+    return x
+
+
+def sample_ctx(rng, D, family, cs_day):
+    n, T = D.shape
+    day = np.arange(T)[None, :]
+    if family == "CS":
+        switched = day >= cs_day[:, None]
+        base = np.where(switched[..., None], np.array([0.1, 0.2, 0.7]), np.array([0.5, 0.3, 0.2]))
+    else:
+        base = np.broadcast_to(np.array([0.5, 0.3, 0.2]), (n, T, 3)).copy()
+    logit_write = np.log(base[..., 1] / base[..., 0])
+    logit_personal = np.log(base[..., 2] / base[..., 0]) + ETA_CTX * D
+    logits = np.stack([np.zeros((n, T)), logit_write, logit_personal], axis=-1)
+    m = logits.max(-1, keepdims=True)
+    p = np.exp(logits - m)
+    p /= p.sum(-1, keepdims=True)
+    cdf = np.cumsum(p, axis=-1)
+    u = rng.random((n, T, 1))
+    ctx = (u > cdf).sum(-1)  # 0=code,1=write,2=personal
+    return ctx
+
+
+def rolling_sum(x, window):
+    """Trailing rolling sum over the last `window` days (inclusive of day t), day 0 padded with itself."""
+    n, T = x.shape
+    c = np.cumsum(x, axis=1)
+    out = np.empty_like(c)
+    out[:, :window] = c[:, :window]  # partial windows at the start use whatever is available
+    out[:, window:] = c[:, window:] - c[:, :-window]
+    return out
+
+
+# ----------------------------------------------------------------------------------------------
+# Baseline stats and the A-fixed composite. Both A-naive and A-fixed (and its ablations) share this
+# machinery; `features` toggles which of (i)-(v) are active. `pop_ref` (mu, sd) switches to the
+# population-level baseline used by the `pop` architecture.
+# ----------------------------------------------------------------------------------------------
+def fit_baseline(X, used, L_obs, day_lo=0, day_hi=BASELINE_DAYS):
+    """Per-person mean/sd per indicator, per-person OLS slope on L_obs, and baseline usage rate,
+    all fit on days [day_lo, day_hi) using used & available observations. Fallback mean 0 / sd 1 /
+    slope 0 when too few observations (documented CHOICE: no spec-given fallback)."""
+    n, T, J = X.shape
+    Xb = X[:, day_lo:day_hi, :]
+    ub = used[:, day_lo:day_hi]
+    ok = ub[..., None] & ~np.isnan(Xb)
+    cnt = ok.sum(1)
+    xsum = np.where(ok, Xb, 0.0).sum(1)
+    mean = safe_div(xsum, cnt)
+    mean = np.where(cnt >= 2, mean, 0.0)
+    var = np.where(ok, (Xb - mean[:, None, :]) ** 2, 0.0).sum(1)
+    sd = np.sqrt(safe_div(var, np.maximum(cnt - 1, 1)))
+    sd = np.where((cnt >= 2) & (sd > 1e-6), sd, 1.0)
+    # per-person slope of each indicator on L_obs, baseline window, OLS through (indicator, L_obs)
+    Lb = L_obs[:, day_lo:day_hi]
+    slope = np.zeros((n, J))
+    for j in range(J):
+        okj = ub & ~np.isnan(Xb[:, :, j])
+        cj = okj.sum(1)
+        lm = safe_div(np.where(okj, Lb, 0.0).sum(1), cj)
+        xm = safe_div(np.where(okj, Xb[:, :, j], 0.0).sum(1), cj)
+        cov = np.where(okj, (Lb - lm[:, None]) * (Xb[:, :, j] - xm[:, None]), 0.0).sum(1)
+        varl = np.where(okj, (Lb - lm[:, None]) ** 2, 0.0).sum(1)
+        s = safe_div(cov, varl)
+        slope[:, j] = np.where(cj >= 3, s, 0.0)
+    usage_rate = used[:, day_lo:day_hi].mean(1)
+    lmean = Lb.mean(1)
+    return dict(mean=mean, sd=sd, slope=slope, usage_rate=usage_rate, lmean=lmean)
+
+
+DEFAULT_FEATURES = dict(unhelped_filter=True, authorship_filter=True, residualize=True,
+                         version_reset=True, low_usage_abstain=True)
+NAIVE_FEATURES = dict(unhelped_filter=False, authorship_filter=False, residualize=False,
+                       version_reset=False, low_usage_abstain=False)
+
+
+def ablation_features(remove):
+    f = dict(DEFAULT_FEATURES)
+    key = {"i": "unhelped_filter", "ii": "authorship_filter", "iii": "residualize",
+           "iv": "version_reset", "v": "low_usage_abstain"}[remove]
+    f[key] = False
+    return f
+
+
+def compute_composite(panel, features, baseline=None, pop_ref=None):
+    """The composite C_t (n, T) with NaN on held days, plus a reason code (n, T) int:
+    0 assessed, 1 unused day, 2 no usable indicator, 3 low-usage abstention (v),
+    4 version-change re-baseline hold (iv). Reuses X_analysis, which already carries the
+    authorship-filter substitution (ii) when panel['pi_prime'] is used upstream; here (ii) just
+    picks which of X / X_filtered feeds indicators 3,4."""
+    X = panel["X"].copy()
+    used = panel["used"]
+    A = panel["A"]
+    L_obs = panel["L_obs"]
+    n, T, J = X.shape
+    if features["authorship_filter"]:
+        X[:, :, IDX_MSGLEN] = panel["X_filtered"][:, :, IDX_MSGLEN]
+        X[:, :, IDX_NEGSELF] = panel["X_filtered"][:, :, IDX_NEGSELF]
+
+    usable = used[..., None] & ~np.isnan(X)
+    if features["unhelped_filter"]:
+        helped = A[..., None] & np.isin(np.arange(J), [IDX_FRAG, IDX_DEFER])[None, None, :]
+        usable = usable & ~helped
+
+    if pop_ref is not None:
+        mean, sd = pop_ref["mean"], pop_ref["sd"]
+        mean = np.broadcast_to(mean, (n, J))
+        sd = np.broadcast_to(sd, (n, J))
+        slope = np.zeros((n, J))
+        lmean = np.zeros(n)
+        usage_rate = np.full(n, 0.8)
+    else:
+        mean, sd, slope, lmean, usage_rate = (baseline["mean"], baseline["sd"], baseline["slope"],
+                                               baseline["lmean"], baseline["usage_rate"])
+
+    Xr = X.copy()
+    if features["residualize"]:
+        for j in (IDX_LATE, IDX_FRAG, IDX_DEFER, IDX_LATENCY):
+            Xr[:, :, j] = X[:, :, j] - slope[:, j][:, None] * (L_obs - lmean[:, None])
+
+    z = safe_div(Xr - mean[:, None, :], sd[:, None, :])
+    z = np.where(usable, z, np.nan)
+
+    hold_window = None
+    if features["version_reset"] and panel.get("av_day") is not None:
+        z, usable, hold_window = _apply_version_reset(panel, z, usable, Xr, used)
+
+    reason = np.zeros((n, T), dtype=int)
+    reason[~used] = 1
+    no_ind = usable.sum(-1) == 0
+    reason[no_ind & used] = 2
+
+    if features["low_usage_abstain"]:
+        trail = rolling_sum(used.astype(float), ABSTAIN_WINDOW)
+        cut = ABSTAIN_USAGE_FRAC * usage_rate[:, None] * ABSTAIN_WINDOW
+        low = trail < cut
+        reason[low & (reason == 0)] = 3
+        usable = usable & ~low[..., None]
+
+    if hold_window is not None:
+        reason[hold_window & used] = 4  # version-change re-baseline hold (iv) takes label priority
+
+    cnt = usable.sum(-1)
+    C = np.where(cnt > 0, np.where(usable, z, 0.0).sum(-1) / np.maximum(cnt, 1), np.nan)
+    C = np.where(reason > 0, np.nan, C)
+    return C, reason
+
+
+def _apply_version_reset(panel, z, usable, Xr, used):
+    """Feature (iv): at a LOGGED version change, hold S for 14 days, then re-baseline indicators
+    2 and 6 (AV) / 1 and 4 (AV2) over that 14-day window and use the new baseline afterward."""
+    n, T = used.shape
+    av_day = panel["av_day"]
+    logged = panel["av_logged"]
+    changed_inds = panel["av_inds"]
+    has_event = ~np.isnan(av_day) & logged
+    if not has_event.any():
+        return z, usable, np.zeros((n, T), dtype=bool)
+    day = np.arange(T)[None, :]
+    ad = np.where(np.isnan(av_day), np.inf, av_day)[:, None]
+    hold_window = has_event[:, None] & (day > ad) & (day <= ad + REBASELINE_WINDOW)
+    usable = usable & ~hold_window[..., None]
+    after_window = has_event[:, None] & (day > ad + REBASELINE_WINDOW)
+    lo = np.clip(av_day, 0, T - 1).astype(int)
+    for j in changed_inds:
+        # re-baseline mean/sd for indicator j from the 14 days right after the change
+        vals = np.full((n, REBASELINE_WINDOW), np.nan)
+        for k in range(REBASELINE_WINDOW):
+            idx = np.clip(lo + 1 + k, 0, T - 1)
+            row = Xr[np.arange(n), idx, j]
+            u = used[np.arange(n), idx]
+            vals[:, k] = np.where(u & has_event, row, np.nan)
+        cnt = (~np.isnan(vals)).sum(1)
+        m = np.nanmean(vals, axis=1)
+        m = np.where(cnt >= 2, m, 0.0)
+        sdv = np.nanstd(vals, axis=1, ddof=1)
+        sdv = np.where((cnt >= 2) & (sdv > 1e-6), sdv, 1.0)
+        znew = safe_div(Xr[:, :, j] - m[:, None], sdv[:, None])
+        z[:, :, j] = np.where(after_window & has_event[:, None], znew, z[:, :, j])
+    return z, usable, hold_window
+
+
+# ----------------------------------------------------------------------------------------------
+# CUSUM. One-sided, k in the composite's own units (NOT re-standardized). Refractory: after an
+# alarm, S resets to 0 and continues updating normally, but a new alarm cannot fire for 14 days
+# (CHOICE: "hold" (abstention, frozen S) and "refractory" (blocked re-alarm, S still moves) are
+# kept distinct -- the spec's confirmation window of 7 days sits inside the 14-day refractory,
+# which only makes sense if S is still live during it).
+# ----------------------------------------------------------------------------------------------
+def run_cusum(C, h, k=K_CUSUM, refractory=REFRACTORY):
+    n, T = C.shape
+    S = np.zeros(n)
+    refr = np.zeros(n, dtype=int)
+    alarm_day = np.full((n, T), False)
+    in_band = np.full((n, T), False)
+    Strace = np.zeros((n, T))
+    for t in range(T):
+        c = C[:, t]
+        held = np.isnan(c)
+        S = np.where(held, S, np.maximum(0.0, S + np.where(held, 0.0, c) - k))
+        Strace[:, t] = S
+        can_alarm = (refr <= 0) & ~held
+        newly = can_alarm & (S >= h)
+        alarm_day[:, t] = newly
+        in_band[:, t] = (~held) & (S >= h * BAND_LO_FRAC) & (S < h)
+        S = np.where(newly, 0.0, S)
+        refr = np.where(newly, refractory, np.maximum(refr - 1, 0))
+    return alarm_day, in_band, Strace
+
+
+# ----------------------------------------------------------------------------------------------
+# Probe schedules. Baseline block (days 7,14,21,28) is common to every schedule except `none`.
+# ----------------------------------------------------------------------------------------------
+def probe_schedule(rng, schedule, C, in_band, p_trig=None, p_trig2=None, c_star=None):
+    n, T = C.shape
+    probed = np.zeros((n, T), dtype=bool)
+    prop = np.zeros((n, T))
+    identified = schedule in ("random", "mixed")
+    if schedule == "none":
+        return probed, prop, identified
+    base_days = [6, 13, 20, 27]
+    probed[:, base_days] = True
+    prop[:, base_days] = 1.0
+    post = np.arange(28, T)
+    if schedule == "fixed":
+        fdays = list(range(37, T, 10))  # every 10 days after the baseline (day 38, 48, ...)
+        probed[:, fdays] = True
+        prop[:, fdays] = 1.0
+    elif schedule == "random":
+        prop[:, post] = 0.1
+        probed[:, post] = rng.random((n, len(post))) < 0.1
+    elif schedule == "triggered":
+        band_post = in_band[:, post]
+        prop[:, post] = np.where(band_post, p_trig, 0.0)
+        probed[:, post] = rng.random((n, len(post))) < prop[:, post]
+    elif schedule == "mixed":
+        band_post = in_band[:, post]
+        prop[:, post] = np.clip(np.where(band_post, 0.04 + p_trig2, 0.04), 0, 1)
+        probed[:, post] = rng.random((n, len(post))) < prop[:, post]
+    elif schedule == "current":
+        cpost = C[:, post]
+        hit = (~np.isnan(cpost)) & (cpost > c_star)
+        probed[:, post] = hit
+        prop[:, post] = np.where(hit, 1.0, 0.0)  # deterministic control, not IPW-eligible
+        identified = False
+    else:
+        raise ValueError(schedule)
+    return probed, prop, identified
+
+
+def expected_budget_per_month(prop, T=T_DAYS, baseline=BASELINE_DAYS):
+    """Expected probes/month from the logged propensities directly (noise-free): used for bisection
+    during tuning so the search target is a deterministic function of the tuned parameter, not a
+    fresh stochastic draw each iteration."""
+    post_months = (T - baseline) / 30.0
+    return prop[:, baseline:].sum(1).mean() / post_months
+
+
+# ----------------------------------------------------------------------------------------------
+# Logistic regression via Newton-Raphson / IRLS (numpy only), used for the response-propensity
+# IPW in P5.
+# ----------------------------------------------------------------------------------------------
+def logistic_irls(Xd, y, n_iter=50, ridge=1e-6, tol=1e-10):
+    n, p = Xd.shape
+    beta = np.zeros(p)
+    for _ in range(n_iter):
+        eta = Xd @ beta
+        mu = expit(eta)
+        w = np.clip(mu * (1 - mu), 1e-6, None)
+        z = eta + (y - mu) / w
+        WX = Xd * w[:, None]
+        H = Xd.T @ WX + ridge * np.eye(p)
+        g = Xd.T @ (w * z)
+        beta_new = np.linalg.solve(H, g)
+        if np.max(np.abs(beta_new - beta)) < tol:
+            beta = beta_new
+            break
+        beta = beta_new
+    return beta
+
+
+def dow_features(T, offset=0):
+    d = (np.arange(T) + offset) % 7
+    ang = 2 * np.pi * d / 7
+    return np.stack([np.ones(T), np.sin(ang), np.cos(ang)], axis=-1)  # (T, 3)
+
+
+# ----------------------------------------------------------------------------------------------
+# Generator.
+# ----------------------------------------------------------------------------------------------
+def mix_authorship(H_col, pi_arr, M_col):
+    """Shared authorship-mixing formula for indicators 4, 5 (message length, negative
+    self-reference): the spec's daily-averaging mechanism, X = (1 - pi) H + pi M. One
+    implementation used for both the unfiltered X (mixed with pi) and the authorship-filtered
+    X_filtered (mixed with pi')."""
+    return (1 - pi_arr) * H_col + pi_arr * M_col
+
+
+def apply_bi_mask(arr, bi_mask):
+    """Broken integration (BI): indicators 1 (late-activity share) and 6 (reply latency) are
+    missing for the bi_mask window. Applied identically to H, X and X_filtered -- `arr` may be
+    a full (n, T, J) array or a single day's (n, J) slice; bi_mask is all-False for every family
+    but BI, so this is a no-op elsewhere."""
+    arr = arr.copy()
+    arr[..., IDX_LATE] = np.where(bi_mask, np.nan, arr[..., IDX_LATE])
+    arr[..., IDX_LATENCY] = np.where(bi_mask, np.nan, arr[..., IDX_LATENCY])
+    return arr
+
+
+def generate_panel(rng, family, cell, n=N_PERSONS, T=T_DAYS,
+                    pi_bar=PI_BAR_DEFAULT, kappa_a4=KAPPA_A4_DEFAULT, mu_m4=MU_M4_DEFAULT,
+                    lam_range=(0.25, 0.5)):
+    """One generated world for a family x cell combination. Returns a dict with every array the
+    architectures and metrics need. `A` (help) and `X` (indicators 4,5 authorship-mixed already
+    applied) are shared across every downstream architecture and schedule for this same panel --
+    the shared-persons / paired-bootstrap design of spec v3."""
+    ev = sample_events(rng, family, n)
+    D = ar1_panel(rng, n, T, PHI_D)
+    if not np.all(np.isnan(ev["t0"])):
+        day = np.arange(T)[None, :]
+        ramp = np.clip((day - ev["t0"][:, None]) / ev["ramp"][:, None], 0, 1) * DELTA_D
+        D = D + ramp
+
+    L = ar1_panel(rng, n, T, PHI_L)
+    if family == "SP":
+        day = np.arange(T)[None, :]
+        in_sprint = (day >= ev["sprint_start"][:, None]) & (day < (ev["sprint_start"] + ev["sprint_len"])[:, None])
+        L = L + 1.5 * in_sprint
+    L_obs = L + rng.normal(0, np.sqrt(0.25), (n, T))
+
+    ctx = sample_ctx(rng, D, family, ev["cs_day"])
+
+    vacation = np.zeros((n, T), dtype=bool)
+    if family in ("VA", "DV"):
+        day = np.arange(T)[None, :]
+        vacation = (day >= ev["vac_start"][:, None]) & (day < (ev["vac_start"] + ev["vac_len"])[:, None])
+    diseng = np.zeros((n, T), dtype=bool)
+    if family == "DE":
+        day = np.arange(T)[None, :]
+        diseng = day >= ev["de_day"][:, None]
+
+    p_use = expit(A0_USE - cell["kappa"] * D - 4 * vacation - 2 * diseng)
+    used = rng.random((n, T)) < p_use
+
+    lam = rng.uniform(*lam_range, (n, N_IND))
+    e = rng.standard_normal((n, T, N_IND))
+    beta_ctx = np.zeros((n, T, N_IND))
+    for j in BETA_CTX_INDICATORS:
+        beta_ctx[:, :, j] = np.select([ctx == CTX_CODE, ctx == CTX_WRITE, ctx == CTX_PERSONAL], BETA_BY_CTX)
+
+    av_day = ev["av_day"] if family in ("AV", "AV2") else np.full(n, np.nan)
+    av_logged = ev["av_logged"] if family == "AV" else np.zeros(n, dtype=bool)
+    av_inds = (IDX_FRAG, IDX_LATENCY) if family == "AV" else (IDX_LATE, IDX_MSGLEN)
+    lam_mult = np.ones((n, T, N_IND))
+    mean_shift = np.zeros((n, T, N_IND))
+    if family in ("AV", "AV2"):
+        day = np.arange(T)[None, :]
+        after = day >= av_day[:, None]
+        for j in av_inds:
+            lam_mult[:, :, j] = np.where(after, 0.7, 1.0)
+            mean_shift[:, :, j] = np.where(after, 0.5, 0.0)
+
+    bi_mask = np.zeros((n, T), dtype=bool)
+    if family == "BI":
+        day = np.arange(T)[None, :]
+        bi_mask = (day >= ev["bi_start"][:, None]) & (day < (ev["bi_start"] + ev["bi_len"])[:, None])
+
+    # authorship mixing (indicators 4,5 i.e. IDX_MSGLEN, IDX_NEGSELF)
+    # CHOICE / pilot-units note: the pilot reports mu_M4 in units of indicator 4's own within-person
+    # SD ("mu_M4_humanSD"), not the spec's original raw-scale placeholder convention (+1.0 was raw).
+    # `mu_m4` is therefore interpreted here as human-SD units and converted to the raw scale using
+    # H4's own population mean/SD -- exact, not approximate, because PSI[IDX_MSGLEN] = 0 so H4 does
+    # not depend on A_t at all and can be computed before any help-mode branching.
+    H4_raw = (lam[:, None, IDX_MSGLEN] * lam_mult[:, :, IDX_MSGLEN] * D + GAM[IDX_MSGLEN] * L
+              + beta_ctx[:, :, IDX_MSGLEN] + e[:, :, IDX_MSGLEN] + mean_shift[:, :, IDX_MSGLEN])
+    ub = used[:, :BASELINE_DAYS]
+    h4b = H4_raw[:, :BASELINE_DAYS][ub]
+    pop_mean_h4, pop_sd_h4 = h4b.mean(), h4b.std(ddof=1)
+    mu_m4_raw = pop_mean_h4 + mu_m4 * pop_sd_h4
+    mu_m = np.array([mu_m4_raw, -1.0])
+    kap_m = np.array([kappa_a4, MIX_KAPPA_A5])
+    if cell["mix_mode"] == "bernoulli":
+        pi_t = (rng.random((n, T)) < pi_bar).astype(float)
+    elif cell["pi_rises"]:
+        pi_t = expit(logit(pi_bar) + 0.5 * D)
+    else:
+        a, b = 10 * pi_bar, 10 * (1 - pi_bar)
+        pi_t = rng.beta(a, b, (n, T))
+    M = np.stack([rng.normal(mu_m[k], np.sqrt(kap_m[k]), (n, T)) for k in range(2)], axis=-1)
+
+    def build_H_X(A):
+        H = (lam[:, None, :] * lam_mult) * D[:, :, None] + GAM[None, None, :] * L[:, :, None] \
+            + beta_ctx - (A[:, :, None] * PSI[None, None, :] * (1 + cell["theta1"] * D[:, :, None])) \
+            + e + mean_shift
+        X = H.copy()
+        for k, j in enumerate((IDX_MSGLEN, IDX_NEGSELF)):
+            X[:, :, j] = mix_authorship(H[:, :, j], pi_t, M[:, :, k])
+        H = apply_bi_mask(H, bi_mask)
+        X = apply_bi_mask(X, bi_mask)
+        X = np.where(used[:, :, None], X, np.nan)
+        return H, X
+
+    pi_prime = 0.1 * pi_t / (0.1 * pi_t + 0.95 * (1 - pi_t) + 1e-12)
+
+    def build_X_filtered(H, pi_prime_arr):
+        Xf = H.copy()
+        for k, j in enumerate((IDX_MSGLEN, IDX_NEGSELF)):
+            Xf[:, :, j] = mix_authorship(H[:, :, j], pi_prime_arr, M[:, :, k])
+        Xf = apply_bi_mask(Xf, bi_mask)
+        Xf = np.where(used[:, :, None], Xf, np.nan)
+        return Xf
+
+    if cell["help_mode"] == "constant":
+        A = rng.random((n, T)) < 0.3
+        H, X = build_H_X(A)
+        X_filtered = build_X_filtered(H, pi_prime)
+    else:
+        # CHOICE: baseline (days 0-27) always uses constant help p=0.3 -- A-fixed's own baseline
+        # cannot be causally available before day 28, so targeting can only start once it is.
+        A = np.zeros((n, T), dtype=bool)
+        A[:, :BASELINE_DAYS] = rng.random((n, BASELINE_DAYS)) < 0.3
+        Hfull, Xfull = build_H_X(A)  # A is False past day 28 here; only the baseline slice is used
+        Xfull_filtered = build_X_filtered(Hfull, pi_prime)
+        H = np.zeros((n, T, N_IND))
+        X = np.full((n, T, N_IND), np.nan)
+        X_filtered = np.full((n, T, N_IND), np.nan)
+        H[:, :BASELINE_DAYS] = Hfull[:, :BASELINE_DAYS]
+        X[:, :BASELINE_DAYS] = Xfull[:, :BASELINE_DAYS]
+        X_filtered[:, :BASELINE_DAYS] = Xfull_filtered[:, :BASELINE_DAYS]
+        base = fit_baseline(X[:, :BASELINE_DAYS], used[:, :BASELINE_DAYS], L_obs[:, :BASELINE_DAYS],
+                             0, BASELINE_DAYS)
+        # CHOICE: A-fixed's own composite (the C_{t-1} feedback signal for targeted help) is
+        # computed via the SAME compute_composite() code path A-fixed's post-hoc scoring uses --
+        # features (i)-(iii) and (v) active, (iv) omitted (PREREG deviation 4 already states this),
+        # not a hand-duplicated formula. It is recomputed on the history through day t-1 each
+        # iteration: O(T^2) but T <= 140, and only ever exercised by help_mode='targeted', never by
+        # tuning (which always uses cell='default', help_mode='constant'). A day compute_composite
+        # holds (C is NaN) HOLDS the feedback signal at its last known value, mirroring how the
+        # CUSUM's own S is held on a held day -- it is not reset to 0.
+        features_targeted = ablation_features("iv")
+        last_c = np.zeros(n)
+        for t in range(BASELINE_DAYS, T):
+            tm1 = t - 1
+            panel_partial = dict(X=X[:, :t, :], X_filtered=X_filtered[:, :t, :], used=used[:, :t],
+                                  A=A[:, :t], L_obs=L_obs[:, :t], av_day=None)
+            C_hist, _ = compute_composite(panel_partial, features_targeted, baseline=base)
+            Cprev = C_hist[:, -1]
+            Cprev = np.where(np.isnan(Cprev), last_c, Cprev)
+            last_c = Cprev
+            p_t = np.clip(expit(logit(0.3) + Cprev), 0.1, 0.9)
+            A[:, t] = rng.random(n) < p_t
+            # single-day slice of the same formula build_H_X uses, to avoid recomputing H for every
+            # prior day inside this loop.
+            Ht = ((lam * lam_mult[:, t, :]) * D[:, t][:, None] + GAM[None, :] * L[:, t][:, None]
+                  + beta_ctx[:, t, :]
+                  - (A[:, t][:, None] * PSI[None, :] * (1 + cell["theta1"] * D[:, t][:, None]))
+                  + e[:, t, :] + mean_shift[:, t, :])
+            Xt = Ht.copy()
+            Xt[:, IDX_MSGLEN] = mix_authorship(Ht[:, IDX_MSGLEN], pi_t[:, t], M[:, t, 0])
+            Xt[:, IDX_NEGSELF] = mix_authorship(Ht[:, IDX_NEGSELF], pi_t[:, t], M[:, t, 1])
+            Xft = Ht.copy()
+            Xft[:, IDX_MSGLEN] = mix_authorship(Ht[:, IDX_MSGLEN], pi_prime[:, t], M[:, t, 0])
+            Xft[:, IDX_NEGSELF] = mix_authorship(Ht[:, IDX_NEGSELF], pi_prime[:, t], M[:, t, 1])
+            Ht = apply_bi_mask(Ht, bi_mask[:, t])
+            Xt = apply_bi_mask(Xt, bi_mask[:, t])
+            Xft = apply_bi_mask(Xft, bi_mask[:, t])
+            Xt = np.where(used[:, t][:, None], Xt, np.nan)
+            Xft = np.where(used[:, t][:, None], Xft, np.nan)
+            H[:, t, :], X[:, t, :], X_filtered[:, t, :] = Ht, Xt, Xft
+
+    Y = D + rng.normal(0, np.sqrt(1 / 0.7 - 1), (n, T))
+    resp_p = expit(logit(0.8) - cell["m1"] * D)
+    responded = rng.random((n, T)) < resp_p
+
+    return dict(family=family, D=D, L=L, L_obs=L_obs, ctx=ctx, used=used, A=A, H=H, X=X,
+                X_filtered=X_filtered, pi_t=pi_t, pi_prime=pi_prime, Y=Y, resp_p=resp_p,
+                responded=responded, av_day=av_day, av_logged=av_logged, av_inds=av_inds,
+                bi_mask=bi_mask, t0=ev["t0"], ramp=ev["ramp"], vac_start=ev["vac_start"],
+                vac_len=ev["vac_len"])
+
+
+# ----------------------------------------------------------------------------------------------
+# --check : known-answer tests (a)-(i).
+# ----------------------------------------------------------------------------------------------
+def check_a(verbose):
+    """(a) lam=0 -> within-person validity of every indicator ~ 0. Uses generate_panel's own
+    `lam_range` argument (forced to (0, 0)) instead of a hand-built copy of the generator."""
+    rng = np.random.default_rng(1)
+    cell = cell_params("default")
+    n = 300
+    panel = generate_panel(rng, "S", cell, n=n, lam_range=(0.0, 0.0))
+    H, D, used = panel["H"], panel["D"], panel["used"]
+    valid = []
+    for j in range(N_IND):
+        hj = np.where(used, H[:, :, j], np.nan)
+        r = np.array([np.corrcoef(hj[i][~np.isnan(hj[i])], D[i][~np.isnan(hj[i])])[0, 1]
+                       for i in range(n) if (~np.isnan(hj[i])).sum() > 5])
+        valid.append(np.nanmean(r))
+    ok = all(abs(v) < 0.06 for v in valid)
+    if verbose:
+        print("  (a) lam=0 per-indicator within-person r(H,D):", np.round(valid, 4), "-> OK" if ok else "FAIL")
+    return ok, valid
+
+
+def check_b(verbose):
+    """(b) no drift, S held -> CUSUM false-alarm rate under A-naive matches a direct simulation.
+    `h` is bisected on the pipeline's own composite to a moderate, easy-to-verify operating point
+    (not the deployed 1/6-month target, which is too high to compare at this n/T without huge MC
+    noise); the same h is then applied to an i.i.d. surrogate with the pipeline's empirical
+    tracked-C variance, and the two false-alarm rates are compared."""
+    rng = np.random.default_rng(2)
+    cell = cell_params("default")
+    n = 1000
+    panel = generate_panel(rng, "S", cell, n=n)
+    baseline = fit_baseline(panel["X"], panel["used"], panel["L_obs"])
+    C, reason = compute_composite(panel, NAIVE_FEATURES, baseline=baseline)
+
+    target = 2.0  # a moderate FA/month target, just for a well-powered comparison
+    h_probe = bisect(lambda mid: fa_rate_for_h(C, mid, reason), 0.1, 20.0, target, n_iter=30)
+    fa_from_pipeline = fa_rate_for_h(C, h_probe, reason)
+
+    rng2 = np.random.default_rng(2)
+    Craw = rng2.standard_normal((n, T_DAYS))
+    sd_pipeline = np.nanstd(C[:, BASELINE_DAYS:])
+    Craw = Craw * sd_pipeline
+    reason_direct = np.zeros((n, T_DAYS), dtype=int)
+    fa_direct = fa_rate_for_h(Craw, h_probe, reason_direct)
+    ratio = fa_from_pipeline / fa_direct if fa_direct > 0 else np.nan
+    ok = 0.5 < ratio < 2.0
+    if verbose:
+        print(f"  (b) h={h_probe:.3f} FA/month pipeline={fa_from_pipeline:.4f} "
+              f"direct-iid-matched-sd={fa_direct:.4f} ratio={ratio:.3f} -> {'OK' if ok else 'FAIL'}")
+    return ok, (fa_from_pipeline, fa_direct)
+
+
+def check_c(verbose, n=8000, T=140):
+    """(c) `current` control (common lam, population z-scaling) leaves the slope within 5% relative.
+    A direct, isolated translation of the reviewer's p4check.py mechanism. `c_star` is a single fixed
+    operating point, calibrated once on the no-drift world and then applied unchanged to the drift
+    world -- matching how a real deployment would calibrate a threshold once, not re-pick it per
+    family."""
+    rng = np.random.default_rng(3)
+    lam = 0.375
+    results = {}
+    c_star = None
+    for drift in (False, True):
+        D = ar1_panel(rng, n, T, PHI_D)
+        if drift:
+            t0 = rng.integers(50, 101, n)
+            r = rng.integers(7, 22, n)
+            day = np.arange(T)[None, :]
+            D = D + np.clip((day - t0[:, None]) / r[:, None], 0, 1)
+        X = lam * D[:, :, None] + rng.standard_normal((n, T, 6))
+        pop_mean = X[:, :BASELINE_DAYS, :].mean((0, 1))
+        pop_sd = X[:, :BASELINE_DAYS, :].std((0, 1), ddof=1)
+        z = (X - pop_mean) / pop_sd
+        C = z.mean(-1)
+        Y = D + rng.normal(0, np.sqrt(1 / 0.7 - 1), (n, T))
+        if c_star is None:
+            c_star = np.nanpercentile(C[:, BASELINE_DAYS:], 90)  # calibrated once, on the no-drift world
+        m = np.zeros((n, T), dtype=bool)
+        m[:, BASELINE_DAYS:] = True
+        probed_cur = np.zeros((n, T), dtype=bool)
+        probed_cur[:, BASELINE_DAYS:] = C[:, BASELINE_DAYS:] > c_star
+
+        b_all = person_slope_corr(m, C, Y)[0]
+        b_cur = person_slope_corr(probed_cur, C, Y)[0]
+        rel = abs(b_cur - b_all) / abs(b_all)
+        results[drift] = (b_all, b_cur, rel)
+    ok = all(rel < 0.05 for _, _, rel in results.values())
+    if verbose:
+        for d, (a, c, r) in results.items():
+            print(f"  (c) current-control drift={d}: all-days slope={a:.4f} current slope={c:.4f} "
+                  f"rel diff={r:.4f} -> {'OK' if r < 0.05 else 'FAIL'}")
+    return ok, results
+
+
+def check_d(verbose, n=2_000_000):
+    """(d) P6 formula matches simulated attenuation under averaging (fixed pi and Beta pi) and
+    Bernoulli mixing, within MC error at large n. Direct translation of p56check.py's mechanism,
+    extended to Beta(pi) and to the per-person V_H formulation used in P6."""
+    rng = np.random.default_rng(4)
+    lam = 0.4
+    D = rng.standard_normal(n)
+    H = lam * D + rng.standard_normal(n) * np.sqrt(1 - lam**2)
+    VH = H.var()
+    r_h = np.corrcoef(H, D)[0, 1]
+    cases = []
+    for pi_bar, kap, mu_m, mode in [(0.3, 1.0, 0.0, "fixed"), (0.3, 0.5, 1.0, "fixed"),
+                                     (0.2, 0.5, 1.0, "beta"), (0.2, 0.5, 1.0, "bernoulli"),
+                                     (PI_BAR_DEFAULT, KAPPA_A4_DEFAULT, MU_M4_DEFAULT * 1.0, "beta-pilot")]:
+        if mode == "fixed":
+            pi = np.full(n, pi_bar)
+        elif mode in ("beta", "beta-pilot"):
+            pi = rng.beta(10 * pi_bar, 10 * (1 - pi_bar), n)
+        else:
+            pi = (rng.random(n) < pi_bar).astype(float)
+        M = rng.normal(mu_m, np.sqrt(kap), n)
+        X = (1 - pi) * H + pi * M
+        kappa_r = kap / VH
+        delta_r = (mu_m - H.mean()) / np.sqrt(VH)
+        Epi, Epi2, Varpi = pi.mean(), (pi**2).mean(), pi.var()
+        att_formula = (1 - Epi) / np.sqrt(((1 - pi) ** 2).mean() + Epi2 * kappa_r + Varpi * delta_r**2)
+        r_x = np.corrcoef(X, D)[0, 1]
+        att_mc = r_x / r_h
+        ok = abs(att_mc - att_formula) < 0.03
+        cases.append((mode, pi_bar, round(att_mc, 4), round(att_formula, 4), ok, round(r_x, 4)))
+    ok_all = all(c[4] for c in cases)
+    if verbose:
+        for mode, pi_bar, mc, formula, ok, r_x in cases:
+            print(f"  (d) mode={mode} pi_bar={pi_bar}: MC={mc} formula={formula} -> {'OK' if ok else 'FAIL'}"
+                  + (f"  [pilot pi_bar: realized r(X,D)={r_x} vs r(H,D)={round(r_h,4)} -- indicator 4 "
+                     f"still carries signal, just heavily diluted]" if mode == "beta-pilot" else ""))
+    return ok_all, cases
+
+
+def check_e(verbose, n=400):
+    """(e) IPW on the random schedule gives the all-days slope within MC error."""
+    rng = np.random.default_rng(5)
+    cell = cell_params("default")
+    cell["m1"] = 1.5  # a schedule with real MNAR pressure so IPW has something to correct
+    panel = generate_panel(rng, "S", cell, n=n)
+    baseline = fit_baseline(panel["X"], panel["used"], panel["L_obs"])
+    C, reason = compute_composite(panel, DEFAULT_FEATURES, baseline=baseline)
+    alarm, in_band, S = run_cusum(C, h=6.0)
+    probed, prop, identified = probe_schedule(rng, "random", C, in_band)
+    Y = panel["Y"]
+    responded = panel["responded"]
+    obs = probed & responded & ~np.isnan(C)
+
+    all_mask = np.arange(T_DAYS)[None, :] >= BASELINE_DAYS
+    all_mask = np.broadcast_to(all_mask, (n, T_DAYS)) & ~np.isnan(C) & responded
+    b_all = person_slope_corr(all_mask, C, Y)[0]
+    b_raw = person_slope_corr(obs, C, Y)[0]
+    ipw_w = np.where(obs, safe_div(1.0, prop, 0.0), 0.0)
+    b_ipw = person_slope_corr(obs, C, Y, weight=ipw_w)[0]
+    rel_raw = abs(b_raw - b_all) / abs(b_all)
+    rel_ipw = abs(b_ipw - b_all) / abs(b_all)
+    ok = rel_ipw < 0.10
+    if verbose:
+        print(f"  (e) all-days slope={b_all:.4f} raw-random={b_raw:.4f} (rel {rel_raw:.3f}) "
+              f"IPW={b_ipw:.4f} (rel {rel_ipw:.3f}) -> {'OK' if ok else 'FAIL'}")
+    return ok, (b_all, b_raw, b_ipw)
+
+
+def check_f(verbose, n=400):
+    """(f) positivity: triggered / fixed return "not identified"."""
+    rng = np.random.default_rng(6)
+    cell = cell_params("default")
+    panel = generate_panel(rng, "S", cell, n=n)
+    baseline = fit_baseline(panel["X"], panel["used"], panel["L_obs"])
+    C, reason = compute_composite(panel, DEFAULT_FEATURES, baseline=baseline)
+    alarm, in_band, S = run_cusum(C, h=6.0)
+    _, _, id_trig = probe_schedule(rng, "triggered", C, in_band, p_trig=0.3)
+    _, _, id_fixed = probe_schedule(rng, "fixed", C, in_band)
+    _, _, id_rand = probe_schedule(rng, "random", C, in_band)
+    _, _, id_mixed = probe_schedule(rng, "mixed", C, in_band, p_trig2=0.3)
+    ok = (not id_trig) and (not id_fixed) and id_rand and id_mixed
+    if verbose:
+        print(f"  (f) identified: triggered={id_trig} fixed={id_fixed} random={id_rand} mixed={id_mixed} "
+              f"-> {'OK' if ok else 'FAIL'}")
+    return ok, (id_trig, id_fixed, id_rand, id_mixed)
+
+
+def check_g(verbose):
+    """(g) known-value assert on the pi' formula. The DGP never simulates the filter's se/sp
+    confusion matrix -- it uses pi' = (1-se)*pi / ((1-se)*pi + sp*(1-pi)) directly (Bayes' rule
+    for P(truly agent | filter passed as human)). So the check is a known-value assert on that
+    closed form, not a Monte Carlo of a classifier mechanism the pipeline doesn't run. Cross-checked
+    against the odds-ratio form of Bayes' rule (prior odds x likelihood ratio) -- an independent
+    algebraic path to the same number -- and against PREREG.md's own stated value at pi_bar."""
+    def pi_prime_formula(pi):
+        return (1 - FILTER_SE) * pi / ((1 - FILTER_SE) * pi + FILTER_SP * (1 - pi) + 1e-12)
+
+    def pi_prime_odds(pi):
+        prior_odds = pi / (1 - pi)
+        lr = (1 - FILTER_SE) / FILTER_SP
+        post_odds = prior_odds * lr
+        return post_odds / (1 + post_odds)
+
+    results = []
+    ok_all = True
+    for pi in (0.0, 0.5, 0.845, 1.0):
+        a = pi_prime_formula(pi)
+        b = pi if pi in (0.0, 1.0) else pi_prime_odds(pi)  # trivial at the boundaries regardless of se/sp
+        ok = abs(a - b) < 1e-6
+        ok_all = ok_all and ok
+        results.append((pi, a, b, ok))
+    known_value_ok = abs(pi_prime_formula(PI_BAR_DEFAULT) - 0.365) < 0.001  # PREREG.md's own stated value
+    ok_all = ok_all and known_value_ok
+    if verbose:
+        for pi, a, b, ok in results:
+            print(f"  (g) pi={pi}: formula={a:.6f} odds-rule cross-check={b:.6f} -> {'OK' if ok else 'FAIL'}")
+        print(f"  (g) pi_bar={PI_BAR_DEFAULT}: pi'={pi_prime_formula(PI_BAR_DEFAULT):.4f} "
+              f"(PREREG.md states 0.365) -> {'OK' if known_value_ok else 'FAIL'}")
+    return ok_all, results
+
+
+def check_h(verbose, n=400):
+    """(h) observed workload noise variance 0.25."""
+    rng = np.random.default_rng(8)
+    cell = cell_params("default")
+    panel = generate_panel(rng, "S", cell, n=n)
+    noise = panel["L_obs"] - panel["L"]
+    v = noise.var(ddof=1)
+    ok = abs(v - 0.25) < 0.01
+    if verbose:
+        print(f"  (h) Var(L_obs - L) = {v:.4f} (target 0.25) -> {'OK' if ok else 'FAIL'}")
+    return ok, v
+
+
+def check_i(verbose):
+    """(i) asserts spec sections 3-6 appear verbatim in sim/PREREG.md."""
+    spec_text = SPEC_PATH.read_text()
+    lines = spec_text.splitlines()
+    start = next(i for i, l in enumerate(lines) if l.strip() == "## 3. Generator (D1)")
+    end = next(i for i, l in enumerate(lines) if l.strip() == "## 7. Corpus pilot (D3), metadata only")
+    body = "\n".join(lines[start:end]).rstrip()
+    prereg_on_disk = PREREG_PATH.read_text() if PREREG_PATH.exists() else ""
+    ok = bool(prereg_on_disk) and body in prereg_on_disk
+    if verbose:
+        print(f"  (i) spec sections 3-6 verbatim in sim/PREREG.md ({len(body)} chars) -> "
+              f"{'OK' if ok else 'FAIL'}")
+    return ok, len(body)
+
+
+def run_check(verbose=True):
+    t0 = time.time()
+    results = {}
+    for name, fn in [("a", check_a), ("b", check_b), ("c", check_c), ("d", check_d),
+                      ("e", check_e), ("f", check_f), ("g", check_g), ("h", check_h),
+                      ("i", check_i)]:
+        if verbose:
+            print(f"[check {name}]")
+        ok, detail = fn(verbose)
+        results[name] = ok
+        if verbose:
+            print()
+    all_ok = all(results.values())
+    print("check summary:", results, "ALL OK" if all_ok else "SOME FAILED", f"({time.time()-t0:.1f}s)")
+    return all_ok, results
+
+
+# ----------------------------------------------------------------------------------------------
+# Tuning (tuning seed 20260927 only; family S / 50-50 S+DR mix only, per the pre-freeze scope).
+# ----------------------------------------------------------------------------------------------
+ARCHS_FOR_H = ["pop", "A-naive", "A-fixed", "A-fixed-minus-i", "A-fixed-minus-ii",
+               "A-fixed-minus-iii", "A-fixed-minus-iv", "A-fixed-minus-v", "probe-only"]
+
+
+def arch_features(name):
+    if name == "A-naive":
+        return NAIVE_FEATURES
+    if name == "A-fixed":
+        return DEFAULT_FEATURES
+    if name.startswith("A-fixed-minus-"):
+        return ablation_features(name.rsplit("-", 1)[-1])
+    return None  # pop / probe-only handled separately
+
+
+def fa_rate_for_alarm(alarm, reason):
+    """False alarms per tracked person-month, given an alarm array already run. Shared by
+    fa_rate_for_h (which runs the CUSUM itself) and score()'s per-family FA/month checks (which
+    already have `alarm` from _run_arch and don't need to re-run it)."""
+    tracked = (reason[:, BASELINE_DAYS:] == 0).sum()
+    return alarm[:, BASELINE_DAYS:].sum() / max(tracked / 30.0, 1e-9)
+
+
+def fa_rate_for_h(C, h, reason):
+    alarm, band, S = run_cusum(C, h)
+    return fa_rate_for_alarm(alarm, reason)
+
+
+def pop_reference(panel):
+    """Population-level baseline (mean, sd) for the `pop` architecture, from this panel's own
+    baseline block. One definition, shared by tune_h('pop', ...) and _run_arch('pop', ...)."""
+    return dict(mean=np.nanmean(panel["X"][:, :BASELINE_DAYS, :], (0, 1)),
+                sd=np.nanstd(panel["X"][:, :BASELINE_DAYS, :], (0, 1)))
+
+
+def probe_only_C(panel, rng):
+    """Probe-only comparator's composite: a CUSUM on probe answers alone, z-scored on the
+    baseline-block probe mean/sd, under the `random` schedule (spec section 4: daily p = 0.1 post-
+    baseline, plus the fixed baseline block) at the matched budget -- not an oracle over every
+    responded day. C (and reason) are defined only on days actually probed AND responded; every
+    other day holds. One implementation, shared by tune_h('probe-only', ...) and score()'s P8."""
+    Yb = panel["Y"][:, :BASELINE_DAYS]
+    respb = panel["responded"][:, :BASELINE_DAYS]
+    mu = np.where(respb, Yb, np.nan)
+    m, s = np.nanmean(mu, 1), np.nanstd(mu, 1, ddof=1)
+    s = np.where(s > 1e-6, s, 1.0)
+    probed, _, _ = probe_schedule(rng, "random", panel["Y"], np.zeros_like(panel["Y"], dtype=bool))
+    observed = probed & panel["responded"]
+    C = safe_div(panel["Y"] - m[:, None], s[:, None])
+    C = np.where(observed, C, np.nan)
+    reason = np.where(observed, 0, 1)
+    return C, reason
+
+
+def tune_h(arch, n=N_PERSONS, seed=TUNING_SEED, target=1 / 6,
+           pi_bar=PI_BAR_DEFAULT, kappa_a4=KAPPA_A4_DEFAULT, mu_m4=MU_M4_DEFAULT):
+    rng = np.random.default_rng(seed)
+    cell = cell_params("default")
+    if arch == "probe-only":
+        panel = generate_panel(rng, "S", cell, n=n, pi_bar=pi_bar, kappa_a4=kappa_a4, mu_m4=mu_m4)
+        rng2 = np.random.default_rng(seed + 1)
+        C, reason = probe_only_C(panel, rng2)
+    else:
+        panel = generate_panel(rng, "S", cell, n=n, pi_bar=pi_bar, kappa_a4=kappa_a4, mu_m4=mu_m4)
+        baseline = fit_baseline(panel["X"], panel["used"], panel["L_obs"])
+        if arch == "pop":
+            C, reason = compute_composite(panel, NAIVE_FEATURES, pop_ref=pop_reference(panel))
+        else:
+            C, reason = compute_composite(panel, arch_features(arch), baseline=baseline)
+
+    h_star = bisect(lambda mid: fa_rate_for_h(C, mid, reason), 0.1, 30.0, target, n_iter=40)
+    fa_final = fa_rate_for_h(C, h_star, reason)
+    boots = []
+    rng_b = np.random.default_rng(seed + 999)
+    n_persons = C.shape[0]
+    alarm, _, _ = run_cusum(C, h_star)
+    tracked_pp = (reason[:, BASELINE_DAYS:] == 0).sum(1)
+    alarms_pp = alarm[:, BASELINE_DAYS:].sum(1)
+    for _ in range(500):
+        idx = rng_b.integers(0, n_persons, n_persons)
+        mon, al = tracked_pp[idx].sum(), alarms_pp[idx].sum()
+        boots.append(al / (mon / 30.0) if mon > 0 else np.nan)
+    se = np.nanstd(boots, ddof=1)
+    return dict(h=float(h_star), fa_per_month=float(fa_final), se=float(se))
+
+
+def tune_schedules(n=N_PERSONS, seed=TUNING_SEED, target=BUDGET_TARGET,
+                    pi_bar=PI_BAR_DEFAULT, kappa_a4=KAPPA_A4_DEFAULT, mu_m4=MU_M4_DEFAULT):
+    rng = np.random.default_rng(seed + 7)
+    cell = cell_params("default")
+    n_s = n // 2
+    n_dr = n - n_s
+    panel_s = generate_panel(rng, "S", cell, n=n_s, pi_bar=pi_bar, kappa_a4=kappa_a4, mu_m4=mu_m4)
+    panel_dr = generate_panel(rng, "DR", cell, n=n_dr, pi_bar=pi_bar, kappa_a4=kappa_a4, mu_m4=mu_m4)
+
+    def cat(a, b):
+        return np.concatenate([a, b], axis=0)
+
+    panel = {k: (cat(panel_s[k], panel_dr[k]) if isinstance(panel_s[k], np.ndarray) and panel_s[k].ndim >= 1
+                 and panel_s[k].shape[:1] == (n_s,) else panel_s[k]) for k in panel_s}
+    baseline = fit_baseline(panel["X"], panel["used"], panel["L_obs"])
+    h_fixed = tune_h("A-fixed", n=n, seed=seed, pi_bar=pi_bar, kappa_a4=kappa_a4, mu_m4=mu_m4)["h"]
+    C, reason = compute_composite(panel, DEFAULT_FEATURES, baseline=baseline)
+    alarm, in_band, S = run_cusum(C, h_fixed)
+
+    def expected_for_ptrig(p):
+        _, prop, _ = probe_schedule(rng, "triggered", C, in_band, p_trig=p)
+        return expected_budget_per_month(prop)
+
+    unreachable_trig = expected_for_ptrig(1.0) < target
+    # expected_for_ptrig is INCREASING in p (more triggering -> more probes): negate both sides.
+    p_trig_bisected = bisect(lambda mid: -expected_for_ptrig(mid), 0.0, 1.0, -target, n_iter=40)
+    p_trig = 1.0 if unreachable_trig else p_trig_bisected
+
+    def expected_for_ptrig2(p):
+        _, prop, _ = probe_schedule(rng, "mixed", C, in_band, p_trig2=p)
+        return expected_budget_per_month(prop)
+
+    unreachable_mixed = expected_for_ptrig2(1.0) < target
+    p_trig2_bisected = bisect(lambda mid: -expected_for_ptrig2(mid), 0.0, 1.0, -target, n_iter=40)
+    p_trig2 = 1.0 if unreachable_mixed else p_trig2_bisected
+
+    def budget_for_cstar(c):
+        probed, prop, _ = probe_schedule(rng, "current", C, in_band, c_star=c)
+        return expected_budget_per_month(prop)
+
+    # budget_for_cstar is DECREASING in c* (higher c* -> fewer probes): same direction as bisect().
+    c_star = bisect(budget_for_cstar, -3.0, 3.0, target, n_iter=40)
+
+    realized = dict(triggered=expected_for_ptrig(p_trig), mixed=expected_for_ptrig2(p_trig2),
+                     current=budget_for_cstar(c_star))
+    return dict(p_trig=float(p_trig), p_trig2=float(p_trig2), c_star=float(c_star),
+                realized_budget=realized, h_fixed_used=float(h_fixed),
+                triggered_budget_target_unreachable=bool(unreachable_trig),
+                mixed_budget_target_unreachable=bool(unreachable_mixed))
+
+
+def run_tune(pi_bar=PI_BAR_DEFAULT, kappa_a4=KAPPA_A4_DEFAULT, mu_m4=MU_M4_DEFAULT):
+    t0 = time.time()
+    out = {"seed": TUNING_SEED, "n_persons": N_PERSONS,
+           "pi_bar": pi_bar, "kappa_a4": kappa_a4, "mu_m4": mu_m4, "h": {}, "schedules": None}
+    for arch in ARCHS_FOR_H:
+        print("tuning h for", arch, "...", flush=True)
+        out["h"][arch] = tune_h(arch, pi_bar=pi_bar, kappa_a4=kappa_a4, mu_m4=mu_m4)
+        print("  ", out["h"][arch], flush=True)
+    print("tuning schedules on S+DR mix ...", flush=True)
+    out["schedules"] = tune_schedules(pi_bar=pi_bar, kappa_a4=kappa_a4, mu_m4=mu_m4)
+    print("  ", out["schedules"], flush=True)
+    out["wall_seconds"] = time.time() - t0
+    (HERE / "tuning.json").write_text(json.dumps(out, indent=2))
+    print(f"wrote sim/tuning.json in {out['wall_seconds']:.1f}s")
+    return out
+
+
+# ----------------------------------------------------------------------------------------------
+# score(): implemented per the deliverable, but NOT to be run pre-freeze (D0 not run this session).
+# Reuses the exact primitives exercised by --check and tune(). PASS/FAIL is against the frozen
+# thresholds in section 6; P1-P3 are labelled construction checks, not findings.
+# ----------------------------------------------------------------------------------------------
+def person_bootstrap(fn, n_persons, B=2000, seed=0):
+    rng = np.random.default_rng(seed)
+    vals = np.array([fn(rng.integers(0, n_persons, n_persons)) for _ in range(B)])
+    lo, hi = np.percentile(vals, [2.5, 97.5])
+    return float(np.mean(vals)), float(lo), float(hi)
+
+
+def _fa_month_pp(alarm, reason):
+    """Per-person FA/month, for bootstrap resampling and the IQR spread metric."""
+    mon = (reason[:, BASELINE_DAYS:] == 0).sum(1)
+    al = alarm[:, BASELINE_DAYS:].sum(1)
+    return safe_div(al, mon / 30.0, fill=np.nan)
+
+
+def _sensitivity(alarm, onset, window=21):
+    day = np.arange(alarm.shape[1])[None, :]
+    in_window = (day >= onset[:, None]) & (day < onset[:, None] + window)
+    pre = day < onset[:, None]
+    fa_pre = (alarm & pre).any(1)
+    return (alarm & in_window).any(1) & ~fa_pre  # per-person boolean detected
+
+
+def _rmst42(alarm, onset, cap=42):
+    """Per-person restricted time to detection, censored at `cap` days from onset: days from onset
+    to the first true (post-onset, not preceded by a pre-onset false alarm) alarm, or `cap` if none."""
+    n, T = alarm.shape
+    day = np.arange(T)[None, :]
+    days_from_onset = day - onset[:, None]
+    in_window = (days_from_onset >= 0) & (days_from_onset < cap)
+    pre = days_from_onset < 0
+    fa_pre = (alarm & pre).any(1)
+    hit = alarm & in_window
+    candidate = np.where(hit, days_from_onset, cap)
+    first = candidate.min(1)
+    first = np.where(fa_pre, float(cap), first.astype(float))
+    return first
+
+
+def _run_arch(panel, arch_name, h):
+    if arch_name == "pop":
+        C, reason = compute_composite(panel, NAIVE_FEATURES, pop_ref=pop_reference(panel))
+    else:
+        baseline = fit_baseline(panel["X"], panel["used"], panel["L_obs"])
+        C, reason = compute_composite(panel, arch_features(arch_name), baseline=baseline)
+    alarm, in_band, S = run_cusum(C, h)
+    return C, reason, alarm, in_band
+
+
+def _prereg_stated_value(prereg_text_on_disk, name):
+    # Anchored to the bullet-list line ("- `NAME = value`"), NOT the earlier prose mention of the
+    # spec's design-time placeholders ("the spec's design-time placeholders (`PI_BAR = 0.2`, ...)"),
+    # which uses the exact same `NAME = value` token syntax for a different, superseded number.
+    m = re.search(rf"^- `{name} = ([0-9.eE+-]+)`", prereg_text_on_disk, re.MULTILINE)
+    if not m:
+        raise RuntimeError(f"could not find a '- `{name} = ...`' bullet line in sim/PREREG.md")
+    return float(m.group(1))
+
+
+def score(prereg_sha):
+    if not PREREG_PATH.exists():
+        raise RuntimeError("sim/PREREG.md missing -- cannot score pre-freeze.")
+    prereg_text_on_disk = PREREG_PATH.read_text()
+    tuning = json.loads((HERE / "tuning.json").read_text())
+    H = tuning["h"]
+    P = tuning["schedules"]
+    # pi_bar/kappa_a4/mu_m4 are read from the committed tuning run, not passed in on the CLI, and
+    # must equal the values the frozen sim/PREREG.md itself states (constitution III/IV).
+    pi_bar, kappa_a4, mu_m4 = tuning["pi_bar"], tuning["kappa_a4"], tuning["mu_m4"]
+    for name, val in (("PI_BAR", pi_bar), ("KAPPA_A4", kappa_a4), ("MU_M4", mu_m4)):
+        expected = _prereg_stated_value(prereg_text_on_disk, name)
+        assert abs(val - expected) < 1e-9, (
+            f"tuning.json's {name}={val} does not match sim/PREREG.md's stated {name}={expected}"
+        )
+    preds = {}
+
+    def panel_for(family, cell_name):
+        seed = eval_seed(prereg_sha, family, cell_name)
+        rng = np.random.default_rng(seed)
+        return generate_panel(rng, family, cell_params(cell_name), n=N_PERSONS,
+                               pi_bar=pi_bar, kappa_a4=kappa_a4, mu_m4=mu_m4)
+
+    # ---- P1 (construction check): A-naive vs A-fixed FA/month on SP, VA, DE, BI ----
+    p1 = {}
+    for fam, lo_thr, hi_thr, note in [("SP", 2.0, None, "confirmed by A-fixed-minus-iii"),
+                                       ("VA", 0.5, 2.0, "no matching component"),
+                                       ("DE", 0.5, 2.0, "no matching component"),
+                                       ("BI", 0.5, 2.0, "no matching component")]:
+        panel = panel_for(fam, "default")
+        _, reason_n, alarm_n, _ = _run_arch(panel, "A-naive", H["A-naive"]["h"])
+        _, reason_f, alarm_f, _ = _run_arch(panel, "A-fixed", H["A-fixed"]["h"])
+        fa_n = _fa_month_pp(alarm_n, reason_n)
+        fa_f = _fa_month_pp(alarm_f, reason_f)
+
+        def ratio_fn(idx, fa_n=fa_n, fa_f=fa_f):
+            return np.nansum(fa_n[idx]) / max(np.nansum(fa_f[idx]), 1e-9)
+
+        mean, lo, hi = person_bootstrap(ratio_fn, N_PERSONS)
+        if fam == "SP":
+            _, reason_iii, alarm_iii, _ = _run_arch(panel, "A-fixed-minus-iii", H["A-fixed-minus-iii"]["h"])
+            fa_iii = _fa_month_pp(alarm_iii, reason_iii)
+            ablation_ratio = np.nansum(fa_n) / max(np.nansum(fa_iii), 1e-9)
+        else:
+            ablation_ratio = None
+        passed = (mean >= lo_thr) if hi_thr is None else (lo_thr <= mean <= hi_thr)
+        p1[fam] = dict(ratio_naive_over_fixed=mean, ci95=[lo, hi], threshold=[lo_thr, hi_thr],
+                        ablation_ratio=ablation_ratio, note=note, PASS=bool(passed))
+    preds["P1"] = p1
+
+    # ---- P1b: A-fixed DE FA/month <= 1.5x its S FA/month ----
+    panel_de = panel_for("DE", "default")
+    panel_s = panel_for("S", "default")
+    _, reason_de, alarm_de, _ = _run_arch(panel_de, "A-fixed", H["A-fixed"]["h"])
+    _, reason_s, alarm_s, _ = _run_arch(panel_s, "A-fixed", H["A-fixed"]["h"])
+    fa_de_pp, fa_s_pp = _fa_month_pp(alarm_de, reason_de), _fa_month_pp(alarm_s, reason_s)
+    ratio = np.nansum(fa_de_pp) / max(np.nansum(fa_s_pp), 1e-9)
+    preds["P1b"] = dict(de_over_s_fa_ratio=ratio, threshold=1.5, PASS=bool(ratio <= 1.5))
+
+    # ---- P2 (construction check): DR, targeted_theta1_05 ----
+    panel_dr_t = panel_for("DR", "targeted_theta1_05")
+    onset = panel_dr_t["t0"]
+    _, _, alarm_naive, _ = _run_arch(panel_dr_t, "A-naive", H["A-naive"]["h"])
+    _, _, alarm_fixed, _ = _run_arch(panel_dr_t, "A-fixed", H["A-fixed"]["h"])
+    _, _, alarm_mi, _ = _run_arch(panel_dr_t, "A-fixed-minus-i", H["A-fixed-minus-i"]["h"])
+    sens_naive = _sensitivity(alarm_naive, onset).mean()
+    sens_fixed = _sensitivity(alarm_fixed, onset).mean()
+    sens_mi = _sensitivity(alarm_mi, onset).mean()
+    gap = sens_fixed - sens_naive
+    gap_i = sens_fixed - sens_mi
+    preds["P2"] = dict(sens_A_naive=sens_naive, sens_A_fixed=sens_fixed, sens_A_fixed_minus_i=sens_mi,
+                        gap=gap, gap_explained_by_i=gap_i,
+                        PASS=bool(gap >= 0.10 and gap_i >= 0.5 * gap))
+
+    # ---- P3 (construction check): AV logged persons, and AV2 vs S ----
+    panel_av = panel_for("AV", "default")
+    logged = panel_av["av_logged"]
+    _, reason_iv, alarm_iv, _ = _run_arch(panel_av, "A-fixed", H["A-fixed"]["h"])
+    _, reason_miv, alarm_miv, _ = _run_arch(panel_av, "A-fixed-minus-iv", H["A-fixed-minus-iv"]["h"])
+    fa_iv = _fa_month_pp(alarm_iv, reason_iv)[logged]
+    fa_miv = _fa_month_pp(alarm_miv, reason_miv)[logged]
+    av_ratio = np.nansum(fa_miv) / max(np.nansum(fa_iv), 1e-9)
+    panel_av2 = panel_for("AV2", "default")
+    _, reason_av2, alarm_av2, _ = _run_arch(panel_av2, "A-fixed", H["A-fixed"]["h"])
+    fa_av2 = _fa_month_pp(alarm_av2, reason_av2)
+    av2_ratio = np.nansum(fa_av2) / max(np.nansum(fa_s_pp), 1e-9)
+    preds["P3"] = dict(av_logged_removeiv_ratio=av_ratio, av2_over_s_ratio=av2_ratio,
+                        PASS=bool(av_ratio >= 2.0 and av2_ratio >= 2.0))
+
+    # ---- P4: S, A-fixed, triggered/mixed/current calibration ----
+    panel_s4 = panel_for("S", "default")
+    C4, reason4, alarm4, band4 = _run_arch(panel_s4, "A-fixed", H["A-fixed"]["h"])
+    rng4 = np.random.default_rng(eval_seed(prereg_sha, "S", "default") + 1)
+
+    Y4, resp4 = panel_s4["Y"], panel_s4["responded"]
+    post_mask = np.zeros_like(reason4, dtype=bool)
+    post_mask[:, BASELINE_DAYS:] = True
+    all_mask = post_mask & ~np.isnan(C4) & resp4
+    b_all, r_all = person_slope_corr(all_mask, C4, Y4)
+    probed_t, prop_t, id_t = probe_schedule(rng4, "triggered", C4, band4, p_trig=P["p_trig"])
+    obs_t = probed_t & resp4 & ~np.isnan(C4)
+    b_t, r_t = person_slope_corr(obs_t, C4, Y4)
+    probed_m, prop_m, id_m = probe_schedule(rng4, "mixed", C4, band4, p_trig2=P["p_trig2"])
+    obs_m = probed_m & resp4 & ~np.isnan(C4)
+    b_m, r_m = person_slope_corr(obs_m, C4, Y4)
+    w_m = np.where(obs_m, safe_div(1.0, prop_m), 0.0)
+    b_m_ipw, r_m_ipw = person_slope_corr(obs_m, C4, Y4, weight=w_m)
+    corr_deflate = r_all - r_t
+    slope_atten_rel = abs(b_all - b_t) / abs(b_all) if b_all else np.nan
+    ok_current, current_detail = check_c(False)
+    preds["P4"] = dict(all_days=dict(slope=b_all, corr=r_all),
+                        triggered=dict(slope=b_t, corr=r_t, corr_deflation=corr_deflate,
+                                        slope_attenuation_rel=slope_atten_rel),
+                        mixed=dict(slope=b_m, corr=r_m),
+                        mixed_ipw=dict(slope=b_m_ipw, corr=r_m_ipw,
+                                        slope_diff=abs(b_m_ipw - b_all), corr_diff=abs(r_m_ipw - r_all)),
+                        current_check_isolated_mechanism=current_detail,
+                        PASS=bool(corr_deflate >= 0.05 and slope_atten_rel >= 0.10
+                                  and abs(b_m_ipw - b_all) <= 0.03 and abs(r_m_ipw - r_all) <= 0.03))
+
+    # ---- P5: S, m1 in {0, 0.5, 1.5}, A-fixed, schedules fixed/random/triggered/mixed ----
+    p5 = {}
+    biases = {}
+    for m1_cell in ("default", "m1_05", "m1_15"):
+        panel5 = panel_for("S", m1_cell)
+        C5, reason5, alarm5, band5 = _run_arch(panel5, "A-fixed", H["A-fixed"]["h"])
+        Y5, resp5 = panel5["Y"], panel5["responded"]
+        post5 = np.zeros_like(reason5, dtype=bool)
+        post5[:, BASELINE_DAYS:] = True
+        all5 = post5 & ~np.isnan(C5) & resp5
+        b_all5, _ = person_slope_corr(all5, C5, Y5)
+        rng5 = np.random.default_rng(eval_seed(prereg_sha, "S", m1_cell) + 2)
+        sched_biases = {}
+        for sched, kw in [("fixed", {}), ("random", {}), ("triggered", dict(p_trig=P["p_trig"])),
+                           ("mixed", dict(p_trig2=P["p_trig2"]))]:
+            probed, prop, ident = probe_schedule(rng5, sched, C5, band5, **kw)
+            obs = probed & resp5 & ~np.isnan(C5)
+            b_obs, _ = person_slope_corr(obs, C5, Y5)
+            rel_bias = abs(b_obs - b_all5) / abs(b_all5) if b_all5 else np.nan
+            sched_biases[sched] = rel_bias
+        biases[m1_cell] = sched_biases
+    added_bias_ok = all(biases["m1_15"][s] - biases["default"][s] >= 0.10 for s in biases["default"])
+    p5 = dict(rel_bias_by_m1_and_schedule=biases,
+              m1_05_random_under_5pct=bool(biases["m1_05"]["random"] < 0.05),
+              m1_15_added_bias_ge_10pct_every_schedule=added_bias_ok)
+    # response-propensity IPW at m1=1.5, random schedule
+    panel5b = panel_for("S", "m1_15")
+    C5b, reason5b, alarm5b, band5b = _run_arch(panel5b, "A-fixed", H["A-fixed"]["h"])
+    Y5b, resp5b = panel5b["Y"], panel5b["responded"]
+    rng5b = np.random.default_rng(eval_seed(prereg_sha, "S", "m1_15") + 3)
+    probed5b, prop5b, _ = probe_schedule(rng5b, "random", C5b, band5b)
+    n5, T5 = C5b.shape
+    lag = np.concatenate([np.zeros((n5, 1)), np.nan_to_num(C5b[:, :-1])], axis=1)
+    dow = np.tile(dow_features(T5), (n5, 1, 1))
+    feats = np.concatenate([np.nan_to_num(C5b)[..., None], lag[..., None], dow], axis=-1)
+    admin = probed5b
+    Xd = feats[admin]
+    yresp = resp5b[admin].astype(float)
+    beta_hat = logistic_irls(Xd, yresp)
+    p_resp_hat = expit(feats @ beta_hat)
+    obs5b = probed5b & resp5b & ~np.isnan(C5b)
+    w_resp = np.where(obs5b, safe_div(1.0, np.clip(p_resp_hat, 0.05, 1.0)), 0.0)
+    post5b = np.zeros_like(reason5b, dtype=bool)
+    post5b[:, BASELINE_DAYS:] = True
+    all5b = post5b & ~np.isnan(C5b) & resp5b
+    b_all5b, _ = person_slope_corr(all5b, C5b, Y5b)
+    b_raw5b, _ = person_slope_corr(obs5b, C5b, Y5b)
+    b_ipw5b, _ = person_slope_corr(obs5b, C5b, Y5b, weight=w_resp)
+    bias_raw = abs(b_raw5b - b_all5b)
+    bias_ipw = abs(b_ipw5b - b_all5b)
+    frac_removed = 1 - bias_ipw / bias_raw if bias_raw else np.nan
+    p5["response_propensity_ipw_m1_15_random"] = dict(bias_raw=bias_raw, bias_ipw=bias_ipw,
+                                                         frac_removed=frac_removed,
+                                                         removes_less_than_half=bool(frac_removed < 0.5))
+    p5["PASS"] = bool(p5["m1_05_random_under_5pct"] and p5["m1_15_added_bias_ge_10pct_every_schedule"]
+                       and p5["response_propensity_ipw_m1_15_random"]["removes_less_than_half"])
+    preds["P5"] = p5
+
+    # ---- P6: indicator-level attenuation, families default / bernoulli_mix / pi_rises_with_D ----
+    def attenuation_person(h, d, x, pi_i, kap, mu_m):
+        """Per-person P6 attenuation: the closed-form Att and the direct MC ratio r(X,D)/r(H,D),
+        for one indicator/mixing variant (unfiltered: pi, X; filtered: pi', X_filtered). Returns
+        None if this person's within-person H variance is too small to be informative."""
+        VH = h.var()
+        if VH < 1e-9:
+            return None
+        rH = np.corrcoef(h, d)[0, 1]
+        kappa_r = kap / VH
+        delta_r = (mu_m - h.mean()) / np.sqrt(VH)
+        Epi, Epi2, Varpi = pi_i.mean(), (pi_i**2).mean(), pi_i.var()
+        att_formula = (1 - Epi) / np.sqrt(((1 - pi_i) ** 2).mean() + Epi2 * kappa_r + Varpi * delta_r**2)
+        rX = np.corrcoef(x, d)[0, 1]
+        att_mc = rX / rH if abs(rH) > 1e-6 else np.nan
+        return att_formula, att_mc
+
+    p6 = {}
+    for cell_name in ("default", "bernoulli_mix", "pi_rises_with_D"):
+        panel6 = panel_for("S", cell_name)
+        used6 = panel6["used"]
+        D6 = panel6["D"]
+        pi6, pip6 = panel6["pi_t"], panel6["pi_prime"]
+        cell_res = {}
+        for j, mu_m, kap in ((IDX_MSGLEN, mu_m4, kappa_a4), (IDX_NEGSELF, -1.0, MIX_KAPPA_A5)):
+            H6 = panel6["H"][:, :, j]
+            X6 = panel6["X"][:, :, j]
+            Xf6 = panel6["X_filtered"][:, :, j]
+            atts, mcs, atts_f, mcs_f = [], [], [], []
+            for i in range(N_PERSONS):
+                ok = used6[i]
+                if ok.sum() < 10:
+                    continue
+                h, d = H6[i, ok], D6[i, ok]
+                res = attenuation_person(h, d, X6[i, ok], pi6[i, ok], kap, mu_m)
+                if res is None:
+                    continue
+                atts.append(res[0]); mcs.append(res[1])
+                # A-fixed's filtered indicator: per spec P6, pi is replaced by pi' here.
+                res_f = attenuation_person(h, d, Xf6[i, ok], pip6[i, ok], kap, mu_m)
+                if res_f is not None:
+                    atts_f.append(res_f[0]); mcs_f.append(res_f[1])
+            ind = j + 1  # PREREG's 1-based indicator numbering (IDX_MSGLEN=3 -> indicator 4, etc.)
+            cell_res[f"ind{ind}_att_formula_mean"] = float(np.nanmean(atts))
+            cell_res[f"ind{ind}_att_mc_mean"] = float(np.nanmean(mcs))
+            cell_res[f"ind{ind}_within_0.03"] = bool(abs(np.nanmean(atts) - np.nanmean(mcs)) < 0.03)
+            cell_res[f"ind{ind}_filtered_att_formula_mean"] = float(np.nanmean(atts_f))
+            cell_res[f"ind{ind}_filtered_att_mc_mean"] = float(np.nanmean(mcs_f))
+            cell_res[f"ind{ind}_filtered_within_0.03"] = bool(
+                abs(np.nanmean(atts_f) - np.nanmean(mcs_f)) < 0.03)
+        p6[cell_name] = cell_res
+    pr = p6["pi_rises_with_D"]
+    p6["pi_rises_signed_departure"] = dict(
+        higher_by_ge_0_05=bool(pr["ind4_att_mc_mean"] - pr["ind4_att_formula_mean"] >= 0.05))
+    p6["PASS"] = bool(p6["default"]["ind4_within_0.03"] and p6["default"]["ind5_within_0.03"]
+                      and p6["default"]["ind4_filtered_within_0.03"] and p6["default"]["ind5_filtered_within_0.03"]
+                      and p6["bernoulli_mix"]["ind4_within_0.03"] and p6["bernoulli_mix"]["ind5_within_0.03"]
+                      and p6["bernoulli_mix"]["ind4_filtered_within_0.03"]
+                      and p6["bernoulli_mix"]["ind5_filtered_within_0.03"]
+                      and p6["pi_rises_signed_departure"]["higher_by_ge_0_05"])
+    preds["P6"] = p6
+
+    # ---- P7: DV sensitivity at least 15 points below DR sensitivity, A-fixed ----
+    panel_dr7 = panel_for("DR", "default")
+    panel_dv7 = panel_for("DV", "default")
+    _, _, alarm_dr7, _ = _run_arch(panel_dr7, "A-fixed", H["A-fixed"]["h"])
+    _, _, alarm_dv7, _ = _run_arch(panel_dv7, "A-fixed", H["A-fixed"]["h"])
+    sens_dr7 = _sensitivity(alarm_dr7, panel_dr7["t0"]).mean()
+    sens_dv7 = _sensitivity(alarm_dv7, panel_dv7["t0"]).mean()
+    preds["P7"] = dict(sens_DR=sens_dr7, sens_DV=sens_dv7, gap_points=100 * (sens_dr7 - sens_dv7),
+                        PASS=bool(100 * (sens_dr7 - sens_dv7) >= 15))
+
+    # ---- P8: A-fixed passive-only (schedule none) vs probe-only (random, matched budget), DR ----
+    panel_dr8 = panel_for("DR", "default")
+    _, _, alarm_af8, _ = _run_arch(panel_dr8, "A-fixed", H["A-fixed"]["h"])
+    sens_af8 = _sensitivity(alarm_af8, panel_dr8["t0"]).mean()
+    rmst_af8 = _rmst42(alarm_af8, panel_dr8["t0"]).mean()
+    rng_po8 = np.random.default_rng(eval_seed(prereg_sha, "DR", "default") + 10)
+    Cpo8, reason_po8 = probe_only_C(panel_dr8, rng_po8)
+    alarm_po8, _, _ = run_cusum(Cpo8, H["probe-only"]["h"])
+    sens_po8 = _sensitivity(alarm_po8, panel_dr8["t0"]).mean()
+    rmst_po8 = _rmst42(alarm_po8, panel_dr8["t0"]).mean()
+    preds["P8"] = dict(sens_A_fixed=sens_af8, sens_probe_only=sens_po8,
+                        sens_gap_points=100 * (sens_af8 - sens_po8),
+                        rmst42_A_fixed=rmst_af8, rmst42_probe_only=rmst_po8,
+                        rmst_gap_days=rmst_po8 - rmst_af8,
+                        PASS=bool(100 * (sens_af8 - sens_po8) >= 10 and (rmst_po8 - rmst_af8) >= 3))
+
+    # ---- P9: BD alarm within tracked days 29-49; A-fixed BD sens <= 0.5 * DR sens ----
+    panel_bd9 = panel_for("BD", "default")
+    _, _, alarm_bd9, _ = _run_arch(panel_bd9, "A-fixed", H["A-fixed"]["h"])
+    sens_bd9 = alarm_bd9[:, BASELINE_DAYS:BASELINE_DAYS + 21].any(1).mean()
+    sens_dr9 = _sensitivity(alarm_dr7, panel_dr7["t0"]).mean()  # reuse P7's DR run, same cell/arch
+    preds["P9"] = dict(sens_BD_days29_49=sens_bd9, sens_DR=sens_dr9,
+                        PASS=bool(sens_bd9 <= 0.5 * sens_dr9))
+
+    # ---- P10: CS FA/month >= 1.5x its S rate, A-fixed ----
+    panel_cs10 = panel_for("CS", "default")
+    _, reason_cs10, alarm_cs10, _ = _run_arch(panel_cs10, "A-fixed", H["A-fixed"]["h"])
+    fa_cs10 = fa_rate_for_alarm(alarm_cs10, reason_cs10)
+    fa_s10 = fa_rate_for_alarm(alarm_s, reason_s)
+    preds["P10"] = dict(fa_CS=fa_cs10, fa_S=fa_s10, ratio=fa_cs10 / max(fa_s10, 1e-9),
+                         PASS=bool(fa_cs10 / max(fa_s10, 1e-9) >= 1.5))
+
+    results = {"prereg_sha256": prereg_sha, "pi_bar": pi_bar, "kappa_a4": kappa_a4, "mu_m4": mu_m4,
+               "predictions": preds}
+    (HERE / "results.json").write_text(json.dumps(results, indent=2, default=float))
+
+    lines = ["# sim/RESULTS.md", "", "P1 to P3 are pipeline construction checks, not findings.", ""]
+    for name in ["P1", "P1b", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10"]:
+        p = preds.get(name, {})
+        verdict = "PASS" if p.get("PASS") else "FAIL"
+        lines.append(f"## {name}: {verdict}")
+        lines.append("")
+        lines.append("```json")
+        lines.append(json.dumps(p, indent=2, default=float))
+        lines.append("```")
+        lines.append("")
+    (HERE / "RESULTS.md").write_text("\n".join(lines))
+    return results
+
+
+# ----------------------------------------------------------------------------------------------
+# CLI
+# ----------------------------------------------------------------------------------------------
+def main():
+    args = sys.argv[1:]
+    if "--check" in args:
+        ok, _ = run_check()
+        sys.exit(0 if ok else 1)
+    if args and args[0] == "tune":
+        run_tune()
+        return
+    if args and args[0] == "score":
+        sha = None
+        if "--prereg-sha" in args:
+            sha = args[args.index("--prereg-sha") + 1]
+        if not sha:
+            print("score requires --prereg-sha <sha256>", file=sys.stderr)
+            sys.exit(2)
+        score(sha)
+        return
+    print(__doc__)
+
+
+if __name__ == "__main__":
+    main()

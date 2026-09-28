@@ -1,0 +1,472 @@
+{
+  "stats": {
+    "files_found": 2281,
+    "files_opened": 2280,
+    "files_failed_to_open": 1,
+    "lines_read": 573967,
+    "user_entries": 75145,
+    "assistant_entries": 125875,
+    "parse_errors": 0,
+    "unparseable_timestamps": 0,
+    "provenance_coverage": {
+      "promptSource": 3397,
+      "turnOrigin": 1609,
+      "entrypoint": 75145,
+      "userType": 75145
+    },
+    "elapsed_seconds": 10.443009853363037,
+    "lane_prompt_files": 326,
+    "until": "2026-09-28T01:32:31Z"
+  },
+  "aggregates": {
+    "total_user_role_entries": 73955,
+    "by_class": {
+      "injected": {
+        "entries": 5249,
+        "chars": 15772484
+      },
+      "tool-result": {
+        "entries": 48432,
+        "chars": 95562804
+      },
+      "sidechain": {
+        "entries": 19369,
+        "chars": 59164952
+      },
+      "lane-prompt": {
+        "entries": 217,
+        "chars": 624173
+      },
+      "human-typed": {
+        "entries": 688,
+        "chars": 2501542
+      }
+    },
+    "by_class_by_month": {
+      "2026-08": {
+        "injected": {
+          "entries": 20,
+          "chars": 337525
+        },
+        "tool-result": {
+          "entries": 61,
+          "chars": 93426
+        },
+        "human-typed": {
+          "entries": 1,
+          "chars": 16714
+        }
+      },
+      "2026-09": {
+        "injected": {
+          "entries": 5229,
+          "chars": 15434959
+        },
+        "tool-result": {
+          "entries": 48371,
+          "chars": 95469378
+        },
+        "sidechain": {
+          "entries": 19369,
+          "chars": 59164952
+        },
+        "lane-prompt": {
+          "entries": 217,
+          "chars": 624173
+        },
+        "human-typed": {
+          "entries": 687,
+          "chars": 2484828
+        }
+      }
+    },
+    "shares": {
+      "entries_human_typed_strict": 0.009302954499357717,
+      "entries_human_typed_or_mixed": 0.009302954499357717,
+      "chars_human_typed_strict": 0.01440765005439423,
+      "chars_human_typed_or_mixed": 0.01440765005439423
+    },
+    "density": {
+      "days_with_any_user_role_activity": 24,
+      "days_with_any_human_typed_entry": 21,
+      "rows_with_unparseable_timestamp": 0
+    },
+    "sessions": {
+      "total_sessions": 1544,
+      "by_kind": {
+        "autonomous": 1303,
+        "mixed": 20,
+        "interactive": 221
+      },
+      "share_sessions_fully_autonomous": 0.8439119170984456
+    },
+    "indicators_naive_vs_filtered_overall": {
+      "report": {
+        "late_share": {
+          "n_paired_days": 21,
+          "correlation_naive_vs_filtered": 0.9025201934081828,
+          "mean_abs_difference": 0.08131517535980734,
+          "naive_distribution": {
+            "n": 24,
+            "mean": 0.14345767291344347,
+            "median": 0.10122719642368061,
+            "iqr": 0.20057328916747041
+          },
+          "filtered_distribution_n_only": 21
+        },
+        "fragmentation": {
+          "n_paired_days": 21,
+          "correlation_naive_vs_filtered": 0.11693315904696679,
+          "mean_abs_difference": 2.6223740617830864,
+          "naive_distribution": {
+            "n": 24,
+            "mean": 4.358372189730086,
+            "median": 3.544642857142857,
+            "iqr": 1.99411231884058
+          },
+          "filtered_distribution_n_only": 21
+        },
+        "mean_log_len": {
+          "n_paired_days": 21,
+          "correlation_naive_vs_filtered": 0.2835609974239445,
+          "mean_abs_difference": 1.209803926465471,
+          "naive_distribution": {
+            "n": 24,
+            "mean": 6.164915043024851,
+            "median": 6.197148959017284,
+            "iqr": 0.3851678946624677
+          },
+          "filtered_distribution_n_only": 21
+        }
+      },
+      "share_days_naive_only": 0.125,
+      "n_naive_days": 24,
+      "n_filtered_days": 21
+    },
+    "train_test_split": {
+      "cutoff_date_local": "2026-09-21",
+      "n_human_typed_days_total": 21,
+      "report": {
+        "train": {
+          "indicators": {
+            "late_share": {
+              "n_paired_days": 15,
+              "correlation_naive_vs_filtered": 0.9368422513133869,
+              "mean_abs_difference": 0.07400949433670907,
+              "naive_distribution": {
+                "n": 18,
+                "mean": 0.14795373961155991,
+                "median": 0.06759505885897923,
+                "iqr": 0.17687405798212924
+              },
+              "filtered_distribution_n_only": 15
+            },
+            "fragmentation": {
+              "n_paired_days": 15,
+              "correlation_naive_vs_filtered": 0.15333759997702792,
+              "mean_abs_difference": 2.7290437442163786,
+              "naive_distribution": {
+                "n": 18,
+                "mean": 4.301182159659355,
+                "median": 3.1525735294117645,
+                "iqr": 2.214484126984127
+              },
+              "filtered_distribution_n_only": 15
+            },
+            "mean_log_len": {
+              "n_paired_days": 15,
+              "correlation_naive_vs_filtered": 0.3774942659502703,
+              "mean_abs_difference": 1.3356650180691803,
+              "naive_distribution": {
+                "n": 18,
+                "mean": 6.129350083058838,
+                "median": 6.162887409576031,
+                "iqr": 0.3433154097592963
+              },
+              "filtered_distribution_n_only": 15
+            }
+          },
+          "share_days_naive_only": 0.16666666666666666,
+          "n_naive_days": 18,
+          "n_filtered_days": 15
+        },
+        "test": {
+          "indicators": {
+            "late_share": {
+              "n_paired_days": 6,
+              "correlation_naive_vs_filtered": 0.9044500455745924,
+              "mean_abs_difference": 0.099579377917553,
+              "naive_distribution": {
+                "n": 6,
+                "mean": 0.12996947281909413,
+                "median": 0.11101095668971972,
+                "iqr": 0.13770462134048966
+              },
+              "filtered_distribution_n_only": 6
+            },
+            "fragmentation": {
+              "n_paired_days": 6,
+              "correlation_naive_vs_filtered": -0.30247799326950026,
+              "mean_abs_difference": 2.355699855699856,
+              "naive_distribution": {
+                "n": 6,
+                "mean": 4.52994227994228,
+                "median": 4.40625,
+                "iqr": 1.1844561688311686
+              },
+              "filtered_distribution_n_only": 6
+            },
+            "mean_log_len": {
+              "n_paired_days": 6,
+              "correlation_naive_vs_filtered": 0.7769753918447277,
+              "mean_abs_difference": 0.8951511974561971,
+              "naive_distribution": {
+                "n": 6,
+                "mean": 6.271609922922888,
+                "median": 6.350019776122294,
+                "iqr": 0.3641969254509023
+              },
+              "filtered_distribution_n_only": 6
+            }
+          },
+          "share_days_naive_only": 0.0,
+          "n_naive_days": 6,
+          "n_filtered_days": 6
+        }
+      }
+    },
+    "change_points": {
+      "cutoff_date_local": "2026-09-21",
+      "by_series": {
+        "naive.late_share": [
+          {
+            "date": "2026-09-10",
+            "persists_in_test": true,
+            "matched_infra_event": {
+              "gap_days": 0,
+              "category": "policy-dated-section",
+              "event_date": "2026-09-10"
+            }
+          }
+        ],
+        "naive.fragmentation": [
+          {
+            "date": "2026-09-10",
+            "persists_in_test": true,
+            "matched_infra_event": {
+              "gap_days": 0,
+              "category": "policy-dated-section",
+              "event_date": "2026-09-10"
+            }
+          },
+          {
+            "date": "2026-09-15",
+            "persists_in_test": false,
+            "matched_infra_event": {
+              "gap_days": 1,
+              "category": "dated-backup",
+              "event_date": "2026-09-16"
+            }
+          }
+        ],
+        "naive.mean_log_len": [
+          {
+            "date": "2026-09-09",
+            "persists_in_test": false,
+            "matched_infra_event": {
+              "gap_days": 0,
+              "category": "model-change",
+              "event_date": "2026-09-09"
+            }
+          }
+        ],
+        "filtered.late_share": [
+          {
+            "date": "2026-09-10",
+            "persists_in_test": false,
+            "matched_infra_event": {
+              "gap_days": 0,
+              "category": "policy-dated-section",
+              "event_date": "2026-09-10"
+            }
+          }
+        ],
+        "filtered.fragmentation": [
+          {
+            "date": "2026-09-11",
+            "persists_in_test": true,
+            "matched_infra_event": {
+              "gap_days": 0,
+              "category": "dated-backup",
+              "event_date": "2026-09-11"
+            }
+          }
+        ],
+        "filtered.mean_log_len": [
+          {
+            "date": "2026-09-09",
+            "persists_in_test": true,
+            "matched_infra_event": {
+              "gap_days": 0,
+              "category": "model-change",
+              "event_date": "2026-09-09"
+            }
+          },
+          {
+            "date": "2026-09-17",
+            "persists_in_test": true,
+            "matched_infra_event": {
+              "gap_days": 1,
+              "category": "dated-backup",
+              "event_date": "2026-09-16"
+            }
+          }
+        ]
+      },
+      "total_change_points": 8,
+      "matched_to_infra_event": 8,
+      "base_rate_any_day_matches_within_3_days": 1.0
+    },
+    "infra_events": {
+      "distinct_versions": 7,
+      "distinct_models": 10,
+      "versions": [
+        {
+          "value": "2.1.251",
+          "first_seen_date": "2026-08-30"
+        },
+        {
+          "value": "2.1.247",
+          "first_seen_date": "2026-08-30"
+        },
+        {
+          "value": "2.1.252",
+          "first_seen_date": "2026-09-01"
+        },
+        {
+          "value": "2.1.255",
+          "first_seen_date": "2026-09-02"
+        },
+        {
+          "value": "2.1.258",
+          "first_seen_date": "2026-09-07"
+        },
+        {
+          "value": "2.1.277",
+          "first_seen_date": "2026-09-18"
+        },
+        {
+          "value": "2.1.280",
+          "first_seen_date": "2026-09-22"
+        }
+      ],
+      "models": [
+        {
+          "value": "claude-opus-5",
+          "first_seen_date": "2026-08-30"
+        },
+        {
+          "value": "claude-sonnet-5",
+          "first_seen_date": "2026-08-30"
+        },
+        {
+          "value": "<synthetic>",
+          "first_seen_date": "2026-09-01"
+        },
+        {
+          "value": "claude-fable-5-1",
+          "first_seen_date": "2026-09-02"
+        },
+        {
+          "value": "claude-fable-5",
+          "first_seen_date": "2026-09-02"
+        },
+        {
+          "value": "claude-haiku-4-5-20251001",
+          "first_seen_date": "2026-09-09"
+        },
+        {
+          "value": "claude-opus-4-8",
+          "first_seen_date": "2026-09-11"
+        },
+        {
+          "value": "gemma-4-e2b-it-qat:gguf:q4",
+          "first_seen_date": "2026-09-11"
+        },
+        {
+          "value": "qwen3.5-4b:gguf:q4",
+          "first_seen_date": "2026-09-11"
+        },
+        {
+          "value": "claude-opus-5-5",
+          "first_seen_date": "2026-09-22"
+        }
+      ],
+      "events_considered": 27
+    },
+    "missingness": {
+      "by_weekday": {
+        "Sunday": {
+          "total_days": 4,
+          "zero_human_typed_days": 0
+        },
+        "Tuesday": {
+          "total_days": 4,
+          "zero_human_typed_days": 1
+        },
+        "Wednesday": {
+          "total_days": 4,
+          "zero_human_typed_days": 1
+        },
+        "Monday": {
+          "total_days": 3,
+          "zero_human_typed_days": 1
+        },
+        "Thursday": {
+          "total_days": 3,
+          "zero_human_typed_days": 0
+        },
+        "Friday": {
+          "total_days": 3,
+          "zero_human_typed_days": 0
+        },
+        "Saturday": {
+          "total_days": 3,
+          "zero_human_typed_days": 0
+        }
+      },
+      "by_month": {
+        "2026-08": {
+          "total_days": 1,
+          "zero_human_typed_days": 0
+        },
+        "2026-09": {
+          "total_days": 23,
+          "zero_human_typed_days": 3
+        }
+      }
+    },
+    "third_party": {
+      "entries_with_paste_marker": 223,
+      "share_entries_with_paste_marker": 0.003015347170576702,
+      "tool_result_entries_third_party": 374,
+      "share_tool_result_entries_third_party": 0.0077221671622068055
+    },
+    "pasted_agent_draft": {
+      "human_typed_entries_checked": 688,
+      "flagged": 0,
+      "share": 0.0
+    },
+    "autonomous_session_contamination": {
+      "share_of_naive_entries": 0.5700763978094787,
+      "share_of_late_entries": 0.7496639437493537,
+      "share_of_fragmentation_session_hours": 0.7461538461538462
+    },
+    "provenance_field_coverage": {
+      "promptSource": 3397,
+      "turnOrigin": 1609,
+      "entrypoint": 75145,
+      "userType": 75145
+    }
+  }
+}

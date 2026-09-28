@@ -1,0 +1,24 @@
+{
+  "main_thread": {
+    "n_text": 6154,
+    "n_human": 688,
+    "n_machine": 5466,
+    "pi_bar_entry": 0.8882027949301268,
+    "pi_bar_daymean": 0.8450399098564537,
+    "pi_day_sd": 0.17414442505820849,
+    "n_days": 24,
+    "mu_M4_humanSD": 0.2744164005064454,
+    "kappa_a": 0.5472780043258888
+  },
+  "with_sidechain": {
+    "n_text": 24998,
+    "n_human": 688,
+    "n_machine": 24310,
+    "pi_bar_entry": 0.9724777982238579,
+    "pi_bar_daymean": 0.9286217996002574,
+    "pi_day_sd": 0.1355426154915875,
+    "n_days": 24,
+    "mu_M4_humanSD": 0.2733395339951404,
+    "kappa_a": 0.6354358107037785
+  }
+}
