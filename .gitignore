@@ -1,3 +1,10 @@
 data/
 __pycache__/
 *.pyc
+
+# eval output: derived or bulk
+.claude/hillclimb/**/traces/
+.claude/hillclimb/**/report.html
+.claude/hillclimb/**/state.json
+.claude/hillclimb/**/trajectory/
+.claude/hillclimb/**/_stub-*/

@@ -1,0 +1,90 @@
+{
+  "flow": "authorship",
+  "description": "Authorship filter: does a user-role transcript entry come from the person or from software? Positive = agent text.",
+  "metrics": [
+    {
+      "id": "correct",
+      "label": "label match",
+      "kind": "binary"
+    }
+  ],
+  "perf_fields": [
+    {
+      "id": "latency_s",
+      "label": "latency",
+      "unit": "s"
+    },
+    {
+      "id": "in_tokens",
+      "label": "in tok"
+    },
+    {
+      "id": "out_tokens",
+      "label": "out tok"
+    }
+  ],
+  "harness_paths": [
+    "scripts/eval_authorship.py",
+    "eval/authorship/cases.jsonl",
+    "eval/authorship/requirements.txt"
+  ],
+  "split_seed": 20260929,
+  "train_ids": [
+    "ai03",
+    "ai04",
+    "ai05",
+    "ai07",
+    "al02",
+    "al03",
+    "al04",
+    "al05",
+    "ap03",
+    "ap04",
+    "ap05",
+    "ap06",
+    "as02",
+    "as03",
+    "as04",
+    "as05",
+    "hd02",
+    "hd03",
+    "hd04",
+    "hd06",
+    "hd08",
+    "hq01",
+    "hq02",
+    "hq04",
+    "hq07",
+    "hq08",
+    "ht01",
+    "ht02",
+    "ht04",
+    "ht05",
+    "ht07",
+    "ht09"
+  ],
+  "test_ids": [
+    "ai01",
+    "ai02",
+    "ai06",
+    "al01",
+    "al06",
+    "al07",
+    "ap01",
+    "ap02",
+    "ap07",
+    "as01",
+    "as06",
+    "hd01",
+    "hd05",
+    "hd07",
+    "hd09",
+    "hq03",
+    "hq05",
+    "hq06",
+    "ht03",
+    "ht06",
+    "ht08",
+    "ht10"
+  ]
+}
