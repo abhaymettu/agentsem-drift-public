@@ -948,3 +948,78 @@ Monacelli et al. (2023) and Giurgiu et al. (2020) for computed or sensor trigger
 - Usage-changing PS still waits on `sim/study003.py`.
 - Every attribution cell in `cell_params` has now run in some round or is assigned to spec 003 (`kappa`,
   `m1 > 0`). If spec 003 drops them, they return here.
+
+## 18. Note (2026-10-03): attribution round 4, the mechanisms, and a baseline mismatch in A-fixed
+
+Source: lane `agentsem-next4-oct03` (`sim/ATTRIBUTION-PLAN-R4.md` sha256 `ea64e1cf...`, `sim/ATTRIBUTION-R4.md`,
+commits `a9ab42d`, `aaf5418`). **Status:** exploratory and synthetic, as section 14. Sections 3 to 6,
+`sim/PREREG.md`, the frozen results, paper v4 and spec 003 are unchanged. The round rebuilt r3's panels
+(r3's alarm counts and M2x3 shares reproduce exactly), added a fresh replication set, hashed its plan
+before scoring and reproduced its JSON byte for byte.
+
+### 18.1 A code fact: A-fixed's baseline for indicators 4 and 5 is fit on unfiltered text
+
+`fit_baseline(panel["X"], ...)` fits the per-person mean and SD on the unfiltered `X`. `compute_composite`
+then scores indicators 4 and 5 from `X_filtered` (component (ii)).
+- Under the default Beta mixing, the two are different text mixtures (`E pi = 0.845` against
+  `E pi' ~ 0.37`). The composite therefore carries a level offset (S mean +0.141 as run, against +0.028
+  with a matched baseline) and an inflated scale on 4 and 5. The frozen `h` was tuned with both, so the
+  frozen false-flag rate is on target.
+- Section 4's wording for (ii) does not say which series the baseline uses. Neither
+  `sim/POSTFREEZE-DEVIATIONS.md` nor this spec mentions it.
+- It reaches every A-fixed composite quantity: the frozen run, paper v4, attribution r1 to r3, the
+  A-fixed-minus-(ii) ablation (which removes the mismatch along with the filter), and the generated help
+  in the targeted cells (`generate_panel` line 686). Single-indicator validities do not use the baseline
+  and are unaffected.
+- Its effect on P1 to P10 and on paper v4's numbers has not been estimated.
+
+### 18.2 Round 4: tests of the three open mechanisms
+
+1. **17.2 point 2, the rate drop under `bernoulli_mix`.**
+   - About half of it is the mismatch disappearing, because under all-or-nothing days `X_filtered`
+     equals `X`. The matched baseline closes 0.52 of the log S-rate gap (replication 0.55): level 0.29,
+     scale 0.23. What drives the other half was not tested.
+   - At a matched false-flag rate, DR's 21-day sensitivity under `bernoulli_mix` is 0.86 [0.74, 1.00] of
+     default's with the frozen baseline (replication 0.78), against 0.26 at the frozen `h`. With the
+     matched baseline it is 0.96 (replication 0.86).
+2. **Proposal 3's minimum-human-text rule, oracle form.**
+   - Under `bernoulli_mix`, rate-matched sensitivity with the rule came in at 0.85 of the matched
+     baseline's (replication 0.95), against a predicted at least 1.0.
+   - `h*` rose from 1.69 to 4.03. Indicator 5's baseline rests on 0 to 3 days for 55 percent of persons,
+     and those persons give 63 percent of S alarms.
+   - By the plan's pre-stated reading, this is the cost of a small baseline for this oracle rule, not
+     evidence about dropping agent-day noise.
+   - Not predicted: under `pi_rises_with_D` the rule raised DR's rate-matched sensitivity from 0.150 to
+     0.186 (replication 0.139 to 0.165). There is no planned interval, and the mechanism is not tested.
+3. **17.2 point 3, the human-text false-alarm route.**
+   - Removing the agent-human mean gap leaves 0.74 of it in the point estimate (replication 0.67). That
+     points toward the human-weight channel, but the intervals do not separate the channels.
+   - With a matched baseline the route holds on r3's panels and is not distinguishable from zero on the
+     replication. Whether the mismatch amplifies it is not settled by two panel sets.
+4. **17.5's sign question.** On M2x3's margin scale, DR under `pi_rises_with_D` barely moves: +0.004
+   [-0.043, +0.054] (probe level -0.047, baseline -0.051), so shifts of about 0.05 are not excluded. r3's
+   +0.024 share difference is +0.006 on the replication. The row is unresolved by the plan's rule.
+
+### 18.3 Proposals (not decisions)
+
+1. **Proposal for spec 003's generator and scorer:** fit every baseline on the series that is scored.
+2. **Proposal for 17.3 point 3:** tuning `h` under the estimated mixing regime works in oracle form. A rule
+   that drops agent-heavy days should come with a baseline rule, such as a minimum day count or a pooled
+   baseline, since in oracle form the rule's cost came from a small baseline (18.2 point 2).
+3. **For him.**
+   - Whether the frozen run gets a matched-baseline sensitivity rerun, as a labelled post-freeze analysis
+     rather than a re-scoring.
+   - How the next paper version discloses 18.1.
+
+   On r3's panels, default's rate-matched DR sensitivity is 0.181 as run and 0.162 with a matched
+   baseline. That comparison has no planned interval and does not use the PREREG seeds. It is not an
+   estimate for the frozen run or paper v4.
+
+### 18.4 Open
+
+- What drives the other half of the `bernoulli_mix` rate gap (not tested). The matched-baseline composite
+  there has a lower SD (0.925 of default's) and lag-1 autocorrelation (0.13 against 0.19).
+- Why DR alarms in the mixing cells come more from persons with lower baseline-probe `D`
+  (`sim/ATTRIBUTION-R4.md` point 6; not tested).
+- 17.5's remaining items stand: usage-changing PS waits on `sim/study003.py`; 16.3's items, including
+  Rathbun 2007, are unread; the `cell_params` assignment to spec 003 holds.
