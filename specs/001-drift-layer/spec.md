@@ -851,3 +851,100 @@ version and the next study's spec.
 - Any claim that the rest of gap (c) is unclaimed rests on the lane's logged queries, not on an
   exhaustive search (see the row).
 - S34-S36 are unchanged from 13.3. They need the dashboard register, which this lane did not attempt.
+
+## 17. Note (2026-10-03): attribution rounds 2 and 3, and the last next-reads
+
+Source: lanes `agentsem-attrib-r2-oct03` (`sim/ATTRIBUTION-PLAN-R2.md`, `sim/ATTRIBUTION-R2.md`, commits
+`21b28d5`, `91e3a46`) and `agentsem-next3-oct03` (`sim/ATTRIBUTION-PLAN-R3.md`, `sim/ATTRIBUTION-R3.md`,
+commits `ddf508e`, `b088165`); the literature in 17.4 is from the same lane, with reader notes and
+saved texts in `~/audit/agentsem-next3-2026-10-03-notes/` (the orchestrator checked each quote below
+against the saved text). **Status:** exploratory and synthetic, as section 14. Sections 3 to 6,
+`sim/PREREG.md`, the frozen results, paper v4 and spec 003 are unchanged. Each round hashed its plan
+before scoring and reproduced its JSON byte for byte.
+
+### 17.1 Round 2: targeted help
+
+Help targeted on the previous day's composite changes none of section 14's three conclusions. The
+observer shift still roughly triples alarms (PS-sub over S 3.00), the profile test still keeps 0.84 to
+0.92 of alarms in every family, and the probes' person-attributed share does not move (S +0.010, DR
+-0.016). Not predicted: targeted help raises S, AV2 and CS alarm rates by 5 to 8 percent, consistent with
+filter (i) dropping indicators 2 and 3 on the high-composite days it helps (not tested).
+
+### 17.2 Round 3: the authorship-mixing cells
+
+1. **A state-tied observer change is a validity cost, not an attribution error.** In `pi_rises_with_D`
+   the agent's share of indicator 4 and 5 text rises with `D`. Probes and the profile test do not read DR
+   alarms as observer change (DR's probe-confirmed share +0.024, M1 share +0.044, cell minus default).
+   DR's 21-day sensitivity falls to 0.81 of default. On the S panel, filtered indicator 5's validity
+   halves (0.272 to 0.141, pooled within-person correlation with `D`) and indicator 4's rises (0.279 to
+   0.342).
+2. **The mixing regime sets the detector's operating point.** Under all-or-nothing days
+   (`bernoulli_mix`) the frozen `h` gives M0 alarm rates 0.17 to 0.33 times default in every family and
+   0.26 of DR's 21-day sensitivity, and filtered indicators 4 and 5 keep a validity of about 0.07.
+3. **Not predicted: day-to-day authorship share is a false-alarm route through the filter.** In the
+   default cell, S alarm days have a filtered share 0.068 below tracked days.
+4. r1's conclusions replicate in the default cell on new seeds (PS-sub over S 3.62; A6 0.270).
+5. Two C1 clauses missed (DR probe-confirmed share +0.091 under `bernoulli_mix`, S -0.054 under
+   `pi_rises_with_D`). By the plan's pre-stated rule both are read as changes in which alarms fire, since
+   the paired selection metric moved with them; the probes cannot see `pi`.
+
+### 17.3 Proposals for spec 003's next revision (not decisions)
+
+1. **Targeted help in the policy log** (r2's open question). Targeted help is endogenous in spec 003's
+   sense (section 8: caused by the layer's own output). Proposal: if spec 003 brings it back, log it with
+   its trigger, never let it reset or label, and report its mechanical cost (indicators 2 and 3 dropped
+   on helped days, 17.1) as a metric.
+2. **Proposed: treat a continuous, state-coupled observer process as a third class.** The authored share
+   is neither an exogenous change nor endogenous in section 8's sense: the person's state, not the
+   layer's output, moves it. (Plan r3 (e) called it "endogenous in that sense"; `sim/ATTRIBUTION-R3.md`
+   corrects that.) Proposal: log it per day as a covariate, never as a change entry, and never let a
+   share change label an alarm *observer* (17.2 point 1).
+3. **Proposal: calibrate under the pilot's mixing regime.** The pilot's day-level SD of `pi` (0.174) lies
+   between the frozen Beta (0.109) and a Bernoulli day (0.362). Either tune `h` under the estimated share
+   distribution, or test a rule that marks indicators 4 and 5 missing on days with too little human text,
+   with its own oracle check. In simulation only, report the alarm-day authorship-share gap as a
+   descriptive check; no alarm-day quantity is computed from real traces (constitution I).
+
+### 17.4 The last next-reads and the gap (c) search, continued
+
+| source | access | what it changes |
+|---|---|---|
+| Rathbun, Shiffman & Gwaltney (2007), *Biometrika* 94(1):153-165, doi:10.1093/biomet/asm009 | **not read**: no open copy; the publisher blocks automated access | Still abstract only, plus two secondary descriptions (Neustifter et al. 2012; Waagepetersen's 2007 Aalborg report), which cite it without a year or as "to appear", so the link to the 2007 paper is inferred. Its positivity statement is unverified, so 16.1 point 2's "read its full text before citing it" stands. |
+| Lin, Mermelstein & Hedeker (2018), supplement (Springer ESM 1) | full text, 6 pp. | Code for the application only; the missingness logit has no outcome term, which confirms 16's reading. Nothing on the simulation, so the 16 row's comparator caveat stands. |
+| Monacelli et al. (2023), *Biom J*, doi:10.1002/bimj.202200203 | arXiv 2207.12331 preprint, full text (the journal version was not read; cite it as the preprint until it is) | A trigger on a statistic the system computes (control-chart limits on the person's own history): "If Condition (2) is satisfied at time t, then the additional task is triggered." Scores the trigger's hit rate, not a criterion relation. |
+| Giurgiu et al. (2020), *JMIR mHealth*, doi:10.2196/17852 | full text (PMC7525404) | Mixes sensor-triggered prompts ("after at least 30 minutes were spent in a sitting or lying position") with random prompts, without design weighting. |
+| Bemmann, Schoedel, van Berkel & Buschek (2021), IUI workshops, CEUR Vol-2903 | full text | Chatbot-delivered ESM: "both bot and app prompted 2 to 4 questionnaires per day at a random schedule". |
+
+Also read, no change: Schick et al. (2022, doi:10.2196/28082; a validity estimand, but no momentary
+sampling), the Lataster/de Groot OSF registration, Ahmadi et al. (2026). Abstract only: Hulme et al.
+(2020), Schuler et al. (2023). A 2026 SPC review and De Pauw et al. are in the reader notes.
+
+Parts 1 to 6 are 16.1 point 1's bullets in order: (1) a mixed schedule with a random-time probability
+sample, (2) history-dependent known inclusion probabilities, (3) design weighting with positivity,
+(4) a trigger on a statistic the system computes, (5) a criterion-validity estimand, (6) agent-mediated
+delivery.
+
+**Gap (c) narrows again and stays open.** Part 4 (a trigger on a system-computed statistic) and part 6
+(agent-mediated delivery) each exist on their own in EMA work, so the paper must not imply that score- or
+sensor-triggered EMA, or chatbot-delivered EMA, is new. Not found in any logged query or opened source:
+- part 5, a criterion-validity estimand under triggered sampling;
+- any of parts 4 to 6 combined with parts 1 to 3 (known, history-dependent inclusion probabilities and
+  design weighting with positivity). Monacelli uses random selection only as a comparison arm.
+
+The search is not exhaustive: Semantic Scholar's search API returned HTTP 429 five times, Google Scholar
+returned a captcha, and OpenAlex (24 queries) and Europe PMC (10) were screened to the first 15 results
+per query, plus three forward-citation chases.
+
+**Staged citations for the next paper version** (after v4, alongside 16.1 point 2): in section 2.5, cite
+Monacelli et al. (2023) and Giurgiu et al. (2020) for computed or sensor triggers, and Bemmann et al.
+(2021) for chatbot-delivered ESM. v4 makes no novelty claim on these points, so nothing in v4 is wrong.
+
+### 17.5 Open
+
+- 17.2 point 2's mechanism (why the rate collapses) and 17.2 point 3's mechanism are untested.
+- 16.3's items stand, except Lin et al.'s supplement (now read, 17.4).
+- Under `pi_rises_with_D`, DR's selection shift (-0.042) and its M2x3 share change (+0.024) have
+  opposite signs; not resolved.
+- Usage-changing PS still waits on `sim/study003.py`.
+- Every attribution cell in `cell_params` has now run in some round or is assigned to spec 003 (`kappa`,
+  `m1 > 0`). If spec 003 drops them, they return here.
