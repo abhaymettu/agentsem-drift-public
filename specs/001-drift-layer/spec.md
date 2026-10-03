@@ -725,3 +725,53 @@ candidate family PS, frozen generator, A-fixed, 1000 persons per family:
 For the next study's spec: the policy log is the separator these numbers support (11.5's "one logged
 field is necessary" outcome); confirmation probes need spacing past the state's memory, or the target
 must name momentary elevation; usage-changing PS, `m1 > 0` and targeted help remain to run.
+
+## 15. Decision (2026-10-03): the next study's target is a sustained mean shift in D
+
+**Provenance.** Section 14 and `~/audit/agentsem-next-2026-10-03.md` left this as Abhay's call. He delegated
+it on 2026-10-03 (15:20 CDT, his words: "You make the decisions or make the decisions with Opus"), with
+the conservative option preferred wherever his data is touched. One Opus methods review returned REVISE
+with four blocking items; all four were accepted and are in the text below.
+
+**Decision.** The next study's target is a *sustained shift in the mean level of `D`*. Momentary elevation
+is not a target. A family counts as positive only if its generator adds a deterministic mean component to
+`D` of at least `delta_D`, held for at least 14 days after any ramp ends. 14 days matches the refractory
+period and the re-baseline window (section 4). AR(1) excursions of `D` never count, whatever their duration: at the
+robustness cell `phi_D = 0.9` (`drift_sim.py:2656`) an excursion takes about 29 days to decay to 0.05, so a
+duration-based definition would admit it. `delta_D` is set in the next spec.
+
+**Scope of the decision.**
+- PH (12.6) stays null, as in the mean-change row of the 12.6 table. Whether timing is part of the target
+  (12.7) is still open.
+- Path A against path B (11.6) is still open. Sustained changes in transition rate or innovation variance
+  are not this target.
+- S stays a null family, so `h` keeps its anchor (tuned on S to a false-alarm rate, section 4). S alarms on
+  transient high `D_t` stay false alarms.
+
+**Consequences for the next spec.**
+1. Confirmation probes must be spaced past the state's memory. The spacing is a function of `phi_D`
+   and must hold across the `phi_D` grid. Lags at which `phi_D^L` falls below 0.05: 3 days at 0.3, 9 days
+   at 0.7 (`0.7^9 = 0.040`) and 29 days at 0.9. The cost is *days to confirmation* (section 5), not days to
+   detect.
+2. The frozen 7-day confirmation rule sits inside the state's memory (`0.7^7 = 0.082`), and any probe in
+   the window confirms, which favours early probes. Frozen confirmation PPV is read with that caveat.
+3. The policy log is the primary separator of person change from observer change (section 14). This asks nothing of the person. Probes are a secondary separator.
+4. In simulation only, false alarms are also broken down by alarm-day `D_t`, as a descriptive diagnostic.
+   No `D_t` or alarm-day state estimate is computed from real traces (constitution I).
+
+**Rationale.**
+- The decision matches the frozen design. Section 5 counts S alarms, and pre-onset alarms in drift families, as false; DR is a ramp
+  that holds, and the target is "within-person change from the person's own baseline" (section 0).
+- Privacy. A momentary target would make the layer a day-level state detector. That is closer to state
+  monitoring, which the framing ruling does not bar outright but which sits nearer to screening. Probe
+  count is set by the budget (section 4), not by the target, so the gain is a narrower inference, not
+  fewer asks.
+- Constitution I and VII already bar real-data state estimates and real probes in this repo. This target
+  governs simulation scoring and any future consented study.
+
+**Reversibility.**
+- Until the next study's preregistration is frozen, this can be reversed with a dated note here.
+- After the freeze, a momentary-elevation rescoring can be added as tagged exploratory work (constitution
+  III), and simulations rerun cheaply. Only a confirmatory momentary claim needs a new study version.
+
+**Unchanged:** sections 3 to 6, `sim/PREREG.md`, the frozen results, paper v4, section 14's numbers.
