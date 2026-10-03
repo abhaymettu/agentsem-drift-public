@@ -1,0 +1,146 @@
+{
+ "seed": 20261003,
+ "n": 1000,
+ "T": 210,
+ "T_gen": 297,
+ "h": {
+  "0.3": 2.3535,
+  "0.7": 3.334,
+  "0.9": 4.8422
+ },
+ "lag": {
+  "0.3": 3,
+  "0.7": 9,
+  "0.9": 29
+ },
+ "m": 3,
+ "margin": 0.5,
+ "cells": {
+  "S_phi0.3": {
+   "sd_baseline_mean_D": 0.2439881507631464,
+   "baseline_mean_D_alarmed": -0.05978109820393509,
+   "baseline_mean_D_not": 0.054908011520337356,
+   "chance_sens_21d": 0.052,
+   "n_alarms": 441,
+   "D_alarm_day": 1.1566941389729506,
+   "confirm_next_day": 0.41496598639455784,
+   "oracle_ref_next_day": 0.41496598639455784,
+   "confirm_spaced": 0.3287981859410431,
+   "oracle_ref_spaced": 0.2925170068027211
+  },
+  "DR_d0.5_phi0.3": {
+   "composite_shift": 0.1735699984826987,
+   "sens_21d": 0.104,
+   "n_alarms": 104,
+   "D_alarm_day": 1.4729864483509536,
+   "confirm_next_day": 0.5769230769230769,
+   "oracle_ref_next_day": 0.5480769230769231,
+   "confirm_spaced": 0.5288461538461539,
+   "oracle_ref_spaced": 0.5288461538461539
+  },
+  "DR_d1.0_phi0.3": {
+   "composite_shift": 0.3425065566510918,
+   "sens_21d": 0.222,
+   "n_alarms": 222,
+   "D_alarm_day": 1.6839074911287064,
+   "confirm_next_day": 0.6351351351351351,
+   "oracle_ref_next_day": 0.6756756756756757,
+   "confirm_spaced": 0.6261261261261262,
+   "oracle_ref_spaced": 0.7072072072072072
+  },
+  "DR_d1.5_phi0.3": {
+   "composite_shift": 0.5260735336875976,
+   "sens_21d": 0.388,
+   "n_alarms": 388,
+   "D_alarm_day": 2.1057680013488547,
+   "confirm_next_day": 0.8608247422680413,
+   "oracle_ref_next_day": 0.8556701030927835,
+   "confirm_spaced": 0.8788659793814433,
+   "oracle_ref_spaced": 0.9123711340206185
+  },
+  "S_phi0.7": {
+   "sd_baseline_mean_D": 0.41278290063724316,
+   "baseline_mean_D_alarmed": -0.16798933141669842,
+   "baseline_mean_D_not": 0.11939164870300466,
+   "chance_sens_21d": 0.059,
+   "n_alarms": 391,
+   "D_alarm_day": 1.275238217287402,
+   "confirm_next_day": 0.5907928388746803,
+   "oracle_ref_next_day": 0.5754475703324808,
+   "confirm_spaced": 0.3350383631713555,
+   "oracle_ref_spaced": 0.26342710997442453
+  },
+  "DR_d0.5_phi0.7": {
+   "composite_shift": 0.16909829628342962,
+   "sens_21d": 0.096,
+   "n_alarms": 96,
+   "D_alarm_day": 1.5044867166723268,
+   "confirm_next_day": 0.7291666666666666,
+   "oracle_ref_next_day": 0.71875,
+   "confirm_spaced": 0.5520833333333334,
+   "oracle_ref_spaced": 0.4791666666666667
+  },
+  "DR_d1.0_phi0.7": {
+   "composite_shift": 0.3540878180790445,
+   "sens_21d": 0.186,
+   "n_alarms": 186,
+   "D_alarm_day": 1.8512760837698783,
+   "confirm_next_day": 0.8548387096774194,
+   "oracle_ref_next_day": 0.8494623655913979,
+   "confirm_spaced": 0.7741935483870968,
+   "oracle_ref_spaced": 0.7419354838709677
+  },
+  "DR_d1.5_phi0.7": {
+   "composite_shift": 0.5192908194825059,
+   "sens_21d": 0.292,
+   "n_alarms": 292,
+   "D_alarm_day": 2.245408324904148,
+   "confirm_next_day": 0.8732876712328768,
+   "oracle_ref_next_day": 0.8972602739726028,
+   "confirm_spaced": 0.8664383561643836,
+   "oracle_ref_spaced": 0.9075342465753424
+  },
+  "S_phi0.9": {
+   "sd_baseline_mean_D": 0.6711465264330526,
+   "baseline_mean_D_alarmed": -0.3677983373060085,
+   "baseline_mean_D_not": 0.26843183241116325,
+   "chance_sens_21d": 0.067,
+   "n_alarms": 386,
+   "D_alarm_day": 1.5196165850498982,
+   "confirm_next_day": 0.8264248704663213,
+   "oracle_ref_next_day": 0.7616580310880829,
+   "confirm_spaced": 0.4689119170984456,
+   "oracle_ref_spaced": 0.2927461139896373
+  },
+  "DR_d0.5_phi0.9": {
+   "composite_shift": 0.18647229302243995,
+   "sens_21d": 0.078,
+   "n_alarms": 78,
+   "D_alarm_day": 1.6575240274449239,
+   "confirm_next_day": 0.9358974358974359,
+   "oracle_ref_next_day": 0.8076923076923077,
+   "confirm_spaced": 0.7435897435897436,
+   "oracle_ref_spaced": 0.6025641025641025
+  },
+  "DR_d1.0_phi0.9": {
+   "composite_shift": 0.3468617422209506,
+   "sens_21d": 0.154,
+   "n_alarms": 154,
+   "D_alarm_day": 1.9718915556151866,
+   "confirm_next_day": 0.935064935064935,
+   "oracle_ref_next_day": 0.922077922077922,
+   "confirm_spaced": 0.8116883116883117,
+   "oracle_ref_spaced": 0.7792207792207793
+  },
+  "DR_d1.5_phi0.9": {
+   "composite_shift": 0.5309882633944936,
+   "sens_21d": 0.225,
+   "n_alarms": 225,
+   "D_alarm_day": 2.1823037055061016,
+   "confirm_next_day": 0.92,
+   "oracle_ref_next_day": 0.9155555555555556,
+   "confirm_spaced": 0.8711111111111111,
+   "oracle_ref_spaced": 0.92
+  }
+ }
+}
