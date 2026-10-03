@@ -706,3 +706,22 @@ study's spec.
   `~/experiments` nor the vault note defines S34-S36; the vault note cites them by tag only. The
   dashboard read returned 404 to a logged-out request on 2026-10-03. Ma et al. fits the "residual-scale
   models tied to missingness" description, but that match is not evidence of what S34 is.
+
+## 14. Note (2026-10-03): person change versus observer change, first exploratory run
+
+Source: `sim/ATTRIBUTION-PLAN.md` (r1) and `sim/ATTRIBUTION.md`. **Status:** exploratory, as section 11. Sections
+3 to 6, `sim/PREREG.md`, the frozen results and paper v4 are unchanged. The run puts numbers on the 11.5
+candidate family PS, frozen generator, A-fixed, 1000 persons per family:
+
+1. An unlogged, indicator-only observation-policy shift (PS-sub, +0.5 on indicators 1, 2, 6) raises
+   post-change alarms 3.5-fold over the same persons without it.
+2. A per-person indicator-pattern test over the 14 days before an alarm has no power here: it keeps
+   0.87 to 0.93 of alarms in every family, person change or not. A loading-proportional observer change
+   cannot be separated from person change by indicators at all, as the invariance argument predicts.
+3. Three confirmation probes after the alarm read 0.76 of DR alarms as person change, against 0.46 to
+   0.56 elsewhere, at 0.46 probes per person-month. Part of what they confirm is real momentary
+   elevation: alarms in S fire at a mean `D_t` of 1.35.
+
+For the next study's spec: the policy log is the separator these numbers support (11.5's "one logged
+field is necessary" outcome); confirmation probes need spacing past the state's memory, or the target
+must name momentary elevation; usage-changing PS, `m1 > 0` and targeted help remain to run.
