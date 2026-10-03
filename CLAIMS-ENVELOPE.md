@@ -9,7 +9,10 @@ person-facing and translational artifacts.
 
 - **Method claims (paper body):** detection sensitivity to planted drift, false flags per tracked
   person-month, calibration under probe schedules, measurement invariance, and authorship contamination
-  of indicators. CUSUM `h`, `k` and other cutoffs are method parameters. Allowed.
+  of indicators. CUSUM `h`, `k` and other cutoffs are method parameters. Allowed. Outside simulation
+  (real traces, the corpus audit), a change recovered from the indicators is called a change in
+  engagement regime, not in wellbeing or functioning, unless an independent anchor supports the link
+  (spec 001 section 11.6, 2026-10-03).
 - **Person-facing claims (the brief, the demo, any translational paragraph):** the wellness envelope
   only. No condition names, no clinical thresholds, no screening, diagnosis, monitoring or management
   intended use, no alerts that recommend clinical action, and no clinical-equivalence claims.

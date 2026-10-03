@@ -293,3 +293,149 @@ Consequences:
 - **The paper (D5) is the endpoint.** It is a measurement-validity paper: an argument-based validity
   chain from trace to indicator to within-person score to change claim, the threats to each link, the
   pre-registered simulation (every failure reported), and the one-person corpus audit.
+
+## 11. Amendment A1 (2026-10-03): observation process and elapsed time
+
+Source: the 2026-09-30 literature read on continuous-time and informative-observation models. The
+on-disk read, `~/experiments/lit-wip-review-20260930/agentsem-literature-read.md` with register
+`sources.md`, is checkpoint revised-wip-2, reviewed REVISE (`VERDICT.md` there). Its fixes, including the
+S12 correction used in 11.4, are in the dashboard version and the vault summaries
+(`01-Projects/Agent-Delivered-Self-Report/readings/2026-09-30-rast-ct-informative-observation.md`,
+`evidence/2026-09-30-findings-to-retain-ct-informative-observation.md`), which the vault note records as
+passing follow-up review. S-numbers refer to the register.
+
+**Status.** Post-freeze. Sections 3 to 6, `sim/PREREG.md`, its hash-derived seeds, the results and paper
+v4 are unchanged (v4 stays untouched, his call 2026-09-28). This section governs how the frozen results
+are described from now on and what the next agentSEM simulation must contain. No grid, threshold,
+estimator or run is frozen here; every new family, field or comparator below is a candidate for that
+study's own spec and review.
+
+### 11.1 The observation mechanisms already in this spec, classified
+
+"At random" means conditionally independent of the currently unobserved state given recorded
+pre-decision history (S3, S9). Adaptive is not the same as nonignorable.
+
+| mechanism | depends on | class | consequence |
+|---|---|---|---|
+| `triggered`, `mixed` probe timing | `S`, a function of observed composites, evaluated on used days only | at random given recorded history, including same-day usage | for `triggered` the obstacle is positivity, not ignorability: zero propensity outside the band, so IPW is not identified (section 4); `mixed` keeps a floor and is identified |
+| day usage, default and VA, DE | not `D` | independent of the state | missing days are ignorable for `D`; VA and DE test missing-data handling only (P1, P1b) |
+| day usage, `kappa = 0.3` | current `D_t` | not at random given history | holding `S` on unused days is not a correction for it |
+| probe response, `m1` | current `D_t` | not at random given history | P5's claim that observable-based IPW removes under half the bias belongs here; in real data `m1` is not estimable and enters only as a sensitivity range (S10, S28) |
+| broken integration, BI | nothing about the person | recording outage | a gap in the record, not an event-free interval |
+
+The paper's verification-bias framing of P4 is consistent with this table. This fixes the
+vocabulary for prior-art gap (c) but does not close it: event-contingent EMA prior art is still
+search-only, with the leads named in `VERDICT.md` (Revol 2025 on episode-contingent ESM;
+Ma/Mermelstein/Hedeker 2022; McNeish 2025 on response nonignorability) unread here.
+
+### 11.2 Elapsed time
+
+The generator is a daily AR(1) with `phi_D = 0.7`. Under it, the stationary part of `D` carries over a
+gap of `h` days as `0.7^h`: 0.082 at `h = 7` and 0.0068 at `h = 14` (arithmetic, not a finding). A
+sustained mean shift, such as the held DR ramp, does not decay. The CUSUM has no lag model: a held `S`
+keeps evidence from a transient excursion at full weight across a gap, where a filter would shrink it by
+about `0.7^h` and widen its uncertainty. The frozen design sees this only through VA, DE and DV (P1,
+P1b, P7). The next study adds an elapsed-time comparator whose predicted state and uncertainty depend on
+the gap (a state-space filter with gap-dependent transition, or a continuous-time model, S1-S2), with
+equal spacing kept as a reference check. Continuous time is a baseline, not a contribution: it removes a
+timing misspecification and says nothing about why an observation occurred.
+
+### 11.3 An empty interval depends on the opportunity
+
+Four kinds of empty interval are different data (S4, S13): no use during a known observable window; no
+answer to a sent probe; no probe because the schedule did not ask; and unknown activity because
+recording failed. A no-event interval is informative only over a known window (the survival term of a
+point-process likelihood, read appendix A). The frozen architectures do not separate an outage from
+ordinary missingness: BI blanks indicators 1 and 6 on used days, the composite averages the indicators
+that remain, and no component targets indicator missingness (P1). The next study's own data contract
+adds indicator-level availability `U_jt`, separate from usage. An unavailable indicator is not stood in
+for by the others, and a day without enough available indicators is reported as abstention with reason
+"unknown availability", never as no change (read appendix D).
+
+### 11.4 Engagement in both directions
+
+Only the `kappa = 0.3` cell links state to usage, and only in one direction: a worse state means less
+use. In one cohort with electronic self-ratings (S12, prior literature), low-mood
+episodes went with the most complete data, remission with less engagement, and moves from euthymia into
+worse states with more missing ratings; level and change carried different associations. That is one
+cohort and one modality, not a rule for agents, but it is enough to require both signs. The next grid
+includes `kappa < 0` and a change-dependent usage term (usage depending on `D_t - D_{t-7}` as well as
+`D_t`).
+
+### 11.5 Person change versus observer change
+
+The contribution the read leaves open (its sections 7, 8 and H) is a controlled validity comparison:
+whether a within-person score separates change in the person from change in how the agent observes,
+helps or records. AV and AV2 (indicator mapping), BI (recording), DE (usage) and the targeted-help cells
+cover parts of this. A pure policy shift with `D` unchanged is missing. Candidate family **PS**, two
+variants for the next spec (hypotheses, not frozen predictions):
+- **Observation-policy shift.** The agent changes how often it prompts or checks in, which changes usage
+  and session structure (indicators 1, 2 and 6) without changing `D`. This is the read's central example:
+  a detector that uses conversation frequency can learn the agent's behavior and fail when the policy
+  changes (read section 5). It belongs in the first, help-off comparison.
+- **Help-policy shift** (help extension only, 11.6). Dropping the help propensity from 0.3 to 0.1 on a
+  random day in [50, 100] moves the composite by about 0.03 (indicators 2 and 3 rise 0.088 of their
+  baseline SD; arithmetic), far under `k = 0.5`. The variant needs a larger help effect, sized in that
+  spec and not tuned for alarms.
+
+A mid-follow-up probe-schedule change is the probe-side twin and matters for the probe-only comparator.
+
+Rules for that comparison:
+- **Comparators.** An established joint timing-and-mark model (S6-S7), the elapsed-time filter of 11.2,
+  a gap/count predictor, a policy-aware candidate, and an estimator matched to whichever target is named
+  (read sections 1 and 8, H).
+- **One information budget.** Comparators read the same observed contract, with expected event counts
+  matched where a contrast needs it. A model that sees `D`, unlogged availability or future records is
+  labelled oracle.
+- **Online scoring is filtering** on history available at `t`, never smoothing with later records.
+- **Metrics.** Target bias and interval coverage, unchanged-person false alarms, detection delay,
+  long-gap uncertainty and policy-shift performance, scored at calendar-time checkpoints with empty
+  intervals included (read section 8).
+- **No method has to win.** Acceptable findings include: an established event/mark model suffices
+  under a logged policy; one logged field (intended probe time, `U_jt`, help propensity) is necessary;
+  or the target cannot be distinguished in a named regime and abstention is the right output.
+
+### 11.6 Target and construct
+
+Path A (residual scale, close to Rast's IVD model, S20, S27) and path B (a specified latent dynamic
+quantity: a change in mean, transition rate or innovation variance; read appendix G) are the read's two
+candidates. This spec's mean-change target (the DR ramp) is the case the read calls an alternative first
+target (its section 8). Nothing here chooses A or B for the Rast-shaped study, and no CUSUM alarm here
+is reported as a variance or volatility result. For a future variance target, DR is the
+mean-change-with-variance-fixed control, because a misspecified location distorts scale estimates even
+with noninformative observation (S19). Innovation, measurement-error, observed within-person,
+between-person scale and time-varying residual-scale variance stay distinct (read appendix C).
+
+Outside simulation (real traces, the corpus audit), a change recovered from the indicators is a change of
+engagement regime until an independent anchor ties it to the construct: inferred states in marked event
+models can separate utilization regimes rather than severity (S7). This holds for all six indicators. In simulation the indicators load on `D` by
+construction (`lam_j`), so the rule does not apply there. Section 10's validity chain carries it as a
+named threat at the indicator-to-score link.
+
+Beyond D5 guard 3, the next study's first comparison runs help-off (read section 9). Action-to-state
+feedback is a question for a separate consented randomized study (read section 9, S25); INITIATIVE does
+not estimate it.
+
+### 11.7 Novelty boundary
+
+Not claimable as new:
+
+| idea | prior art |
+|---|---|
+| modelling uneven intervals | S1-S2 |
+| state-dependent observation, with its weighting, shared-parameter and sensitivity fixes | S3-S5, S9-S10, S28-S29 |
+| separate visiting, recording and outcome processes | S11 |
+| latent state from event timing plus content | S6-S7 |
+| observation-aware prediction and its transport problem | S8 |
+| choosing observations and actions together | S17 |
+| latent-variance tracking under informative timing | S26 |
+| variance targets in longitudinal data | S19, S21, S33 |
+| agentic sensing for wellbeing | S15-S16 |
+| adaptive language assessment | S30-S32 |
+| the recursive observe-estimate-observe loop | S22 |
+
+Claimable only if demonstrated: a specified comparison, identification argument or record design that
+separates person change from observer change in ordinary agent use. The read's S34-S36 (residual-scale
+models tied to missingness, volatility under informative observation, a mood-volatility/MNAR preprint)
+appear in the dashboard version of its register but not in the on-disk ledger, so they are unverified
+here.
