@@ -439,3 +439,212 @@ separates person change from observer change in ordinary agent use. The read's S
 models tied to missingness, volatility under informative observation, a mood-volatility/MNAR preprint)
 appear in the dashboard version of its register but not in the on-disk ledger, so they are unverified
 here.
+
+## 12. Amendment A2 (2026-10-03): timing versus state
+
+Source: `~/code/agentsem/design-input-time-registration-20261001.md` (sha256 `318f1924...522be`) and
+its incorporation brief `design-brief-agentsem-20261001.md` (sha256 `ffa49b3b...f9639a`). Both are WIP
+from 2026-10-01; the umbrella folder is not a git repo, so the hashes pin the versions read. Base commit:
+`fe355aa`. The input reads a machine transcript of an EEG talk on registration, in which trials,
+conditions and subjects each get their own timing transformation. The talk motivates separating timing
+from amplitude but validates no method for behavioral event streams. Its pure-noise check is a
+speculative recommendation, not a reported result.
+
+**Status.** As in section 11: post-freeze. Nothing here is frozen, and every arm, family and field is a
+candidate for the next study's own spec and review.
+
+### 12.1 Timing is already inside this spec's target
+
+Indicator 1 (late-activity share) responds to phase, to the spread of activity and to added activity
+mass. Indicators 2 (fragmentation) and 6 (reply latency) are timing quantities. In the generator all
+three load on `D` (`lam_j`). If `D` acts on indicator 1 partly through phase, aligning activity times
+before scoring removes that part of the channel, so this spec has no "align before detection" rule.
+
+That argument can be tested only in a generator that emits within-day event times. The frozen generator
+draws indicator 1 as a daily value and cannot express phase separately from amplitude. The next
+generator computes indicators from event times by the pilot's own rule and declares whether simulated
+behavior follows the wall clock or the sun.
+
+Outside simulation a timing change has causes other than the person's state: timezone and travel,
+daylight-saving transitions, term or work schedules, the agent's own scheduler, and autonomous lanes. The
+pilot attributes 0.7497 of late-window entries to autonomous sessions (`pilot/RESULTS.md`). Under 11.6, a
+timing change in real traces is a change of timing regime until an independent anchor ties it to the
+construct.
+
+### 12.2 The clock is part of the indicator definition
+
+The pilot computes late share on a fixed America/Chicago wall clock. "Late" is local hour in [0, 5),
+the day boundary is local midnight, and fragmentation bins by local hour (`pilot/trace_audit.py` lines
+50-51, 470-473, 586, 591). Three consequences:
+
+- **Timezone.** The transcripts carry no timezone field; a sample check this lane found only
+  `timestamp`. The fixed-zone rule is therefore an unsourced known-warp assumption, and travel would move
+  indicator 1 with no change relative to the local clock. The next data contract records the device
+  timezone or a dated travel record. A day with neither is an abstention with reason "unknown clock",
+  parallel to 11.3's unknown availability.
+- **Daylight saving.** Chicago transitions at 02:00, inside the late window. On spring-forward night the
+  window is 4 hours and the day 23. On fall-back night the window is 6 hours, the day is 25, and the
+  repeated hour falls into one fragmentation bin. Transition dates are flagged as exposure-altered, not
+  only as known-warp dates. Separately, a routine anchored to light or sleep moves an hour against the
+  clock on those dates.
+- **Day boundary.** The [0, 5) window credits late activity to the calendar date after the evening it
+  continues. A delay that pushes activity past midnight moves entries between dates. That changes each
+  date's count, its used/unused status and its late share at once. A fixed boundary at the person's
+  baseline activity trough, set from the baseline window only, is a candidate alternative.
+
+The pilot's numbers stay as computed. Later text that describes indicator 1 names its clock and
+boundary.
+
+A known warp (timezone, daylight saving) comes from an independent record and corrects the clock. An
+estimated warp is a model with its own uncertainty. The two are never reported as the same kind of
+adjustment.
+
+### 12.3 Candidate comparison
+
+All arms read the same observed contract (11.5, one information budget).
+
+| arm | what it does | status |
+|---|---|---|
+| R0 raw | indicators on a declared, sourced local clock and a declared fixed day boundary | baseline, always kept |
+| R1 phase summary | one daily phase summary of user-initiated events, kept as its own series with uncertainty. Example: the circular mean of event times, or the onset of the most-active block in the rest-activity tradition (Van Someren et al. 1999, Chronobiology International 16:505-518). It enters detection only as a sensitivity arm, labelled as removing the phase channel, because residualizing on phase erases it as R2 does | first comparator |
+| R2 restricted registration | a bounded day-level shift against a template fit on the baseline window and frozen, with the warp of 12.4 between days. No per-session or per-event warp | most complex arm admitted |
+| oracle | the generator's true shift | an upper bound for reference, never a baseline |
+
+**Why R2 is restricted.** Phase and amplitude are not separately identified unless the warp class and
+the template are constrained:
+- Marron, Ramsay, Sangalli and Srivastava 2015, Statistical Science 30:468-484, doi 10.1214/15-STS524;
+- Kneip and Ramsay 2008, JASA 103:1155-1165, doi 10.1198/016214508000000517.
+
+Days are bins, not stimulus-locked trials, and a sparse day can hold a handful of events, so a flexible
+per-day warp would be fit to noise. The input's event/day/person hierarchy is therefore reduced to a
+person-level template and a day-level shift. Registration of sparse, fragmented curves exists (Matuk,
+Bharath, Chkrebtii and Kurtek 2022, JASA 117:1964-1980, doi 10.1080/01621459.2021.1893179) and is not
+needed for a first comparison.
+
+The citation details were located by search in this lane and checked by the review subagent. Abstracts
+only were read.
+
+### 12.4 Identification and the information boundary
+
+- **Abstain when there is no phase.** Before any template is fit, flatness is tested by a prespecified
+  test on the baseline event clock-angles (for example Rayleigh), at an alpha fixed on the tuning seed. A
+  flat person gets the abstention reason "phase not estimable", not a shift of zero. A day with fewer
+  than `n_min` user-initiated events abstains with the reason "too few events". Aligning noise to a
+  template reproduces the template, so a fitted template is not evidence of a shared shape.
+- **Past-only boundary.** Events are assigned to day `d` by the fixed boundary of R0. `ŝ_d` is
+  estimated only from events in that window after it closes, and the aligned late window is computed
+  inside it. No boundary depends on `ŝ_d` or on any later day.
+- **Fixed inputs.** The template is fit on days 1 to 28 and frozen. A whole-series retrospective
+  re-alignment is labelled offline (11.5: filtering, not smoothing). The template, the shift bound,
+  `n_min` and alpha use the tuning seed only.
+- **Which events.** Phase is estimated from user-initiated events only. Replies to agent-initiated
+  prompts and autonomous-lane traffic are excluded, because the agent's scheduler set their timing
+  (11.5, PS). A probe schedule that follows the estimated phase makes observation times depend on the
+  estimate. That stays at random given recorded history (11.1) only if the estimate is logged with the
+  propensity.
+- **Event models in transformed time.** If an intensity model is fit in warped time `u = w(t)`, then
+  `lambda_u(u) = lambda_t(w^-1(u)) * (w^-1)'(u)`. Observation windows, `U_jt` and outages map through
+  `w` and its derivative. An outage stays an outage and is never interpolated.
+- **The warp must be continuous.** A piecewise-constant day shift is not a valid warp: adjacent days
+  overlap or leave a gap of `s_{d+1} - s_d`. R2's warp is continuous and monotone, interpolating
+  linearly between day anchors, so within day `d`, `w'(t) = 1 - (s_{d+1} - s_d)/24h`, with
+  `|s_{d+1} - s_d| < 24h`. Exposure is carried through this derivative. Only a constant shift has
+  `w' = 1`. For past-only scoring, day `d` is scored with the last anchor carried forward.
+- **What registration cannot do.** It does not change any class in 11.1, does not make observation
+  ignorable, and does not supply opportunities during an outage (11.3). The continuous-time and
+  observation-process baselines (11.2, 11.5) stay in the comparison.
+
+### 12.5 The timing shift as its own quantity
+
+Raw timestamps, the estimated daily shift and its uncertainty are kept together. An aligned series never
+replaces them. The summaries are fixed before scoring:
+- the shift from baseline in hours (delay or advance);
+- its day-to-day variability;
+- the weekday-weekend difference. This is analogous to social jetlag (Wittmann, Dinich, Merrow and
+  Roenneberg 2006, Chronobiology International 23:497-509), which is defined on sleep midpoints these
+  data do not contain.
+
+Whether a shift predicts an independently anchored outcome beyond raw timing, exposure and context is a
+question for an anchored validation study. In simulation the link is built in. A predictive association
+is not a state claim.
+
+### 12.6 Null and failure suite
+
+The full pipeline runs in every family: flatness test, template fit, shift estimation and detector. A
+detector given oracle alignment never stands in for it. Daylight-saving transition dates fall inside
+every family's follow-up.
+
+| control | family |
+|---|---|
+| pure noise, no shared shape | S with a flat within-day template |
+| autocorrelated or heteroskedastic timing noise, no effect | S with AR(1) day-level jitter |
+| phase only, estimated | new **PH**: a sustained template shift of fixed size with `D` unchanged, unlogged (a schedule shift) |
+| phase only, known | PH with a logged timezone change. This tests R0's clock correction, not registration |
+| amplitude only | DR with the template held fixed |
+| joint | DR in which `D` also delays the template |
+| policy only | PS (11.5), with the agent's prompts at fixed clock times |
+| missing responses, outages | the `m1` cells; BI |
+| sparse events, changing context | a low-volume cell; CS |
+| drift inside the baseline | BD, whose template is fit on contaminated baseline days |
+
+What counts as a false alarm depends on the target, so results are read per target:
+
+| target | PH | joint | R2 |
+|---|---|---|---|
+| the person's mean change (this spec's DR) | null: alarms are false | positive | admitted |
+| a timing regime | positive | positive | excluded: it removes the target |
+
+Metrics are section 5's, plus:
+- phase-estimate bias and interval coverage against the generator;
+- the share of persons and days abstaining for each reason;
+- indicator 1's within-person validity per arm;
+- the composite sensitivity on DR and joint per arm, with `h` retuned per arm on S to the same
+  false-alarm target;
+- false alarms on PH, by arm;
+- on flat persons, the non-abstention rate (at most alpha) and the peak amplitude of the aligned mean.
+
+Some absorption of `D`'s late-activity mass by the shift estimate is expected. R2's criterion on DR is
+therefore non-inferiority to R0 within a margin fixed in the preregistration, not equality. Failed fits
+and abstentions stay in denominators (section 5). Target, tuning, the shift bound, the PH size, `n_min`,
+alpha, thresholds and stopping rules are fixed in that study's preregistration before scoring.
+
+### 12.7 Decisions and change log
+
+**Adopted as candidates:** arms R0 to R2 and the oracle, clock provenance and transition-date flags, a
+fixed trough-anchored day boundary, family PH, an event-time generator.
+
+**Rejected:**
+- a universal align-before-detection rule (12.1);
+- flexible hierarchical event/day/person warps for the first comparison, since the data have no repeated
+  stimulus-locked curves and days can be sparse;
+- a piecewise-constant day shift, which is not a warp (12.4);
+- any day boundary that depends on the current shift estimate, which would leak future events;
+- porting the EEG method without checking its repeated-curve and phase-amplitude assumptions;
+- reporting the talk's pure-noise check as done;
+- reading a schedule shift as a change in the person (11.6, `CLAIMS-ENVELOPE.md`).
+
+**Open for that spec:** midnight or trough boundary; the shift bound, PH size, `n_min`, flatness alpha
+and non-inferiority margin; which phase summary; whether timing is part of the target (12.6 table).
+
+**Unchanged:** sections 3 to 6, `sim/PREREG.md`, paper v4, the pilot's computed numbers.
+
+**Change log.** An Opus methods review of the first draft (this lane, 2026-10-03) returned REVISE with
+nine blocking items. The eight that concern this spec were all accepted:
+- the warp is continuous with its derivative, replacing "only labels move";
+- the boundary is past-only;
+- daylight saving changes exposure;
+- a target-by-family table was added;
+- the DR criterion is per-indicator non-inferiority with per-arm `h`;
+- a flatness test and `n_min` were added;
+- R1 is a series and a sensitivity arm only;
+- this log and the hashes were added.
+
+Its non-blocking items were also accepted:
+- indicator 1 is no longer called a pure phase quantity;
+- the generator declares its clock;
+- the open parameters are listed;
+- BD contamination is noted;
+- the Matuk citation is completed.
+
+The review confirmed the intensity formula, the pilot grounding, all five citations, the tuning/scoring
+separation and that no frozen material changed.
