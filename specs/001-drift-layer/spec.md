@@ -775,3 +775,79 @@ duration-based definition would admit it. `delta_D` is set in the next spec.
   III), and simulations rerun cheaply. Only a confirmatory momentary claim needs a new study version.
 
 **Unchanged:** sections 3 to 6, `sim/PREREG.md`, the frozen results, paper v4, section 14's numbers.
+
+## 16. Note (2026-10-03): the remaining next-reads and the gap (c) search
+
+Source: lane `agentsem-litreads-oct03`. It read the two leads left open in 13.3 and Revol et al.'s
+supplement C, and it ran the remaining gap-(c) search. The orchestrator checked the key quotes against
+the saved text and recomputed the supplement C numbers from the authors' released results CSV. An Opus
+claim check then ran on this section. **Status:** as in section 13. These are notes for the next paper
+version and the next study's spec.
+
+| source | access | what it does |
+|---|---|---|
+| Lin, Mermelstein & Hedeker (2018), *Health Serv Outcomes Res Methodol* 18:227-243, doi:10.1007/s10742-018-0184-5 | typeset PDF on the first author's site (xiaolei-lin.github.io); not in PMC; supplement not read | Location-scale model for random-prompt EMA (461 adolescents, 7 days; on average 22.3% of each participant's prompts missed), with a per-prompt missingness logit. That logit shares a person effect `λ` with the random location and scale effects: "conditional on λi, the missing indicators Mij are assumed to be i.i.d" (p. 232). Missingness therefore depends on time-invariant person effects and on time-of-day by day-type bins, not on the momentary outcome. Ma et al. (2022) call their own model an extension of Lin's. The simulation's naive model also drops the random scale effect (eqs. 14-15), so its bias for the within-person variance mixes two omissions. |
+| Li, Mykland, Renault, Zhang & Zheng (2014), *Econometric Theory* 30(3):580-605, doi:10.1017/S0266466613000418 | typeset PDF on Mykland's page; Crossref-checked | Realized variance of an Itô process when the sampling times may depend on the process. The setting is in-fill asymptotics, with no noise. Realized variance stays consistent, but an asymptotic bias term moves part of the error from variance to mean (Thm 1, Remark 1). The paper gives a bias-corrected estimator and a tricity test of exogenous times. Times that depend only on past observed values give no such term (Ex. 3). Hitting times of the process (Ex. 4), or of a correlated latent process (Ex. 6), give one only with asymmetric barriers (`v = 0` when `a = b`). There is no weighting by sampling probability. |
+| Revol et al. (2025), supplement C (APA `met0000758_sm3.html`, identical to the authors' GitLab copy) and the released results CSV | open; the typeset version returned a bot-check page and was not read; Lirias holds only the accepted manuscript | Supplement C fits ctsem under time-contingent, random-burst and episode-contingent sampling, with the episode trigger only at 100% precision. Recomputed from the CSV (true AR 0.5, T = 50/100), ctsem's implied lag-1 AR is biased by +15.6% to +44.1% relative under episode-contingent sampling, by +2.2% to +9.8% under random bursts (blocks of consecutive prompts at random times) and by -0.8% to +2.8% under time-contingent sampling. OLS on the episode-contingent data stays within -4.5% to +0.8%. The authors suggest, without testing it, that continuous-time methods handle "sudden jumps" poorly. |
+| Gap-(c) search: EMA schedules mixing triggered and random prompts with known-probability weighting | 18 web, 6 Europe PMC and 15 OpenAlex searches (plus 11 title lookups) and 2 citation chases; Semantic Scholar rate-limited (HTTP 429); Google Scholar not queried | Found the Rathbun-Shiffman line. It mixes event-contingent assessments with random-time prompts drawn from a known probability design. It estimates with Horvitz-Thompson (design-unbiased) estimating equations and states positivity ("provided πi(t) > 0"). Full text read: Neustifter, Rathbun & Shiffman (2012), *J Appl Stat*, doi:10.1080/02664763.2011.626848; Rathbun et al. (2013), *JRSS-C*, doi:10.1111/j.1467-9876.2012.01064.x; Rathbun & Shiffman (2016), *Biometrics*, doi:10.1111/biom.12416. Abstract only: Rathbun, Shiffman & Gwaltney (2007), *Biometrika*, doi:10.1093/biomet/asm009. In Neustifter et al., each event is assessed "with known probability", which depends on the previous day's event count and is set to target five assessments a day. |
+
+### 16.1 What changes
+
+1. **Gap (c) narrows further and stays open.** EMA prior art already contains three parts of the
+   `mixed` design:
+   - a schedule that mixes non-random assessments with a random-time probability sample;
+   - known inclusion probabilities that can depend on recorded history;
+   - design-weighted estimation that states positivity (the Rathbun-Shiffman line).
+
+   The paper must not imply that these parts are new to EMA. What none of the sources found by the
+   logged queries does:
+   - a trigger aimed at high values of a statistic the system computes (in the Rathbun-Shiffman line
+     the person's own recorded event prompts the assessment, and the history-dependent probability only
+     throttles volume);
+   - an estimand that is criterion validity, the score-criterion relation, rather than covariate effects
+     on event rate;
+   - agent-mediated delivery.
+
+   Micro-randomized trials do not cover it either (Dempsey et al. 2020, doi:10.1214/19-AOAS1293): they
+   randomize an intervention, not a criterion prompt.
+2. **Staged citation for the next paper version.** In section 2.5, cite Neustifter et al. (2012) and
+   Rathbun et al. (2013) as the EMA instance of design-weighted mixed sampling, next to Begg & Greenes
+   (1983). Boruvka et al. (2018) is cited in section 3. Rathbun et al. (2007) is the line's origin; read
+   its full text before citing it. Paper v4 makes no novelty claim here, so nothing in v4 is wrong.
+3. **11.7 table.** Lin et al. (2018) goes first in the row "residual scale (IVD) linked to the observation
+   process", ahead of Ma et al. (2022). The link has been known since 2018, not 2022. 13.1's limit on
+   path A holds. Cite Lin for the model, not for a size of bias (see the row).
+4. **11.7 table, new row:** "variance estimation, bias correction and an exogeneity test under
+   process-dependent sampling times (in-fill, noise-free)", Li et al. (2014). It stays separate from S26
+   (latent-variance tracking). `VERDICT.md` called it "the formal template for Path B's target"; the
+   innovation-variance case is where it fits, and daily, sparse, noisy EMA lies outside it.
+   INFERENCE, a loose analogy only: Li's split resembles the draft's previous-day versus
+   current-composite contrast. Timing set by past observed values is Ex. 3. Timing set by the path
+   between observations is Ex. 4 and 6, with asymmetric barriers. The analogy carries no bias result,
+   for three reasons:
+   - Li's estimand is the realized variance of the sampled process.
+   - Both draft triggers are at random given recorded history (11.1).
+   - The draft notes that history still predicts the current state.
+5. **Correction to section 13.** In 13's Revol row, "biased upward at high instrument precision" becomes
+   "overestimated the implied lag-1 AR under an episode trigger at 100% precision, the only precision
+   fit with ctsem; less with milder episodes and more follow-ups" (sec. 6.4.1, supplement C; numbers in
+   the row above). 13.1 point 4's rule holds. ctsem was also biased by 2-10% under Revol's random
+   bursts, which is a different design from `random`. As a precaution, the elapsed-time comparator is
+   therefore also checked under `random`.
+
+### 16.2 What does not change
+
+- 11.1: `m1` stays outcome-dependent MNAR. Lin et al. covers neither `m1` nor P5's IPW result.
+- 11.6: path A against path B stays open, as section 15 left it.
+- N2 stays "a known result in a new setting". Revol et al.'s sec. 6.3 advice (fit the AR model, not the
+  autocorrelation) was rechecked against the accepted manuscript (Lirias) and OSF preprint v3. The
+  typeset version could not be checked.
+- Section 12 (timing versus state) and section 15 (target): no change.
+
+### 16.3 Open
+
+- Not read: Revol et al.'s typeset version (PsycNET bot-check), Lin et al.'s supplement, and Rathbun et
+  al. (2007) beyond its abstract.
+- Any claim that the rest of gap (c) is unclaimed rests on the lane's logged queries, not on an
+  exhaustive search (see the row).
+- S34-S36 are unchanged from 13.3. They need the dashboard register, which this lane did not attempt.
