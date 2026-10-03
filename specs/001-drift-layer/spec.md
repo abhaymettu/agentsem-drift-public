@@ -648,3 +648,61 @@ Its non-blocking items were also accepted:
 
 The review confirmed the intensity formula, the pilot grounding, all five citations, the tuning/scoring
 separation and that no frozen material changed.
+
+## 13. Note (2026-10-03): prior-art gap (c) read
+
+Source: the three leads named in section 11.1, read in full text by lane `agentsem-lit-gap-c-oct03`. Ma
+et al. was read from the PMC author manuscript, with equations described from the prose. Revol et al. and
+McNeish were read from accepted-manuscript preprints on PsyArXiv. All three DOIs were checked on
+Crossref. **Status:** as in sections 11 and 12. These are notes for the next paper version and the next
+study's spec.
+
+| source | what it does |
+|---|---|
+| Ma, Mermelstein & Hedeker (2022), *Stat Med* 41(10):1780-1796, doi:10.1002/sim.9328 | Shared-parameter location-scale model for event-contingent EMA. A daily count of missed self-initiated reports, detected through random prompts converted to event reports, depends on a person random effect that is linked to the location effects and to the random scale (IVD) effect. Observation depends only on time-invariant person effects and covariates. The authors say it is valid under random-coefficient-dependent MNAR and may be biased under outcome-dependent MNAR (Little). |
+| Revol, Ariens, Lafit, Adolf & Ceulemans (2025), *Psychol Methods*, online, doi:10.1037/met0000758 | Episode-contingent ESM: sampling starts when the observed process is far from its mean, with follow-ups. The OLS AR slope is not materially biased; precision trades predictor variance against effective pairs. Under this design the lag-1 autocorrelation no longer equals the AR coefficient, so they advise fitting the regression (sec. 6.3). A continuous-time fit (ctsem) on these data was biased upward at high instrument precision (sec. 6.4.1, supplement C, which was not read). The paper frames this as time spacing, not missingness. |
+| McNeish (2025), *Psychol Methods*, online, doi:10.1037/met0000742 | DK-DSEM: a probit missingness model on the current latent within-person component, its lag and time. Identification rests on normality and exclusion restrictions that cannot be tested, so MNAR models are offered as sensitivity analyses (comparing specifications, local sensitivity). The simulated mechanism is one-signed (high values go missing). Residual scale is not a cause of missingness. |
+
+### 13.1 What changes
+
+1. **N2 gets its ESM instance.** Revol et al. is the ESM case of selection on the predictor and matches
+   N2 and the draft's unbiased-slope statement; their tail trigger widens the predictor range where this
+   spec's band narrows it. The next paper version
+   cites Revol et al. beside Lathia et al. (2013) in the criterion-sampling paragraph.
+2. **Gap (c) narrows but does not close.** None of the three covers a trigger on a statistic other than
+   the predictor, or a random floor with logged propensities and weighting in an ESM schedule. Those
+   stay attributed to verification bias (Begg & Greenes 1983) and micro-randomized-trial weighting
+   (Boruvka et al. 2018). The remaining search is for ESM schedules that mix triggered and random
+   prompts and weight by the logged probability.
+3. **11.1 vocabulary.** `m1` is outcome-dependent MNAR: response depends on the current `D_t`. A
+   shared-parameter model of Ma et al.'s form, which ties observation to time-invariant person effects,
+   would not cover it. McNeish's DK-DSEM models the `m1` form directly and identifies it only through
+   untestable assumptions, which supports treating `m1` as a sensitivity range. The next spec names
+   both forms of sensitivity analysis: a grid on `m1` (as in P5) and a comparison of specifications (as
+   in McNeish). P5's "observable-based IPW removes under half the bias" is covered by none of the three
+   and stays a simulation result of this study.
+4. **11.2 elapsed time.** A continuous-time comparator is not automatically unbiased on triggered data
+   (Revol et al., ctsem). The next study checks its elapsed-time comparator under `triggered` and
+   `mixed` against the oracle before treating it as the baseline.
+5. **11.7 novelty table.** Add Ma et al. 2022 as a new row, "residual scale (IVD) linked to the
+   observation process". Path A therefore cannot claim that link; its claim is limited to
+   agent-mediated observation and observer change. Add McNeish 2025 to the state-dependent observation
+   row. Add Revol et al. 2025 as a new row, "event-contingent sampling and dynamic estimates".
+6. **11.4.** McNeish simulates one sign only (`kappa` is free in the model but not varied). The
+   `kappa < 0` and change-dependent cells extend a known model; they are not new.
+
+### 13.2 What does not change
+
+- N2 stays "a known result in a new setting, not a discovery". No reading contradicts it or makes it new.
+- 11.1's `triggered` classification and section 4's IPW statement hold: Revol et al.'s unsampled middle
+  range leaves a correctly specified linear slope unbiased, so positivity binds only for weighting and
+  for misspecified or nonparametric targets.
+
+### 13.3 Open
+
+- Not yet read: Lin, Mermelstein & Hedeker (2018, the closest Path A lead) and Li et al. (2014, Path
+  B), both from the same `VERDICT.md` list; Revol et al.'s supplement C; the typeset versions.
+- S34-S36 are still unverified. `sources.md` on disk stops at S33. Neither page tarball in
+  `~/experiments` nor the vault note defines S34-S36; the vault note cites them by tag only. The
+  dashboard read returned 404 to a logged-out request on 2026-10-03. Ma et al. fits the "residual-scale
+  models tied to missingness" description, but that match is not evidence of what S34 is.
