@@ -1,6 +1,6 @@
 # Spec 003: detecting a sustained mean shift, and separating it from observer change
 
-Status: DRAFT r2, not frozen. Nothing here is a result. It becomes `sim/PREREG-003.md` only after a
+Status: DRAFT r3, not frozen. Nothing here is a result. It becomes `sim/PREREG-003.md` only after a
 confirmation review, with its own hash, seeds and thresholds (constitution III). Spec 001,
 `sim/PREREG.md`, the frozen results, `sim/ATTRIBUTION*` and paper v4 are unchanged.
 
@@ -183,8 +183,9 @@ confirmed if the mean of the answered probes, minus the baseline-block probe mea
 - **Oracle reference**, in simulation only. It uses the same baseline-block contrast with the true
   baseline `D` replaced by the generator mean 0, and the block's probe noise kept. The gap between the
   two references is therefore baseline `D` error only.
-- **Comparators:** the next-day rule with 3 consecutive probes (as M2x3 in `ATTRIBUTION.md`), and the
-  frozen 7-day rule.
+- **Comparators:** the next-day rule with 3 consecutive probes on `a + 1`, `a + 2`, `a + 3` (as the
+  design check; M2x3 in `ATTRIBUTION.md` used `a + 1`, `a + 3`, `a + 5`), and the frozen 7-day rule, run
+  with every day probed (its upper bound; the frozen run probed on a stochastic schedule).
 
 **Design check** (synthetic; margin 0.5; A-fixed; 28 days and 4 probes; DR-1.0 counts persons detected
 with no pre-onset alarm). Confirmed share:
@@ -204,8 +205,9 @@ with no pre-onset alarm). Confirmed share:
 **Cost.** Days to confirmation rise to `3L`: 9, 27 and 87 days. That is the price of the sustained
 target (spec 001 section 15).
 
-**Budget.** 3 probes per alarm, plus the baseline block. At the frozen false-alarm rate this stays far
-under 3.0 per person-month (M2x3 used 0.46). The budget is reported per family and arm.
+**Budget.** 3 probes per alarm, plus the baseline block, reported per family and arm. Design run: S runs
+at 1.32 per tracked month. On a sustained shift the detector keeps alarming after each refractory period,
+and each alarm draws 3 probes, so DR-1.0 reaches 2.39 and DR-1.5 3.24 (`sim/DESIGN-003.md` s3 item 8).
 
 ## 8. The policy log, primary separator of person from observer change
 
@@ -353,11 +355,10 @@ Constitution I and VII bind all of it.
 
 ## 13. Open before freeze
 
-- The estimated `c` for `k*`, help-off.
 - The PS-use intercept size. It stays at a value not tuned for alarms.
-- The exact spacing of the 8 baseline probes.
 - The S34 to S36 sources, still unverified.
-- Lin 2018 and Li 2014, still unread.
+- The thresholds of H1b, H2b, H3's decision rule, H5's L0+label clause and the budget rule:
+  `sim/DESIGN-003.md` section 4 has proposals from the design run.
 
 ## 14. Change log
 
@@ -412,3 +413,14 @@ Constitution I and VII bind all of it.
 
   The S confirmation numbers changed with the rerun because S's random stream changed. Alarm counts,
   alarm-day `D`, baseline means, chance levels and every DR number are unchanged.
+- **r3, lane `agentsem-next6-oct03`.** Generator and scorer: `sim/study003.py` (`d641d4c`, `e193a51`).
+  Tuning and the design run are summarized in `sim/DESIGN-003.md`.
+  - Section 13: `c` (0.334 to 0.342) and the 8-probe spacing are settled by the build, reversibly; Lin and
+    Li are read (spec 001 section 16); freeze proposals are added.
+  - Section 7: the comparator's probe days, the 7-day rule's upper-bound form and the budget sentence are
+    corrected.
+
+  Code interpretations of r2 are flagged `CHOICE:` or stated in docstrings in `study003.py`, for review
+  before the freeze. One scoring rule follows section 2 rather than the frozen code: confirmed PPV counts
+  only pre-onset alarms as false. Reviews: Opus methods and confirmation passes and an Opus accuracy check,
+  plus ponytail; all applied but one ponytail cut (see the commits).
