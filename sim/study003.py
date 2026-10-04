@@ -367,9 +367,9 @@ def confirm(p, a, lag, base_days):
 
 
 def confirm_all(p, alarm, lag, base_days, B, onset=None):
-    """Every alarm in [B, T), per person: (alarms, confirmed, confirmed inside [onset, onset + 21)). A DR
-    family's other confirmed alarms are its confirmed false alarms, as in the frozen PPV."""
-    n_c, n_t = np.zeros(len(alarm)), np.zeros(len(alarm))
+    """Every alarm in [B, T), per person: (alarms, confirmed, confirmed inside [onset, onset + 21), confirmed
+    before onset). Spec 003 s2: in a positive family only pre-onset alarms are false."""
+    n_c, n_t, n_f = np.zeros(len(alarm)), np.zeros(len(alarm)), np.zeros(len(alarm))
     for t in range(B, T):
         a = np.where(alarm[:, t], t, -1)
         if (a >= 0).any():
@@ -377,7 +377,8 @@ def confirm_all(p, alarm, lag, base_days, B, onset=None):
             n_c += c
             if onset is not None:
                 n_t += c & (t >= onset) & (t < onset + 21)
-    return alarm[:, B:].sum(1) * 1.0, n_c, n_t
+                n_f += c & (t < onset)
+    return alarm[:, B:].sum(1) * 1.0, n_c, n_t, n_f
 
 
 def share(cf):
@@ -551,10 +552,10 @@ def run_study(base_seed, tun):
         gaps = {}
         for B, m in ARMS:
             bd = probe_days(B, m)
-            fams = {f: P[f] for f in ("S", "DR-1.0", "DR-1.5")}
+            fams = {f: P[f] for f in ("S", "DR-0.5", "DR-1.0", "DR-1.5")}
             al = {f: alarms(p, B, "A-k0.5") for f, p in fams.items()}
             first = {"S": first_in(al["S"][0], np.full(N, B), np.full(N, T))}
-            for d in ("DR-1.0", "DR-1.5"):
+            for d in ("DR-0.5", "DR-1.0", "DR-1.5"):
                 t0 = fams[d]["t0"]
                 first[d] = np.where(sens(al[d][0], t0, 21) > 0, first_in(al[d][0], t0, t0 + 21), -1)
             res = {}
@@ -569,17 +570,19 @@ def run_study(base_seed, tun):
                      "S_unconfirmable_share": boot(ratio(xS * 1.0, (first["S"] >= 0) * 1.0), N, brng)}
                 for f in fams:
                     c, x, d_ = cf[f][0], cf[f][2], cf[f][4]
-                    n_al, n_c, n_t = confirm_all(fams[f], al[f][0], lag, bd, B, None if f == "S" else fams[f]["t0"])
+                    n_al, n_c, n_t, n_f = confirm_all(fams[f], al[f][0], lag, bd, B, None if f == "S" else fams[f]["t0"])
                     tr = (al[f][1][:, B:] == 0).sum(1) / 30.0
                     g = r.setdefault(f, {})
                     g["days_to_confirmation"] = boot(ratio(d_ * 1.0, c * 1.0), N, brng)
-                    g["probes_per_tracked_month"] = boot(ratio((7 if lag is None else M_CONF) * n_al, tr), N, brng)
+                    # confirmation probes plus the arm's baseline block (m per person), per tracked month
+                    g["probes_per_tracked_month"] = boot(ratio((7 if lag is None else M_CONF) * n_al + m, tr), N, brng)
                     if f == "S":
                         g["confirmed_fa_per_tracked_month"] = boot(ratio(n_c, tr), N, brng)
                     else:
                         g.update(n_detected=int((first[f] >= 0).sum()), confirmed_share=boot(share(cf[f]), N, brng),
                                  unconfirmable_share=boot(ratio(x * 1.0, (first[f] >= 0) * 1.0), N, brng),
-                                 confirmed_ppv=boot(ratio(n_t, n_c), N, brng))
+                                 confirmed_ppv=boot(ratio(n_t, n_t + n_f), N, brng),
+                                 pre_onset_confirmed_fa_per_tracked_month=boot(ratio(n_f, tr), N, brng))
                 out["confirmation"][f"phi{phi}_B{B}_m{m}_{lagname}"] = r
             sp, nd = res["spaced"], res["next_day"]
             out["confirmation"][f"phi{phi}_B{B}_m{m}_H1_S_spaced_minus_next_day"] = boot(
@@ -699,9 +702,10 @@ def policy_log(Q, alarms, sens, brng, tun):
                 pc[f"{fam}_{rule}_unconfirmable_share"] = boot(ratio(cf[2] * 1.0, (f >= 0) * 1.0), N, brng)
                 if rule == "L0":
                     ld = p["log_day"] if p["log_exo"] and len(p["log_map"]) else np.full(N, np.nan)
-                    person = (f >= 0) & ~((ld >= f - 14) & (ld <= f))
-                    pc[f"{fam}_L0label_person_confirmed_share"] = boot(
-                        ratio((person & cf[0]) * 1.0, (cf[0] | cf[1]) * 1.0), N, brng)
+                    for W in W_LABEL:
+                        person = (f >= 0) & ~((ld >= f - W) & (ld <= f))
+                        pc[f"{fam}_L0label_W{W}_person_confirmed_share"] = boot(
+                            ratio((person & cf[0]) * 1.0, (cf[0] | cf[1]) * 1.0), N, brng)
         r["confirmation_after_rule"] = pc
         # H5 (known answer): unlogged PS-prop vs DR-1.0, person-attributed share, L0+label and M1
         num_d, den_d = lab["DR-1.0_W14_all"]
@@ -745,9 +749,14 @@ def policy_log(Q, alarms, sens, brng, tun):
         # AV / AV2 under the rules: overall alarm rate post-baseline
         r["av"] = {}
         for fam in ("AV", "AV2"):
+            lg = Q[fam]["av_logged"]
             for rule in ("L0", "L1", "L2"):
                 a, rr = alarms(Q[fam], 28, det, rule)
-                r["av"][f"{fam}_{rule}_fa_per_month"] = boot(ratio(a[:, 28:].sum(1), (rr[:, 28:] == 0).sum(1) / 30.0), N, brng)
+                al, tr = a[:, 28:].sum(1), (rr[:, 28:] == 0).sum(1) / 30.0
+                r["av"][f"{fam}_{rule}_fa_per_month"] = boot(ratio(al, tr), N, brng)
+                if fam == "AV":  # frozen P3's contrast: logged against unlogged
+                    r["av"][f"AV_{rule}_logged_fa_per_month"] = boot(ratio(al * lg, tr * lg), N, brng)
+                    r["av"][f"AV_{rule}_unlogged_fa_per_month"] = boot(ratio(al * ~lg, tr * ~lg), N, brng)
         out[det] = r
     return out
 
@@ -824,6 +833,10 @@ def sha256(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def provenance():
+    return {f: sha256(HERE / f) for f in ("study003.py", "drift_sim.py", "attribution.py", "tuning_003.json")}
+
+
 def main():
     cmd = sys.argv[1] if len(sys.argv) > 1 else "--check"
     if cmd == "--check":
@@ -833,8 +846,7 @@ def main():
     elif cmd == "design":
         tun = json.loads((HERE / "tuning_003.json").read_text())
         out = dict(label="DESIGN (spec 003 s11): sizes PREREG-003, scores no prediction; not a result",
-                   sha256={f: sha256(HERE / f) for f in ("study003.py", "drift_sim.py", "attribution.py", "tuning_003.json")})
-        out.update(run_study(DESIGN_SEED, tun))
+                   sha256=provenance(), **run_study(DESIGN_SEED, tun))
         (HERE / "design_003.json").write_text(json.dumps(out, indent=1))
     elif cmd == "score":
         sha = sys.argv[sys.argv.index("--prereg-sha") + 1]
@@ -845,7 +857,8 @@ def main():
             raise RuntimeError("PREREG-003 does not list the current sha256 of study003.py and tuning_003.json.")
         tun = json.loads((HERE / "tuning_003.json").read_text())
         seed = int(hashlib.sha256(f"{sha}:study003".encode()).hexdigest()[:16], 16) % (2**32 - 1)
-        (HERE / "results_003.json").write_text(json.dumps(run_study(seed, tun), indent=1))
+        out = dict(label="EVALUATION (PREREG-003)", prereg_sha256=sha, sha256=provenance(), **run_study(seed, tun))
+        (HERE / "results_003.json").write_text(json.dumps(out, indent=1))
     else:
         raise SystemExit(__doc__)
 
