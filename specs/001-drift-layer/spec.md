@@ -1023,3 +1023,35 @@ then scores indicators 4 and 5 from `X_filtered` (component (ii)).
   (`sim/ATTRIBUTION-R4.md` point 6; not tested).
 - 17.5's remaining items stand: usage-changing PS waits on `sim/study003.py`; 16.3's items, including
   Rathbun 2007, are unread; the `cell_params` assignment to spec 003 holds.
+
+## 19. Note (2026-10-03): matched-baseline sensitivity analysis of the frozen P1 to P10
+
+Source: lane `agentsem-next5-oct03` (`sim/SENS-BASELINE-PLAN.md` sha256 `e9768ee5...488c`, committed in
+`3fa1a03` before the run; `sim/SENS-BASELINE.md`; `sim/sens_baseline.json`). **Status:** exploratory,
+post-freeze, synthetic. It is not a re-scoring. `sim/PREREG.md`, the frozen results, paper v4 and spec 003
+are unchanged.
+
+### 19.1 Result
+
+- The frozen `score()` was rerun on the frozen evaluation seeds with 18.1's baseline matched (indicators 4
+  and 5 standardized on `X_filtered`), and every `h` and schedule was re-tuned by the frozen procedure.
+  None of the 14 primary verdicts changed, and neither did any component boolean: robust to this choice in
+  this analysis.
+- Not predicted: the point estimates of detection are lower. DR sensitivity is 0.176 against 0.197, and
+  P8's gap is 15.7 [13.3, 18.2] points against 17.8 [15.2, 20.4], so P8 still holds. The separate intervals
+  overlap and no paired interval was computed, so the drop is not established.
+- Not predicted: P10's point estimate fell below 1.5, to 1.475. It was a FAIL and stays one.
+
+### 19.2 Proposals (not decisions)
+
+1. 18.3 point 3's first question now has numbers (19.1). Whether, and how, they enter the record is
+   Abhay's call.
+2. For spec 003 (18.3 point 1): the frozen `h` must not be reused with a matched baseline. Under M2 that
+   halves the S false-alarm rate and changes 5 verdicts. At M1's re-tuned `h`, the budget-tuned mixed
+   schedule cannot reach 3.0 probes per person-month: it caps at `p_trig2 = 1.0`, at 2.76. The triggered
+   schedule was already short as run, at 2.26, and reaches 1.62. Spec 003's probe budget should therefore
+   be sized under its own scorer.
+
+### 19.3 Open
+
+- The open items in `sim/SENS-BASELINE.md` section 5 and the items in 18.4 stand.
