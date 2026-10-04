@@ -50,3 +50,70 @@ Expected (k 0.5, in-window, 63 days unless stated):
 Reading (not an expectation): set L1_did's added share in `conc0.5` against its D-dependent sensitivity gain
 over L1 in OBS-003 (0.194 [0.105, 0.272], same cell). A gain smaller than or near the added share means L1_did
 buys sensitivity with specificity whenever such shifts are common.
+
+## Results (run after the plan commit `aeff91d`)
+
+`unlog_003.json` sha256 d430735040ef287e80e9eb10900e285860debe4effe67528340a670fc3bd9b09; the rerun was
+byte-identical (`cmp`), also by the Opus reviewer. Every assert passed.
+
+No D change in any arm; added share as the plan defines it (paired). No-shift no-change rates (63 d, k 0.5):
+L1 0.304, L1_step 0.211, L1_did 0.211, L2 0.316, oracle 0.211. Unmapped indicators' mean hold z shift: 0.207
+(`conc0.25`), 0.413 (`conc0.5`), 0 (`post0.5`).
+
+Table 1. Added alarm share, k 0.5, in-window persons (n = 247), 63 days [95% interval]:
+
+| arm | L1 | L1_step | L1_did | L2 | oracle |
+|---|---|---|---|---|---|
+| conc0.25 | 0.000 [-0.012, 0.012] | 0.146 [0.104, 0.191] | 0.243 [0.191, 0.298] | 0.178 [0.132, 0.230] | 0.146 [0.100, 0.189] |
+| conc0.5 | 0.004 [-0.012, 0.022] | 0.283 [0.228, 0.343] | 0.482 [0.418, 0.540] | 0.397 [0.340, 0.458] | 0.300 [0.243, 0.354] |
+| post0.5 | 0.219 [0.173, 0.272] | 0.283 [0.228, 0.343] | 0.251 [0.196, 0.305] | 0.263 [0.211, 0.318] | 0.263 [0.210, 0.316] |
+
+Table 2. Paired differences in added share, same cell:
+
+| arm | L1_did - L1_step | L1_did - L2 | L1_did - oracle | L1_did - L1 |
+|---|---|---|---|---|
+| conc0.25 | 0.097 [0.037, 0.156] | 0.065 [0.004, 0.128] | 0.097 [0.034, 0.161] | 0.243 [0.192, 0.297] |
+| conc0.5 | 0.198 [0.131, 0.265] | 0.085 [0.013, 0.151] | 0.182 [0.106, 0.254] | 0.478 [0.411, 0.541] |
+| post0.5 | -0.032 [-0.097, 0.031] | -0.012 [-0.083, 0.049] | -0.012 [-0.074, 0.046] | 0.032 [-0.045, 0.101] |
+
+Findings:
+1. **The DiD reference carries an unlogged unmapped shift onto the mapped indicators, and that raises false
+   alarms.** The DiD step error falls by the unmapped hold z shift (0.013 to -0.194 and -0.401), as `step_est`
+   implies; the evidence is the alarms. L1_did - L1_step in added share is positive in both `conc` arms (table
+   2); at `k*`, 63 d: 0.231 [0.162, 0.299] (`conc0.5`) and 0.089 [0.028, 0.151] (`conc0.25`).
+2. **L1_did's extra cost is the transfer: L1_step pays the same whether the shift starts at c or after the
+   hold.** L1_step holds all indicators over the hold, estimates the step from the mapped indicators only, and
+   keeps the unmapped indicators on their baseline z after it, so the two arms differ in what it scores only on
+   day c. Its whole alarm series differs between `conc0.5` and `post0.5` for 2 of 247 in-window persons (1 at
+   `k*`), and its 63-day alarm indicator for none. L1_did's series differs for 192 (206 at `k*`) and its
+   63-day indicator for 57 (66). L1's series also differs (156; 154 at `k*`), because it re-baselines on the
+   hold data the two arms do not share.
+3. **By 42 days every rule except L1 pays for an unlogged shift; L1 pays for none that starts with the logged
+   change.** L1 re-baselines all indicators over the hold, so it absorbs a concurrent shift, the same mechanism
+   that made it absorb the D ramp (ABSORB-003). The oracle rule knows the logged change only. At `k*` 21 d,
+   L1_step pays 0.000 [0.000, 0.000] (`conc0.25`) and 0.004 (`conc0.5`).
+4. **Given a concurrent 0.5 unmapped shift in every person, L1_did's extra false-alarm cost over L1_step exceeds
+   its extra sensitivity (points; at 0.25 the intervals overlap).** The planned reading, against L1: L1_did's
+   added share in `conc0.5` is 0.482 [0.418, 0.540], against its D-dependent gain over L1 of 0.194 [0.105,
+   0.272] (OBS-003, same cell), so the gain is smaller than the added share. The L1_step comparison is added
+   because L1 absorbs the concurrent shift (L1_did - L1 0.478 [0.411, 0.541]). In LOAD-003 (rho 1, same cell),
+   L1_did - L1_step in D-dependent sensitivity is 0.045 [-0.024, 0.114]; here its extra added share is 0.198
+   (`conc0.5`) and 0.097 (`conc0.25`). These come from different arms and are not a paired contrast. How much
+   this matters depends on how often such shifts happen, which no run here can estimate.
+5. **At 21 days L1_did - L2 is negative in both `conc` arms and both detectors** (`conc0.5`: k 0.5 -0.146
+   [-0.208, -0.081], `k*` -0.275 [-0.336, -0.212]), consistent with L1_did's full hold and S reset (L2 holds
+   only the mapped indicators). By 63 days at k 0.5 it is positive (table 2).
+
+Expectations, scored clause by clause:
+1. Yes.
+2. Yes (finding 1, by construction); raw -0.021 in both `conc` arms; DiD within 0.001 of the stated value.
+3. Yes (table 2).
+4. Yes: points -0.004 to 0.004. In `conc0.5` two interval upper bounds pass 0.02 (k 0.5 63 d 0.022, `k*` 42 d
+   0.025); the clause names no interval.
+5. Yes (table 2).
+6. Yes in all six cells; `k*` 21 d [0.000, 0.021] touches 0.
+
+What this means for the paper, if it specifies an observer-step re-baseline: L1_step (raw hold shift on the
+mapped indicators, no DiD) gets most of L1_did's D-dependent sensitivity (0.340 vs 0.385, rho 1, points;
+L1_did - L1_step 0.045 [-0.024, 0.114]) without the transfer, and L1_did has the false-alarm route shown here.
+The choice of rule is the project owner's (Abhay's).
