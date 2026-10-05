@@ -50,7 +50,7 @@ Consequences for text and tables:
 | L1_did - L1, D-dependent | OBS-003, LOAD-003 | 0.194 [0.105, 0.272] at rho 1; 0.012 / 0.105 / 0.194 / 0.316 at rho 0 / 0.5 / 1 / 2 |
 | Added alarm share by rule, `conc0.5` | UNLOG-003 | L1 0.004, L1_step 0.283, L1_did 0.482, L2 0.397, oracle 0.300 |
 | L1_step - L1_bsd, step 3 of the chain (re-centring unmapped) | HYB-003 | 0.040 [-0.013, 0.094] at rho 0 to 0.202 [0.138, 0.267] at rho 2; no-change step 3 -0.069 [-0.120, -0.025] |
-| L1_step - L1 added false alarms by shift arm | STEP-003 B | `conc0.5` 0.279, `post0.5` 0.065 (covers 0), `conc-0.5` -0.138 (generator values derivable from `rep_003.json` as Fs - F0, not computed here) |
+| L1_step - L1 added false alarms by shift arm | STEP-003 B | `conc0.5` 0.279, `post0.5` 0.065 (covers 0), `conc-0.5` -0.138; generator means of Fs - F0 over the 200 populations 0.258, 0.016, -0.125 (point values; per-term MCSE 0.002) |
 
 The L1_did - L1 values are L1_step - L1 values plus L1_did - L1_step, so the rho-0 reading carries the same F0
 and T0 draw as section 1. The F0 draw offsets part A by 0.024 w at every rho, so treat every rho in the OBS/LOAD row as design-draw-sensitive, most at rho 0.
