@@ -1,8 +1,11 @@
-# Author notes for paper/DRAFT.md (v4.2)
+# Author notes for paper/DRAFT.md (v4.3)
 
 Kept out of the manuscript on purpose: provenance, local paths, verification status of references, the
 referee-response map, and open items. v0 `a497ae3`, v1 `d0db495`, v2 `3fb50cd`, v3 `e1f2c72` (voice pass `201f649`); v4 `4c46cb3`; v4.1 adds section 3.11 (matched-baseline sensitivity); v4.2 (uncommitted, 2026-10-07) adds sections 3.12
 (spec 003 methods) and 3.13 (spec 003 results, Table 3) and a "3.13, H3" pointer in the section 2.7 table.
+v4.3 (uncommitted, 2026-10-07) trims the body to the venue's suggested length and moves detail, verbatim, to
+`paper/SUPPLEMENT.md`; section 10 below records what moved, what was cut, the counts and the renumbering.
+Section, table and figure numbers elsewhere in these notes are v4.2's unless marked; section 10 maps them.
 
 ## 1. Provenance
 
@@ -32,7 +35,7 @@ referee-response map, and open items. v0 `a497ae3`, v1 `d0db495`, v2 `3fb50cd`, 
 | spec 003 candidate text | `~/lanes/anchor-research/drafts/paper-spec003-results-draft.md` (176 lines), inserted in v4.2 as section 3.13; its opening method sentences moved into 3.12, its "Table 2" renumbered Table 3 (2.7 already has a Table 2), its definitions block turned into Table 3's notes, and L1_did and the HYB-003 step glossed in the observer-step paragraph |
 | ORCID (declarations block) | 0009-0001-2434-353X, the candidate from the Courier release source; public record checked 2026-10-07 14:44 CDT by the coordinator via `pub.orcid.org/v3.0/0009-0001-2434-353X/person`: given name Abhay, family name Mettu, name visibility public. Shown in the draft as "[ORCID 0009-0001-2434-353X, public record checked 2026-10-07; author to confirm use]" |
 | corpus no-read claims (Disclosures, Ethics; section 4.1) | `pilot/trace_audit.py` cannot prove that no other person's content was read. `extract_text_and_chars` walks tool_result content inside `message.content` in memory to count characters (only the separate `toolUseResult` field is never read), and user-role text, which can hold pasted third-party material (0.30 percent of entries carry a paste marker), is read in memory to classify authorship. The Disclosures therefore keep "[owner to confirm: no other person's content was read]" and say tool-result content was walked only to count characters. Section 4.1's "Tool-result payloads are never read" was not changed and conflicts with the code (open item 16) |
-| figures | `paper/figures.py` renders `paper/fig1` to `fig4` (.svg) from `sim/results.json`, `sim/metrics.json` and `pilot/results.json`. File numbers match figure numbers in the draft (renamed 2026-09-27). v4 edited text labels only (fig1 subtitle and footnote, fourth stage renamed "Use"; fig3 title and description); after re-running `figures.py`, every numeric token in all four SVGs is identical to `HEAD` (`201f649`) |
+| figures | `paper/figures.py` renders `paper/fig1` to `fig4` (.svg) from `sim/results.json`, `sim/metrics.json` and `pilot/results.json`. Since v4.3 file numbers no longer match figure numbers: `fig2` is Supplement Figure S1, `fig3` is main-text Figure 2 and `fig4` is main-text Figure 3 (file names unchanged; the SVGs carry no figure numbers). v4 edited text labels only (fig1 subtitle and footnote, fourth stage renamed "Use"; fig3 title and description); after re-running `figures.py`, every numeric token in all four SVGs is identical to `HEAD` (`201f649`) |
 | citation verification files | `~/lanes/bridge-jobs/agentsem-overnight-20260927/paper-citations.md`, `prior-art-passive.md`, `lit-verify.md` |
 
 ### Where each number comes from
@@ -277,25 +280,29 @@ isolate), which needs a new run.
    G3-reading curve, and a check of the P9 candidate explanation.
 4. P1b's lower bound is exactly 0.500; check whether it is a bootstrap quantile or a floor.
 5. Begg and Greenes (1983) full text; the unverified list is in section 4.
-6. Venue word limit (Advances in Methods and Practices in Psychological Science) against the body
-   (about 8,430 words excluding Appendix A and references).
+6. Venue word limit (Advances in Methods and Practices in Psychological Science) against the body.
+   Addressed in v4.3 under the owner's 17:02 CDT decision ("Trim it to be ideal"): body 5,373 words against
+   the General Article guide of 3,000 to 5,000 (section 10); the excess is caveats kept beside their claims. The guide is not a hard limit.
 7. Retention: whether to raise `cleanupPeriodDays` above 45.
 8. The spec's pasted-draft check says "earlier assistant message"; the code checks the last five turns.
 9. Whether section 3.11 stays in the submitted version (spec 001 section 18.3 point 3), and whether the word
-   limit (item 6) absorbs its roughly 260 words. Inserted 2026-10-07 under the owner's delegation of the
+   limit (item 6) absorbs its roughly 260 words. v4.3: it stays as the second paragraph of section 3.5 (about
+   100 words, mismatch caveat and verdict kept); the full v4.2 text is Supplement S9. Inserted 2026-10-07 under the owner's delegation of the
    pending paper decisions.
-10. The H3 paragraph in section 3.13 still carries its "[author wording]" marker. Its content follows section 9's
+10. The H3 paragraph in section 3.13 (v4.3: section 3.7) still carries its "[author wording]" marker. Its content follows section 9's
    order (frozen FAIL first, post hoc interval reading second and labelled, review disclosed, Monte Carlo labelled
    design-stage); the wording decision stands with the author, and the marker must go before submission.
-11. Word limit (items 6 and 9) now also covers sections 3.12 (about 400 words) and 3.13 (about 1,670 words,
-   including Table 3); after the science review they are about 460 and 1,850 words. Body, title through
-   the declarations block, excluding Appendix A and references: 11,424 words after the AMPPS restructure
-   (11,084 before it) (v4 was 8,410 by the same count, v4.1 8,690). Candidates for cutting if needed: the observer-step paragraph
-   (exploratory) and the family glosses repeated in Table 3's caption.
+11. Word limit (items 6 and 9). Superseded by the v4.3 trim: by the section 10 script, the body (title
+   through the declarations block, excluding the abstract, Appendix A and references) is 5,373 words after the
+   science review fixes (4,991 before them), down from 10,305 for v4.2 by the same script; spec 003 is now
+   sections 3.6 (279 words) and 3.7 (464), against
+   464 and 1,538 in v4.2. The observer-step paragraph and Table 3 with its caption moved to Supplement S11.
+   The earlier figures (11,424 after the AMPPS restructure, 11,084 before; v4 8,410, v4.1 8,690) came from a
+   different count that also included the abstract and table punctuation, so they are not comparable.
 12. The abstract, section 3.1 and the Data and code availability statement now carry the science review's
    minimal sentences for spec 003 (item B3). Confirm the wording, and whether `REVIEW.md` (outside the repository,
-   cited by hash in 3.13) should be deposited with the supplement.
-13. Section 3.12 calls the reviewer "a separate AI agent" and the freezer "the freezing lane (the agent session
+   cited by hash in 3.13, v4.3 section 3.7) should be deposited with the supplement.
+13. Section 3.12 (v4.3: section 3.6) calls the reviewer "a separate AI agent" and the freezer "the freezing lane (the agent session
    that froze the file)"; confirm this description against the AI-use statement, which does not yet mention
    the spec 003 freeze or review.
 14. The manuscript header still reads "Manuscript draft v4, 2026-09-28"; it was not bumped for v4.1 or v4.2.
@@ -344,3 +351,95 @@ The candidate text is `~/lanes/anchor-research/drafts/paper-spec003-results-draf
 section 3.13, with the methods in section 3.12 (provenance rows in section 1).
 
 Full amendment: `sim/POST-EVALUATION-003.md` (provenance row in section 1).
+
+## 10. v4.3 trim to the venue length (2026-10-07)
+
+Owner decision, phone, 17:02 CDT, after seeing the length against AMPPS: "Trim it to be ideal". AMPPS General
+Articles are guided at 3,000 to 5,000 words (`~/lanes/anchor-research/evidence/citations-20261007/ampps-requirements.md`).
+No simulation was run and no frozen file was touched.
+
+**Count method.** One script (`/tmp/count_paper.py`, kept for this session only): words are whitespace tokens
+containing a letter or digit, after removing HTML comments, `---` rules and table separator rows; tables and
+figure captions count. Body is the title through the declarations block, excluding the abstract, Appendix A
+and references.
+
+| part | v4.2 | v4.3 |
+|---|---:|---:|
+| body | 10,305 | 5,373 |
+| abstract | 363 | 350 |
+| references | 960 | 960 |
+| Appendix A | 175 | 0 (Supplement S1) |
+| total | 11,803 | 6,683 |
+| supplement (new file, whole file) | | 6,940 |
+
+Per section, v4.2 then v4.3: introduction 458 / 282; section 2 1,567 / 1,300 (2.1 238 / 184, 2.2 255 / 217,
+2.3 183 / 167, 2.4 272 / 230, 2.5 294 / 223, 2.6 107 / 106, 2.7 214 / 169); Disclosures 408 / 368; section 3
+5,975 / 2,213; section 4 999 / 595 (4.1 345 / 172, 4.2 520 / 325, 4.3 125 / 89); section 5 263 / 197;
+section 6 305 / 88; section 7 157 / 157; declarations 141 / 141. Section 3 in v4.2: 3.1 143, 3.2 346, 3.3 233,
+3.4 126, 3.5 128, 3.6 228, 3.7 584, 3.8 533, 3.9 927, 3.10 439, 3.11 279, 3.12 464, 3.13 1,538. In v4.3: 3.1 53,
+3.2 298, 3.3 207, 3.4 717, 3.5 188, 3.6 279, 3.7 464.
+
+**Renumbering.** Section 3 is now: 3.1 Status (v4.2 3.1); 3.2 Design (v4.2 3.2 to 3.4); 3.3 Decision rule and
+scoring runs (3.5, 3.6); 3.4 Results (3.7 to 3.9); 3.5 Exploratory analyses (3.10, 3.11); 3.6 Spec 003 design
+(3.12); 3.7 Spec 003 results (3.13). The section 2.7 table is now Table 1 (its "earlier link" column, the
+referee-response mapping, was dropped and the backing column now names R1 to R9). v4.2 Table 1 is Table S1 and
+Table 3 is Table S2. v4.2 Figure 2 is Figure S1; Figures 3 and 4 are now Figures 2 and 3. Appendix A is
+Supplement S1.
+
+**Moved to `paper/SUPPLEMENT.md` ("Supplementary material, private draft, 2026-10-07").** Each block is the
+v4.2 text verbatim, with only cross-references updated to v4.3 numbering; the main text points to each one.
+- S1: Appendix A (the attenuation derivation) and the residual-share sentence of 2.2.
+- S2: 3.2 generator in full (equations, parameter values, families, cells).
+- S3: 3.3 rules with ablations and tuned thresholds, 3.4 schedule parameters, 3.5 decision-rule detail.
+- S4: 3.6 scoring runs and post-freeze fixes, including run 1's P8 numbers and the re-tune.
+- S5: 3.7 with Table S1 (all eleven predictions, caption, precision glossary, notes).
+- S6: 3.8 reporting-only metrics in full, with Figure S1.
+- S7: 3.9 in full (P4 detail including the previous-day reading and weighted numbers, P5 totals, P6 entry versus
+  day-level paragraph, P9 candidate explanation, mechanisms paragraph).
+- S8: 3.10 robustness grid with its S1 to S6 expectation bullets (a note says these labels are not supplement
+  sections).
+- S9: 3.11 matched-baseline sensitivity in full.
+- S10: 3.12 spec 003 design and freeze in full (probe spacing, probe rules, families, commit `57208bc`, every
+  post-design choice).
+- S11: from 3.13, Table S2 with its caption and notes, the reported-not-scored paragraph, the L1_step numbers,
+  the probe-budget paragraph and the observer-step paragraph.
+- S12: 4.1 in full, and from 4.2 the main-thread count paragraph, person-absent detail, time-split
+  correlations, pastes and third parties, change-point detail and data density; 4.3's four bullets.
+- S13: section 6's seven-item list and the combining paragraph.
+
+**Cut from the main text, by kind.** Repeated statements (persons per cell, seeds and "local commit, not an
+external registration" given in both Disclosures and section 3; the product disclaimer given three times);
+glosses that restated Table S1, Table S2 or Figure 3 (audit); the introduction's roadmap paragraph and
+"It is natural to ask" opener; definitions given twice (the filter's sensitivity and specificity, the residual
+share, family lists); the referee-response scaffolding (Table 1's "earlier link" column); bullet lists that a
+sentence carries (section 6, section 4.3); and literature detail that a citation string carries (2.5's
+range-restriction sentence, the Anthropic counts, GLOBEM's user-years).
+
+**Kept as required.** The frozen H3 FAIL first and the post hoc INCONCLUSIVE second with no point pass; the
+"[author wording]" marker; the sentence that a pass on the point is weaker than a pass on the interval; the
+review timing (complete at 10:44, before the freeze, not read by the freezing lane), the post-evaluation
+amendment and `REVIEW.md` with its hash; the design-draw versus generator caveat; the A-fixed baseline
+mismatch; the corpus parsing limitation in Ethics; n = 1 non-generalization; every bracketed placeholder and
+the DRAFT declarations label; no S34 to S36 tags. The abstract dropped the generator-mechanism clause and the
+weighted-recovery sentence (with its "1,000 persons"); every number it keeps is unchanged, and it now
+labels the sensitivity figures as reporting-only and the sign change as a hypothetical cell.
+
+**Not changed, noted.** `scripts/claims_lint.sh` fails on the Shen and Han reference title (two questionnaire names)
+both before and after this edit; SUPPLEMENT.md passes. Bolger and Laurenceau (2013) was already uncited in v4.2.
+
+**Science review applied (same day).** `~/lanes/anchor-research/reports/paper-v43-trim-science-review-20261007.md`,
+verdict REVISE. B1: 3.3 now states the P8 re-tune (probe-only `h` 6.539 to 22.949, tuning seed only) and the
+frozen sqrt(200) standard-error leftover. B2: 3.4 and 3.5 state that three of the six robustness expectations
+failed their interval rule in named cells. B3: 3.4 restores the previous-day reading, 16.1 percent [10.0, 22.1],
+with its equal weight, so S4's pointer holds. B4: 3.4 and the abstract label 0.197, 0.053, "3.7 times" and the
+false-flag rates as frozen reporting-only metrics computed after scoring with no threshold, and give the high
+tuning target. B5: the two S12 paragraphs that began mid-sentence (line ranges started one line late) now carry
+their v4.2 openings. Non-blocking: re-attached the entry versus day-level mixing caveat (3.2, 4.2), "a property
+of this window" (4.2), "keeping the frozen thresholds changes five verdicts" (3.5), "classed as typed" (4.2);
+3.6's oracle reworded as H2a's comparator; "training period" defined in 4.2; Table 1 cites Table S1 for P1 to
+P3, P10 and the use row's P2; 2.3 regains the varying indicator count and the link from per-person loadings
+to section 3's pooled statistics; 2.4 regains "it also weakens generalization"; 2.5 regains the previous-day
+history sentence and the full non-response qualifier; 2.6 regains "as in two of the simulation's cells";
+Figures 1 and 3 are now called out. Not applied: N6's E1 to E6 relabelling (it would change the plan's labels)
+and N8's orphan reference.
+
