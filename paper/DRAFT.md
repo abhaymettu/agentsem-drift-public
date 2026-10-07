@@ -518,6 +518,25 @@ triggered slope ratio of 0.829 [0.770, 0.890]) are not comparable with Table 1.
   in 1 of 11 cells, which chance alone can produce. The below-chance direction was not anticipated, and
   attributing it to non-response concentrating when the state is elevated is a post hoc conjecture. In
   the other ten cells, an interval containing zero is not evidence of equivalence.
+### 3.11 Exploratory sensitivity: the baseline series for indicators 4 and 5 (not frozen)
+
+A-fixed's component (ii) scores indicators 4 and 5 from the authorship-filtered text, but the per-person
+baseline mean and standard deviation that those two indicators are standardized against were fit on the
+unfiltered text, in the frozen code and in every run above. The frozen text did not say which series the
+baseline uses, and the mismatch was found after scoring, while reading the code (supplementary repository,
+spec section 18.1). On the attribution round's panels, not the frozen seeds, it offsets the composite's level
+(an S mean of about +0.14 as run against +0.03 with a matched baseline) and inflates the scale of the two
+z-scores by about 1.2; because `h` was tuned with both, the frozen false-flag rate is unaffected. A post-freeze
+sensitivity analysis, planned and hashed before it ran (`sim/SENS-BASELINE-PLAN.md`), re-scored the frozen
+evaluation seeds with the baseline fit on the filtered series and every threshold and schedule re-tuned by the
+frozen procedure. None of the 14 primary verdicts in Table 1, and no component boolean, changed. Detection
+point estimates were lower (A-fixed's 21-day DR sensitivity 0.176 against 0.197; P8's gap 15.7 [13.3, 18.2]
+against 17.8 [15.2, 20.4] points), with overlapping separate intervals and no paired interval computed, so the
+drop is not established. With the frozen thresholds kept instead of re-tuned, five verdicts change and
+A-fixed's false-flag rate falls to 0.072 per tracked person-month against 0.151 as run, which the plan's
+reading rule classes as an operating-point effect. The frozen verdicts stand; the as-run baseline is a
+disclosed choice, not a fix, and the matched baseline is the one a future scorer should use.
+
 ---
 
 ## 4. A one-person corpus audit of the scoring inference

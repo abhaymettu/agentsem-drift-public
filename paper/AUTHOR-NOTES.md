@@ -1,7 +1,7 @@
-# Author notes for paper/DRAFT.md (v4)
+# Author notes for paper/DRAFT.md (v4.1)
 
 Kept out of the manuscript on purpose: provenance, local paths, verification status of references, the
-referee-response map, and open items. v0 `a497ae3`, v1 `d0db495`, v2 `3fb50cd`, v3 `e1f2c72` (voice pass `201f649`); v4 is uncommitted.
+referee-response map, and open items. v0 `a497ae3`, v1 `d0db495`, v2 `3fb50cd`, v3 `e1f2c72` (voice pass `201f649`); v4 `4c46cb3`; v4.1 adds section 3.11 (matched-baseline sensitivity).
 
 ## 1. Provenance
 
@@ -21,6 +21,7 @@ referee-response map, and open items. v0 `a497ae3`, v1 `d0db495`, v2 `3fb50cd`, 
 | program studies cited as Mettu (2026b) | Study 1a `~/code/agentsem-trap-world` commit `21ec751` (`MORNING-HANDOFF.md`); Study 2 S1 `~/code/agentsem-study2-integration` commit `41d6774`; Study 5 `~/code/agentsem-study5-feasibility` commit `3dfe3c2` (`FALSIFICATION-PLAN.md`) |
 | Mettu (2026a) | `~/code/ghost-respondents/paper/GHOST-RESPONDENTS-DRAFT.md`, section 2.2 (E5, E7) |
 | exploratory robustness grid | plan `sim/ROBUSTNESS-PLAN.md`, sha256 `e1dbc8b74be6b3067e9433b76a1d1b24b01b705994b6a248771ad65f11836606`, committed in `3fb50cd` (2026-09-27 23:43:25 CDT); results `sim/robustness.json`, `sim/ROBUSTNESS.md`; two cells (`default`, `m1_15`) computed before the commit for a refactor check, disclosed as `sim/POSTFREEZE-DEVIATIONS.md` item 9 |
+| matched-baseline sensitivity (section 3.11) | plan `sim/SENS-BASELINE-PLAN.md`, sha256 `e9768ee5f8d9273b0c6f4c63de7ef478fdacebe73f4e0e5c888025d70013488c`, committed in `3fa1a03` (2026-10-03); results `sim/sens_baseline.json`, sha256 `7c18568e4b3e0a6d01ee90682ac40b62c5cf84a84de9dfd7c92374396934ab81`, `sim/SENS-BASELINE.md`, commit `24ddeb6`; byte-identical rerun. The level offset (+0.14 against +0.03) and scale factor (about 1.2) are from `~/audit/agentsem-next4-2026-10-03.md` section 1, attribution round-3 panels |
 | figures | `paper/figures.py` renders `paper/fig1` to `fig4` (.svg) from `sim/results.json`, `sim/metrics.json` and `pilot/results.json`. File numbers match figure numbers in the draft (renamed 2026-09-27). v4 edited text labels only (fig1 subtitle and footnote, fourth stage renamed "Use"; fig3 title and description); after re-running `figures.py`, every numeric token in all four SVGs is identical to `HEAD` (`201f649`) |
 | citation verification files | `~/lanes/bridge-jobs/agentsem-overnight-20260927/paper-citations.md`, `prior-art-passive.md`, `lit-verify.md` |
 
@@ -208,3 +209,6 @@ isolate), which needs a new run.
    (about 8,430 words excluding Appendix A and references).
 7. Retention: whether to raise `cleanupPeriodDays` above 45.
 8. The spec's pasted-draft check says "earlier assistant message"; the code checks the last five turns.
+9. Whether section 3.11 stays in the submitted version (spec 001 section 18.3 point 3), and whether the word
+   limit (item 6) absorbs its roughly 260 words. Inserted 2026-10-07 under the owner's delegation of the
+   pending paper decisions.
