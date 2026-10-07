@@ -24,7 +24,9 @@ the frozen threshold on the interval, and weighting on observables did not remov
 agent-authored share rose with the state, one indicator's validity changed sign (from 0.34 to -0.01).
 The best rule flagged 20 percent of planted drifts within 21 days at one false flag per six tracked
 person-months, 3.7 times its chance level; P8, the one prediction proper that passed, compared it with a
-criterion-only rule indistinguishable from chance. A metadata-only audit of one heavy-automation
+criterion-only rule indistinguishable from chance. A second frozen simulation, of a sustained shift and
+logged agent-behaviour changes, held one of two registered predictions; the other failed under its frozen
+rule and is inconclusive under a post hoc interval reading. A metadata-only audit of one heavy-automation
 user's coding-agent transcripts found that 0.93 percent of user-role entries were typed by the person.
 The audit is n = 1 and descriptive. The contribution is the argument, the design requirements it implies
 for a consented validation study, and an existence proof that the scoring inference can fail badly.
@@ -52,7 +54,7 @@ loneliness and emotional dependence over four weeks.
 None of these asks whether a within-person change in a score computed from ordinary agent use is a
 change in the person. The passive-sensing literature gives a reason to ask first: in GLOBEM, a
 multi-year, multi-site phone-sensing dataset of more than 700 user-years, existing models did not
-generalize across cohorts or years (Xu et al., 2023). Work on dense experience sampling shows that
+generalize across cohorts or years (Xu et al., 2022). Work on dense experience sampling shows that
 within-person dynamics can carry information before a transition (Helmich et al., 2023), but it rests
 on intensive self-report, not on a trace the person did not produce for measurement. My searches found
 no study validating within-person change inferred from general-purpose assistant logs against a
@@ -210,7 +212,7 @@ first draft of this argument.
 |---|---|---|---|---|
 | scoring | machine-authored entries; person-absent sessions; state-driven delegation | entry-level provenance; machine share per indicator; naive vs filtered | section 4; section 3, P6 | link 1 |
 | generalization | baseline error; drift inside the baseline; varying indicator count; heterogeneity across persons | baseline and change-score reliability; person-level validity distribution | section 3, P9, family BD; 3.8 | part of links 2 and 3 |
-| extrapolation | version, help and context non-invariance; non-state change; usage missing not at random; construct underrepresentation | invariance across contexts, versions and help; false flags by non-state family; sensitivity; abstention | section 3, P1 to P3, P7, P10, `kappa` cell | links 2 and 3 |
+| extrapolation | version, help and context non-invariance; non-state change; usage missing not at random; construct underrepresentation | invariance across contexts, versions and help; false flags by non-state family; sensitivity; abstention | section 3, P1 to P3, P7, P10, `kappa` cell; 3.13, H3 | links 2 and 3 |
 | backing for extrapolation | score-triggered criterion sampling; criterion non-response | random floor with logged propensities; weighted and unweighted estimates | section 3, P4, P5 | link 4 |
 | use | score-contingent help; reactivity to flags and prompts | logged randomized help; logged prompts | section 3, targeted-help cells, P2 | not in the first draft |
 
@@ -221,13 +223,46 @@ sampling and criterion non-response, is drawn inside extrapolation.
 
 ---
 
+## Disclosures
+
+**Preregistration.** Neither simulation was lodged with a registry. Each was frozen as a document in the
+supplementary repository, committed and hashed before scoring: `sim/PREREG.md` for sections 3.2 to 3.11 (sha256
+in section 3.1) and `sim/PREREG-003.md` for sections 3.12 and 3.13 (sha256 in section 3.12). A local commit is
+not an external registration. The exploratory analyses of sections 3.10 and 3.11 follow plans committed and
+hashed before they ran (two cells of 3.10 were computed once before its plan's commit); post-freeze changes are disclosed in sections 3.6, 3.11 and 3.12. [author to confirm: the
+corpus audit of section 4 had no preregistration]
+
+**Data, materials and code.** The simulation code, the frozen pre-scoring document, both scoring runs, the
+spec 003 pre-registration, evaluation output and dated post-evaluation amendment (`sim/PREREG-003.md`,
+`sim/results_003.json`, `sim/POST-EVALUATION-003.md`), the reporting-only metrics, the audit code and the
+corpus audit's aggregate outputs are in the supplementary repository. None is yet at a persistent public
+archive: the author has not yet authorised a deposit. [persistent link: to be added on deposit] The transcript
+corpus itself is not shared, because it contains third-party content.
+
+**Simulation reporting.** Sections 3.2 and 3.12 give each generator, its families and parameters; every
+parameter is invented except indicator 4's mixing parameters (section 6, item 2). Sections 3.2 and 3.12 give the
+persons per cell (1,000 and 4,000), sections 3.5 and 3.12 the person-bootstrap draws (2,000 and 1,000), and
+sections 3.1 and 3.12 the evaluation seeds, each derived from its frozen file's hash; thresholds were tuned on a
+separate tuning seed (section 3.3). The code and the hashes of every frozen file are in the repository.
+
+**Ethics.** The data in section 3 are synthetic. Section 4 audits the author's own agent transcripts; no
+participants were recruited. User-role text was read only in memory, to assign authorship classes; only
+metadata and aggregates were stored; no state of any person was estimated. The stream contains some
+third-party content (0.77 percent of tool results came from tools named for messaging, calendar or email).
+The audit code parses user-role text and walks tool-result content in memory to count characters and assign authorship classes; it does not establish whose words every payload contains, so no claim is made that no other person's content was read. [AUTHOR TO CONFIRM: no ethics review was sought, because the only human data are the author's own
+usage metadata; third-party traffic was counted by tool name, and the parse does not establish whose words each payload contains.]
+
+---
+
 ## 3. Simulation, frozen and hashed before scoring
 
 ### 3.1 Status
 
 The design, metrics and predictions were frozen before scoring as a committed file with sha256
 `60db6dd195942387e5572a640224c4cb13836f29c37c1b611b14c70598678f17` (supplementary repository,
-`sim/PREREG.md`), at 21:21 CDT on 2026-09-27. Every evaluation seed derives from that hash. The
+`sim/PREREG.md`), at 21:21 CDT on 2026-09-27. Every evaluation seed in sections 3.2 to 3.11 derives from that hash; sections
+3.12 and 3.13 report a second, separately frozen specification (spec 003), with its own hash and seed, given
+in 3.12. The
 freeze is a local commit, not an external registration. The design was written for a change-detection
 layer; seven minutes after the freeze, the project's direction was recorded as a measurement-validity
 study, and the simulation is read here as validity evidence. That reframing changed nothing in the frozen
@@ -537,6 +572,136 @@ A-fixed's false-flag rate falls to 0.072 per tracked person-month against 0.151 
 reading rule classes as an operating-point effect. The frozen verdicts stand; the as-run baseline is a
 disclosed choice, not a fix, and the matched baseline is the one a future scorer should use.
 
+### 3.12 Spec 003: a sustained shift and logged observer changes
+
+Spec 003 keeps the generator of section 3.2 and A-fixed (`k = 0.5`), with help off, a 210-day record and a 28-day
+baseline. In families DR-1.0 and DR-1.5, `D` ramps to a mean 1.0 or 1.5 SD higher from an onset drawn uniformly on
+days 70 to 120, and stays there. An alarm (a flag, section 3.3) on day `a` is confirmed if probes on `a + L`, `a +
+2L` and `a + 3L` (`L` = 3, 9 and 29 at `phi_D` 0.3, 0.7 and 0.9) average at least 0.5 above four baseline probes;
+the comparators are next-day probes and, in simulation only, an oracle reference free of baseline error in `D`.
+The probe rule `wait` probes a later alarm only after the last probed alarm's third probe day; `all` probes every
+alarm, and `stop` none after a first confirmation; the budget target is 3.0 probes per tracked person-month. In
+the PS families the agent's own behaviour changes on a day in the same window, logged for half of persons with the
+indicators it can touch: PS-sub raises indicators 1, 2 and 6, PS-use also adds check-ins, PS-prop shifts in
+proportion to each person's loadings, and DR+PS adds PS-use's change to DR-1.0 near onset. Rule L0 ignores the
+log; L1 resets `S`, holds it and re-baselines every indicator over 14 days; L2 re-baselines only the logged
+indicators; M1 attributes an alarm from the indicator pattern alone.
+
+Two registered predictions (H2a, H3) and four construction checks (H1a, H1b, H4, H5) were frozen in
+`sim/PREREG-003.md` (supplementary repository) at commit `57208bc`, 12:27 CDT on 2026-10-07, sha256
+`06ee47576d02bc440560115b07aad029e8c7574480b684b4c7779d796c99bb79`, a local commit, and scored once (attested by
+the run log; the frozen scorer did not enforce it) at N = 4,000 persons per cell, with 1,000 bootstrap resamples
+and a seed (192815961) derived from the frozen file's hash. Choices made after the design run are disclosed there:
+H3's point rule for L1 and L2, chosen knowing it passed on the design draw (1.421) where the interval rule did not
+([1.175, 1.706]), while the only other draw gave 1.629, above 1.5; H1b's 0.70, just under the design lower bound
+(0.715); H2b's demotion to exploratory; a 21-day re-baseline window, evaluated and not taken; the budget rule; and
+N, raised from 2,000.
+
+A blocking design review by a separate AI agent was complete at 10:44 CDT, before the freeze, but the freezing
+lane (the agent session that froze the file) had not read it, and its blocking items, among them an objection to
+H3's point rule, were not applied. A dated amendment written after the evaluation (`sim/POST-EVALUATION-003.md`)
+discloses the review and adds post hoc readings and nine definition corrections, one of which retires the frozen
+phrase "non-refractory tracked days"; it changes no frozen verdict, threshold or number.
+
+### 3.13 Results, spec 003: a sustained shift in `D`
+
+Under the frozen rules, one of the two registered predictions holds (H2a: 0.202 [0.175, 0.227] against 0.10, design value 0.201) and H3 fails, on one of its six clauses.
+All four construction checks hold. A post hoc interval reading of H3, adopted after the evaluation, is reported
+second, in the H3 paragraph.
+
+**Table 3. Predictions, spec 003 evaluation run.** Point [95% person-bootstrap interval], 4,000 persons per cell;
+"cc", construction check. S, stationary `D` with no observer change; DR-1.0, a ramp in `D`; PS-sub, PS-use and
+PS-prop, stationary `D` with an observer change logged for half of each family's persons (PS-use also raises the
+agent's check-ins; PS-prop's change is proportional to each person's loadings). H3 uses the logged persons of
+PS-sub and PS-use, H5 the unlogged persons of PS-prop. H3's rate, for each rule and family, is the logged persons'
+alarms per 30 tracked days from the later of the change day and the end of the 28-day baseline to day 210, pooled
+over persons (total alarms over total tracked days), divided by the same persons' pooled rate on the S panel over
+the same window. A tracked day is one on which the detector neither abstains nor holds: days in the 14-day
+refractory period count as tracked (the frozen text's "non-refractory" misdescribes the scorer that produced the
+verdicts), and L1's 14 hold days after the change do not. Verdicts compare the stored 4-decimal values with the
+thresholds. A prediction fails if any clause fails.
+
+| | statistic | threshold | est [95% interval] | verdict |
+|---|---|---|---|---|
+| H1a (cc) | S, `phi_D` 0.7: confirmed share, spaced minus next-day | interval at or below -0.15 | -0.2643 [-0.2956, -0.2345] | PASS |
+| H1b (cc) | DR-1.0, `phi_D` 0.7: spaced over next-day confirmed share, first in-window alarm (persons in the Notes) | interval at or above 0.70 | 0.8871 [0.8398, 0.9403] | PASS |
+| H2a | S, `phi_D` 0.9: spaced confirmed share minus oracle-reference share | interval at or above 0.10 | 0.2019 [0.1748, 0.2267] | PASS |
+| H3 | logged-person alarm rate over S, all six clauses | all six hold | | FAIL |
+| | L1, PS-sub | point below 1.5 | 1.5756 [1.4205, 1.7489] | fails |
+| | L1, PS-use | point below 1.5 | 1.4599 [1.3211, 1.6276] | holds |
+| | L2, PS-sub | point below 1.5 | 1.2110 [1.1195, 1.3090] | holds |
+| | L2, PS-use | point below 1.5 | 1.1935 [1.1035, 1.2859] | holds |
+| | L0, PS-sub | interval above 1.5 | 3.1239 [2.9606, 3.3025] | holds |
+| | L0, PS-use | interval above 1.5 | 3.1286 [2.9611, 3.3126] | holds |
+| H4 (cc) | logged DR+PS, `phi_D` 0.7: 21-day sensitivity, L2 minus L1 (persons in the Notes) | interval above 0.0 | 0.2035 [0.1768, 0.2306] | PASS |
+| H5 (cc) | persons alarmed under L0 within 42 days of onset (DR-1.0) or of the change (unlogged PS-prop): share whose first such alarm M1 attributes to the person, DR-1.0 minus PS-prop | interval inside (-0.10, 0.10) | -0.0014 [-0.0153, 0.0123] | PASS |
+
+*Notes.* The definitions follow the amendment's wording corrections (`sim/POST-EVALUATION-003.md`, section (f)),
+which change no number. H1b: among DR-1.0 persons with an alarm in `[t0, t0 + 21)` and none before the onset `t0`,
+the first in-window alarm is confirmed, and the statistic is the spaced confirmed share over the next-day
+confirmed share, each among confirmable alarms (at least two probes answered). H4: logged DR+PS persons with `t0`
+in `[c, c + 13]`, where `c` is the change day, so that the shift begins inside L1's hold; 21-day sensitivity, with
+pre-onset alarms not excluded. H5: among persons with an alarm under L0 in `[x0, x0 + 42)`, where `x0` is the
+onset for DR-1.0 and the change day for PS-prop, the share whose first such alarm M1 attributes to the person.
+H5's second clause, L0+label, is 0.0000 for any data: the rule labels an alarm *person* unless a logged change
+falls in the 14 days before it, and neither arm has a log entry, so the clause is true by definition and not
+scored. Because it reads the policy log it is not an indicator-only rule, and H5's claim is limited to M1. H1 and
+H2 are scored under the probe rule `all`; each scores a person's first post-baseline alarm, which every rule
+probes, so the statistics are the same under `all`, `wait` and `stop`. H3, H4 and H5 use no probes. Nothing was
+re-tuned after scoring.
+
+**Construction checks.** All four held on the interval (Table 3); they are checks on the construction, not findings.
+
+**Reported, not scored** (PREREG-003 section 4). H2b, the reduction in the H2a gap from a 28-day to a 56-day
+baseline, was 0.0475 [0.0153, 0.0801], under the 0.05 threshold it was demoted from. H6, matched `k` minus `k =
+0.5` in 21-day sensitivity at `phi_D` 0.7, was -0.0230 [-0.0335, -0.0118] for DR-1.0 and -0.0518 [-0.0643,
+-0.0395] for DR-1.5. On H4's persons, L2 minus the unregistered L1_step was 0.2080 [0.1827, 0.2318].
+
+**Registered prediction H3. [author wording]** Under its frozen rule, H3 did not hold. That rule read L1 and L2 on
+the point estimate and L0 on the interval, and H3 failed on one of its six clauses: L1 on PS-sub had a point
+estimate of 1.576 [1.421, 1.749] against "below 1.5". The other five clauses met the frozen rule (Table 3).
+The frozen file states that a pass on the point is weaker than a pass on the interval; L1 on PS-use met the rule
+on the point only, and its interval contains 1.5. The pre-freeze review of section 3.12 objected to the point rule. In its synthetic,
+design-stage Monte Carlo (500 populations per sample size), the generator's PS-sub L1 ratio was about 1.585, above
+1.5, and the design draw on which the rule had been chosen sat at its 16th percentile, so a pass on the point
+would have been sampling noise. These Monte Carlo figures come from the review document (`REVIEW.md`, sha256
+`35adb9077bbc4fdc2e117c3f8861cdb23619f30a4f1fc8911f47a37c010accd4`), which is outside the supplementary
+repository; `sim/POST-EVALUATION-003.md` sections (c) and (d) mirror them. It recommended reading every clause on
+its 95 percent interval, with a three-way outcome: holds, fails or inconclusive. Read that way after the
+evaluation, and labelled post hoc, both L1 clauses are inconclusive, because each interval contains 1.5; L2 holds
+on both families (upper bounds 1.309 and 1.286), as does L0; and H3 as a whole is inconclusive. On this reading,
+neither L1 point estimate is read as a pass or a fail. This was the review's expected outcome: at N 4000 its Monte
+Carlo had PS-sub's L1 clause inconclusive on the interval in 0.792 of populations, and the frozen rule passing H3
+in only 0.148, so the frozen FAIL is the generator's usual outcome, not bad luck. That Monte Carlo describes the
+generator; it is neither confirmatory power nor evidence about the evaluation draw. The unregistered L1_step arm,
+which leaves the unmapped indicators on their pre-change baseline, gave 0.934 [0.857, 1.022] on PS-sub and 0.927
+[0.849, 1.014] on PS-use. It was not sized or registered for H3 and is reported as a comparison, not a rescue:
+under the frozen rule H3 stands as failed.
+
+**Probe budget.** Under the `wait` rule (section 3.12), DR-1.5 used 2.401 [2.376, 2.425] probes
+per tracked person-month at `phi_D` 0.7; the design rule `all` used 3.318 [3.271, 3.363]. The target is read on
+the 95 percent upper bound, a reading rule adopted post hoc in the amendment because the frozen text gave none; on
+this draw the point and upper-bound readings agree in every cell of the budget table. On that reading `wait` met
+3.0 for every family at `phi_D` 0.7 (upper bounds 2.425 for DR-1.5, 1.978 for DR-1.0, 1.277 for S). The cost is in
+the in-window share: persons confirmed in window fell from 0.321 under `all` to 0.288 under `wait`, a difference
+of 0.032 for which the run stores no paired interval. `wait` also lowered S's confirmed false alarms per tracked
+month at `phi_D` 0.7 (0.066 to 0.053). The 3.0 target is claimed only at `phi_D` 0.7: at 0.9 `wait` cut DR-1.5's
+in-window share from 0.260 to 0.160, and at 0.3 it equalled `all`, under which DR-1.5 did not meet 3.0 (3.699
+[3.654, 3.740]); only `stop` did (1.798 [1.775, 1.818]). Only `all`, `wait` and `stop` were compared, so `wait` is
+the best of three, not shown optimal.
+
+**Observer-step rules (exploratory, not frozen).** These are design-stage generator means, synthetic, and score no
+prediction. Across 200 simulated populations of 1,000 persons (227 to 309 in-window persons each), L1_step
+exceeded L1, which re-centres the unmapped indicators, in D-dependent true-positive minus false-positive rate by
+about zero at rho 0 (0.004, MCSE 0.002), rising to 0.219 at rho 2 (k 0.5, 63 d; rho scales D's realized effect on
+the unmapped indicators, 1 as generated). With an unlogged shift on the unmapped indicators concurrent with the
+logged change in every person, L1_step's advantage under equal weighting was 0.041 at rho 0 and 0.093 to 0.142 at
+rho 0.5 to 2; at twice the weight on false alarms, L1 was ahead at every rho (-0.148 to -0.047). On the same
+populations, the L0 interaction of the D change with the observer change at 21 days was 0.108 (single draw 0.154).
+L1_did, a within-person difference-in-differences variant dropped before the freeze, exceeded L1 by about zero at
+rho 0 (-0.001) and by 0.071, 0.150 and 0.273 at rho 0.5, 1 and 2; and the step of a decomposition from L1 to
+L1_step that only stops re-centring the unmapped indicators was about zero at rho 0 (0.005) and 0.208 at rho 2.
+
 ---
 
 ## 4. A one-person corpus audit of the scoring inference
@@ -552,7 +717,7 @@ counts are not reported: they depend on when the scan runs, because the transcri
 including from the sessions that produced this analysis.
 
 **What is kept.** Per-entry metadata (timestamp, session, role, flags, provenance fields, harness
-version, model id, length) and an authorship class. Tool-result payloads are never read; other text is
+version, model id, length) and an authorship class. Tool-result payloads are walked in memory only to count characters and are not stored or classified; other text is
 used only in memory, to classify and check for pastes.
 
 **Authorship classes**, in priority order: `sidechain` (subagent traffic); `tool-result`; `injected`
@@ -721,24 +886,26 @@ stated in claims (FDA, 2026), and nothing in this paper states an intended use.
 
 ---
 
-## Statements
+## Author contributions and conflicts
+
+[DRAFT declarations, pending the author's confirmation]
+
+**Author.** Abhay Mettu, sole author; independent researcher. [ORCID 0009-0001-2434-353X, public record checked
+2026-10-07; author to confirm use]
+
+**Contributions.** Sole author. [author to confirm contribution roles, if the venue asks for a taxonomy]
+
+**Funding.** No external funding.
+
+**Conflicts of interest.** No competing interests.
 
 **Use of AI tools.** The simulation code, the corpus-audit code, the analyses, the audit of the scoring
 code against the frozen text, and this draft were produced with AI coding agents (Anthropic Claude
 models) working under the author's direction.
-
-**Ethics.** The corpus is the author's own agent transcripts. User-role text was read only in memory, to
-assign authorship classes; only metadata and aggregates were stored, tool-result payloads were never
-read, and no state of any person was estimated. The stream contains some third-party content (0.77
-percent of tool results came from tools named for messaging, calendar or email), which the audit did not
-read. [AUTHOR TO CONFIRM: no ethics review was sought, because the only human data are the author's own
-usage metadata; no other person's content was read (third-party traffic was counted only by tool
-name).]
-
-**Data and code availability.** The simulation code, the frozen pre-scoring document, both scoring runs,
-the reporting-only metrics, the audit code and the corpus audit's aggregate outputs are in the
-supplementary repository. The transcript corpus itself is not shared, because it contains third-party
-content.
+Candidate minimal line: "Claude assisted with code development and manuscript preparation." The venue asks the
+statement to name the model, its purpose, what the author checked and its limits: [model and version: author to
+specify]; [purpose: author to specify]; [what the author checked: author to specify]; [limits: author to
+specify].
 
 ---
 
@@ -773,13 +940,13 @@ this is the rising-share distortion in section 3.9.
 - Borsboom, D., Mellenbergh, G. J., and van Heerden, J. (2004). The concept of validity. *Psychological Review*, 111(4), 1061-1071.
 - Boruvka, A., Almirall, D., Witkiewitz, K., and Murphy, S. A. (2018). Assessing time-varying causal effect moderation in mobile health. *Journal of the American Statistical Association*, 113(523), 1112-1121.
 - Curran, P. J., and Bauer, D. J. (2011). The disaggregation of within-person and between-person effects in longitudinal models of change. *Annual Review of Psychology*, 62, 583-619.
-- Eichstaedt et al. (2018). Facebook language predicts depression in medical records. *Proceedings of the National Academy of Sciences.* doi:10.1073/pnas.1802331115. <!-- cite: -->
+- Eichstaedt et al. (2018). Facebook language predicts depression in medical records. *Proceedings of the National Academy of Sciences*, 115(44), 11203-11208. doi:10.1073/pnas.1802331115. <!-- cite: -->
 - FDA/CDRH (2026, January 6). *General Wellness: Policy for Low Risk Devices.* Guidance for Industry and Food and Drug Administration Staff.
 - Fisher, A. J., Medaglia, J. D., and Jeronimus, B. F. (2018). Lack of group-to-individual generalizability is a threat to human subjects research. *Proceedings of the National Academy of Sciences*, 115(27), E6106-E6115.
 - Hamaker, E. L. (2012). Why researchers should think "within-person": A paradigmatic rationale. In M. R. Mehl and T. S. Conner (Eds.), *Handbook of Research Methods for Studying Daily Life.* Guilford Press.
 - Hamaker, E. L. (2025). Analysis of intensive longitudinal data: Putting psychological processes in perspective. *Annual Review of Clinical Psychology*, 21, 379-405.
 - Hamaker, E. L., Kuiper, R. M., and Grasman, R. P. P. P. (2015). A critique of the cross-lagged panel model. *Psychological Methods*, 20(1), 102-116.
-- Helmich, Smit, Bringmann, Schreuder, Oldehinkel, Wichers, and Snippe (2023). Detecting impending symptom transitions using early-warning signals in individuals receiving treatment for depression. doi:10.1177/21677026221137006. <!-- cite: -->
+- Helmich, Smit, Bringmann, Schreuder, Oldehinkel, Wichers, and Snippe (2023). Detecting impending symptom transitions using early-warning signals in individuals receiving treatment for depression. *Clinical Psychological Science*, 11(6), 994-1010. doi:10.1177/21677026221137006. <!-- cite: -->
 - Horiuchi, S. (2026). Governing mental-state inference: Source-neutral regulatory triggers and tiered obligations. arXiv:2608.00936.
 - Kane, M. T. (2013). Validating the interpretations and uses of test scores. *Journal of Educational Measurement*, 50(1), 1-73.
 - Klasnja, P., Hekler, E. B., Shiffman, S., Boruvka, A., Almirall, D., Tewari, A., and Murphy, S. A. (2015). Microrandomized trials: An experimental design for developing just-in-time adaptive interventions. *Health Psychology*, 34(Suppl), 1220-1228.
@@ -796,12 +963,12 @@ this is the rising-share distortion in section 3.9.
 - Pearson, K. (1903). Mathematical contributions to the theory of evolution. XI. On the influence of natural selection on the variability and correlation of organs. *Philosophical Transactions of the Royal Society of London, Series A*, 200, 1-66.
 - Rubin, D. B. (1976). Inference and missing data. *Biometrika*, 63(3), 581-592.
 - Sackett, P. R., and Yang, H. (2000). Correction for range restriction: An expanded typology. *Journal of Applied Psychology*, 85(1), 112-118.
-- Shen and Han (2026). The reliability illusion in synthetic patients. *Proceedings of CLPsych 2026.*
+- Shen and Han (2026). The reliability illusion in synthetic patients: Psychometric misalignment of open-weight LLMs on PHQ-9 and GAD-7. *Proceedings of CLPsych 2026.*
 - Tao, R., Mercaldo, N. D., Haneuse, S., Maronge, J. M., Rathouz, P. J., Heagerty, P. J., and Schildcrout, J. S. (2021). Two-wave two-phase outcome-dependent sampling designs, with applications to longitudinal binary data. *Statistics in Medicine*, 40(8), 1863-1876.
 - Thorndike, R. L. (1949). *Personnel Selection: Test and Measurement Techniques.* Wiley.
 - Tieleman, O., Zhu, Z., Su, T., Bell, S. J., Hull, T. D., and Stamatis, C. A. (2026). Fine-tuning LLMs for passive depression severity estimation from AI mental health dialogue. arXiv:2606.17973. <!-- cite: -->
 - Varadarajan, V., Sikström, S., Kjell, O., and Schwartz, H. A. (2024). ALBA: Adaptive language-based assessments for mental health. *Proceedings of NAACL 2024.*
 - Varadarajan, V., Xu, H., Boehme, R. A., Mirstrom, M. M., Sikström, S., and Schwartz, H. A. (2026). MAQuA: Multi-outcome adaptive question-asking for mental health using item response theory. *Proceedings of EACL 2026.*
-- Xu et al. (2023). GLOBEM: multi-year, multi-site passive-sensing and wellbeing dataset and cross-dataset generalization benchmark. *IMWUT / UbiComp 2023.* doi:10.1145/3569485.
-- Yun, H. S., Arjmand, M., Sherlock, P., Paasche-Orlow, M. K., Griffith, J. W., and Bickmore, T. (2024). Keeping users engaged during repeated administration of the same questionnaire: Using large language models to reliably diversify questions. *Proceedings of ACM IVA 2024.* arXiv:2311.12707.
+- Xu et al. (2022). GLOBEM: multi-year, multi-site passive-sensing and wellbeing dataset and cross-dataset generalization benchmark. *IMWUT / UbiComp 2023.* doi:10.1145/3569485.
+- Yun, H. S., Arjmand, M., Sherlock, P., Paasche-Orlow, M. K., Griffith, J. W., and Bickmore, T. (2024). Keeping users engaged during repeated interviews by a virtual agent: Using large language models to reliably diversify questions. *Proceedings of ACM IVA 2024.* arXiv:2311.12707.
 - Zhou, H., Weaver, M. A., Qin, J., Longnecker, M. P., and Wang, M. C. (2002). A semiparametric empirical likelihood method for data from an outcome-dependent sampling scheme with a continuous outcome. *Biometrics*, 58(2), 413-421.

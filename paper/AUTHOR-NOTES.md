@@ -1,7 +1,8 @@
-# Author notes for paper/DRAFT.md (v4.1)
+# Author notes for paper/DRAFT.md (v4.2)
 
 Kept out of the manuscript on purpose: provenance, local paths, verification status of references, the
-referee-response map, and open items. v0 `a497ae3`, v1 `d0db495`, v2 `3fb50cd`, v3 `e1f2c72` (voice pass `201f649`); v4 `4c46cb3`; v4.1 adds section 3.11 (matched-baseline sensitivity).
+referee-response map, and open items. v0 `a497ae3`, v1 `d0db495`, v2 `3fb50cd`, v3 `e1f2c72` (voice pass `201f649`); v4 `4c46cb3`; v4.1 adds section 3.11 (matched-baseline sensitivity); v4.2 (uncommitted, 2026-10-07) adds sections 3.12
+(spec 003 methods) and 3.13 (spec 003 results, Table 3) and a "3.13, H3" pointer in the section 2.7 table.
 
 ## 1. Provenance
 
@@ -25,6 +26,12 @@ referee-response map, and open items. v0 `a497ae3`, v1 `d0db495`, v2 `3fb50cd`, 
 | spec 003 pre-registration | `sim/PREREG-003.md`, frozen at commit `57208bc` (2026-10-07 12:27:07 CDT), sha256 `06ee47576d02bc440560115b07aad029e8c7574480b684b4c7779d796c99bb79` |
 | spec 003 evaluation | `sim/results_003.json`, sha256 `922cd808aa05602750d3e2908b9354f8ec91ddb2736b8381faa8fd56c0e8000c`, with `sim/RESULTS-003.md`, commit `52286ad` (2026-10-07 12:33:54 CDT); `n` 4000, seed 192815961 derived from the frozen file's sha256 |
 | spec 003 post-evaluation amendment | `sim/POST-EVALUATION-003.md`, dated 2026-10-07, written after the evaluation, committed in `626ce6c`, section (g) repaired in `533aa14`, sha256 `7ad60923a2ef11d28324d6f6ddd46cae670efe5ae1f9d445968126027c7bbfda`; post hoc readings only, frozen verdicts unchanged (section 9) |
+| spec 003 design text (section 3.12) | `specs/003-sustained-shift/spec.md` (r5) sections 3, 4, 7 and 8: shifts 1.0 and 1.5, ramp U[7, 21], probe days `a + L` to `a + 3L`, margin 0.5, oracle reference, families, L0, L1, L2; `sim/PREREG-003.md` sections 1, 2, 5 and 7: help-off, `T` 210, 28-day baseline, 4 baseline probes, `W` 14, N 4000, 1000 resamples, the `wait`/`all`/`stop` rules, and the choices disclosed as made after the design run |
+| spec 003 pre-freeze review (sections 3.12, 3.13) | `~/lanes/opus-reviews/prereg003-20261007/REVIEW.md`, sha256 `35adb9077bbc4fdc2e117c3f8861cdb23619f30a4f1fc8911f47a37c010accd4`, outside the repo; timeline `~/lanes/anchor-research/evidence/prereg003-review-20261007/TIMELINE.md`, sha256 `859057ab...`. The paper cites both only through `sim/POST-EVALUATION-003.md` sections (a), (c), (d) and (h) |
+| observer-step paragraph (section 3.13) | design stage, exploratory, not frozen: `sim/OBSERVER-STEP-DIGEST.md` sections 1 to 3; `sim/rep2_003.json` (REP2-003, 200 populations) and `sim/rep_003.json` (REP-003, same 200 seeds) |
+| spec 003 candidate text | `~/lanes/anchor-research/drafts/paper-spec003-results-draft.md` (176 lines), inserted in v4.2 as section 3.13; its opening method sentences moved into 3.12, its "Table 2" renumbered Table 3 (2.7 already has a Table 2), its definitions block turned into Table 3's notes, and L1_did and the HYB-003 step glossed in the observer-step paragraph |
+| ORCID (declarations block) | 0009-0001-2434-353X, the candidate from the Courier release source; public record checked 2026-10-07 14:44 CDT by the coordinator via `pub.orcid.org/v3.0/0009-0001-2434-353X/person`: given name Abhay, family name Mettu, name visibility public. Shown in the draft as "[ORCID 0009-0001-2434-353X, public record checked 2026-10-07; author to confirm use]" |
+| corpus no-read claims (Disclosures, Ethics; section 4.1) | `pilot/trace_audit.py` cannot prove that no other person's content was read. `extract_text_and_chars` walks tool_result content inside `message.content` in memory to count characters (only the separate `toolUseResult` field is never read), and user-role text, which can hold pasted third-party material (0.30 percent of entries carry a paste marker), is read in memory to classify authorship. The Disclosures therefore keep "[owner to confirm: no other person's content was read]" and say tool-result content was walked only to count characters. Section 4.1's "Tool-result payloads are never read" was not changed and conflicts with the code (open item 16) |
 | figures | `paper/figures.py` renders `paper/fig1` to `fig4` (.svg) from `sim/results.json`, `sim/metrics.json` and `pilot/results.json`. File numbers match figure numbers in the draft (renamed 2026-09-27). v4 edited text labels only (fig1 subtitle and footnote, fourth stage renamed "Use"; fig3 title and description); after re-running `figures.py`, every numeric token in all four SVGs is identical to `HEAD` (`201f649`) |
 | citation verification files | `~/lanes/bridge-jobs/agentsem-overnight-20260927/paper-citations.md`, `prior-art-passive.md`, `lit-verify.md` |
 
@@ -50,6 +57,52 @@ referee-response map, and open items. v0 `a497ae3`, v1 `d0db495`, v2 `3fb50cd`, 
   `pilot/indicator4_params.json` (main thread and `day_level_main_thread`). These are identical in the
   committed run and the working-tree re-run, and `trace_audit.py --until 2026-09-28T01:32:31Z` reproduces
   them from any later corpus state.
+- Section 3.12: `n` 4000, `nboot` 1000, `T` 210, `onset` [70, 121) (U[70, 120]), `lags` {0.3: 3, 0.7: 9,
+  0.9: 29}, `seed` 192815961, `prereg_sha256`: `sim/results_003.json` top level. Shifts 1.0 and 1.5, margin 0.5
+  (`margin`), four baseline probes, PS-sub's indicators 1, 2 and 6, DR+PS within 5 days of onset, 14-day
+  re-baseline: spec 003 sections 3, 4, 7 and 8 and PREREG-003 section 1. Freeze `57208bc` at 12:27 CDT:
+  POST-EVALUATION-003 (a) and (h). Design values 1.421 and [1.175, 1.706], 1.629, 0.70 and 0.715, N 2000 to
+  4000: PREREG-003 sections 1, 2, 3 and 7. Review at 10:44, not read by the freezing lane, blocking items not
+  applied: POST-EVALUATION-003 (a). 1.629 (check seed 20261004, PS-sub L1/S at N 2000): PREREG-003 section 2.
+  W 21 evaluated and not taken: PREREG-003 sections 1 and 7. Budget target 3.0 probes per tracked
+  person-month: PREREG-003 section 5. Scored once, attested by the run log, not enforced by the scorer:
+  RESULTS-003 "Deviations" and POST-EVALUATION-003 (a). Nine definition corrections, "non-refractory"
+  retired: POST-EVALUATION-003 (f), items 1 to 9.
+- Section 3.13, "Reported, not scored" (added after the 2026-10-07 science review, item B2): H2b 0.0475
+  [0.0153, 0.0801], `verdicts.H2b`; its dropped 0.05 threshold, spec 003 section 11; H6 -0.0230 [-0.0335,
+  -0.0118] and -0.0518 [-0.0643, -0.0395], `verdicts.H6.{DR-1.0,DR-1.5}` (RESULTS-003 "Reported, not
+  scored"); L2 minus L1_step 0.2080 [0.1827, 0.2318], `verdicts.H4.L1_step`. The frozen-rule H3 pass rate
+  0.148 at N 4000: POST-EVALUATION-003 (d), REVIEW.md section 3.2 ("H3, all six, drafted").
+- Section 3.13, Table 3 and the H2a, construction-check and H3 paragraphs: `sim/results_003.json`, block
+  `verdicts` (printed in `sim/RESULTS-003.md`, "Verdicts"): `verdicts.H1a`, `H1b`, `H2a`, `H4`
+  (`est`, `lo`, `hi`, `threshold`); `verdicts.H3.clauses.{L1_PS-sub, L1_PS-use, L2_PS-sub, L2_PS-use,
+  L0_PS-sub, L0_PS-use}`, threshold 1.5, `verdicts.H3.holds` false; `verdicts.H5.clauses.M1` and
+  `verdicts.H5.L0label` (0.0000); `verdicts.H3.L1_step.{PS-sub, PS-use}` (0.9344 [0.8570, 1.0218], 0.9273
+  [0.8494, 1.0141]). Prose rounds the 4-decimal values to 3. H2a's design value 0.201: PREREG-003 section 2.
+  Table 3's definitions and notes: POST-EVALUATION-003 (f) items 1 to 6 and 8; "at least two probes answered":
+  spec 003 section 7.
+- Section 3.13, post hoc H3 reading: interval verdicts and upper bounds 1.309 and 1.286, POST-EVALUATION-003
+  (c); 1.585, the 16th percentile, 500 populations per N and 0.792, POST-EVALUATION-003 (c) and (d), from
+  REVIEW.md sections 2.1 and 2.2 (synthetic, design-stage).
+- Section 3.13, probe budget: `sim/results_003.json`, block `budget`; 2.401 [2.376, 2.425] and 3.318 [3.271,
+  3.363], `budget.phi0.7_DR-1.5.{wait,all}.probes_per_tracked_month`; upper bounds 1.978 and 1.277,
+  `budget.phi0.7_{DR-1.0,S}.wait.probes_per_tracked_month.hi`; 0.321 and 0.288,
+  `budget.phi0.7_DR-1.5.{all,wait}.persons_confirmed_in_window`; 0.066 and 0.053,
+  `budget.phi0.7_S.{all,wait}.confirmed_fa_per_tracked_month`; 0.260 and 0.160,
+  `budget.phi0.9_DR-1.5.{all,wait}.persons_confirmed_in_window`; 3.699 [3.654, 3.740] and 1.798 [1.775,
+  1.818], `budget.phi0.3_DR-1.5.{all,stop}.probes_per_tracked_month`. The difference 0.032 (0.0324, no
+  paired interval): RESULTS-003 "Probe budget". Upper-bound reading and point/upper agreement:
+  POST-EVALUATION-003 (e); `wait` semantics and 28 days at 0.7: (f) item 5.
+- Section 3.13, observer-step paragraph: 200 populations and 227 to 309 in-window persons,
+  `rep2_003.json` `R` and `per_population.n_inwin` (min 227, max 309); 0.004 (MCSE 0.002) and 0.219,
+  `rep2_003.json` `summary.xcheck_L1_step_minus_L1_dd_rho{0.0,2.0}` (0.0041, mcse 0.0018; 0.2186); 0.041 and
+  0.093 to 0.142, `rep_003.json` `summary.rho{0.0,0.5,1.0,2.0}_conc0.5_A-k0.5_h63.U_w1_p1.0.mean` (0.0411,
+  0.0932, 0.1424 at rho 2); -0.148 to -0.047, same keys with `U_w2_p1.0` (-0.1479, -0.0466); 0.108 and
+  0.154, `rep2_003.json` `summary.fact_L0_interaction_h21.{mean,design}`; -0.001, 0.071, 0.150, 0.273,
+  `summary.load_L1_did_minus_L1_dd_rho{0.0,0.5,1.0,2.0}.mean`; 0.005 and 0.208,
+  `summary.hyb_step3_dd_rho{0.0,2.0}.mean`. "About zero" at rho 0: digest section 2 (`design_side` 0.465 and
+  0.51). Not carried over from the candidate draft: p*(2) and p*(4), and the ABSORB and UNLOG generator
+  means.
 - Raw scan counts, kept here as provenance only (they depend on when the scan runs, because the live
   transcript store keeps growing, including from the analysis sessions themselves):
 
@@ -68,6 +121,11 @@ referee-response map, and open items. v0 `a497ae3`, v1 `d0db495`, v2 `3fb50cd`, 
 - Commit timestamps (git log), the 21:28 time of spec section 10 (spec text), and the 45-day retention
   (`~/.claude/settings.json`).
 - The "about 22 baseline-window answers" in section 3.6: `sim/POSTFREEZE-DEVIATIONS.md` item 6.
+- Sections 3.12 and 3.13: the review's Monte Carlo figures (about 1.585, the 16th percentile, 500 populations
+  per N, 0.792, 0.148), which the H3 paragraph now attributes to REVIEW.md (sha256 `35adb907...`), exist only in REVIEW.md, outside the repo, and reach the paper through POST-EVALUATION-003 (c)
+  and (d); the times 10:44 and 12:27 are the file and history times listed in its section (a).
+- Section 3.12's design values (1.421, [1.175, 1.706], 1.629, 0.715) are design-stage numbers quoted in the
+  frozen PREREG-003, from `sim/DESIGN-003.md`, `sim/DECIDE-003.md` and the check seed 20261004 run.
 
 ### Discrepancies noticed
 
@@ -91,7 +149,7 @@ From the three citation files. The manuscript carries no status tags.
 | Thorndike (1949) | book verified; Case II and III labels confirmed only in secondary sources, so the draft attributes the labels to Sackett and Yang (2000) |
 | Sackett and Yang (2000); Page (1954); Rubin (1976); Klasnja et al. (2015); Nahum-Shani et al. (2018) | verified |
 | Begg and Greenes (1983) | abstract and secondary summaries only; JSTOR full text not read <!-- cite: --> |
-| Lamp and MacKinnon (2024) | verified from PMC full text; page span 647-648 not reconciled with the publisher; the referee says it is a two-page abstract, so it is cited only alongside Sackett and Yang |
+| Lamp and MacKinnon (2024) | verified from PMC full text; Crossref gives 59(3), 647-648, matching the draft (citations ledger 2026-10-07), so the page question is closed; the referee says it is a two-page abstract, so it is cited only alongside Sackett and Yang |
 | Boruvka et al. (2018) | verified (arXiv full text; JASA details via PubMed) |
 | Lathia et al. (2013) | verified, pages 183-192 |
 | Zhou et al. (2002) | verified at the abstract page, with the corrected title |
@@ -102,6 +160,17 @@ From the three citation files. The manuscript carries no status tags.
 | Horiuchi (2026) | abstract only |
 | FDA (2026) General Wellness guidance | verified |
 | Mettu (2026a, 2026b) | own unpublished work; not retrievable until deposited |
+
+S34 to S36: `grep -c -E '\bS3[4-6]\b' paper/DRAFT.md` returned 0 on 2026-10-07, so the paper carries no S34,
+S35 or S36 tag and no opaque tag claim; nothing was replaced. (Spec 003 section 13 still lists "the S34 to S36
+sources" as open; they do not reach the paper.)
+
+Metadata updated 2026-10-07 from `~/lanes/anchor-research/evidence/citations-20261007/ledger.md` (Crossref):
+GLOBEM (Xu et al.) year 2022, not 2023, in the entry and the in-text citation (the venue string "IMWUT /
+UbiComp 2023" was left as it was); Yun et al. now carry the IVA 2024 title ("...repeated interviews by a
+virtual agent..."); Shen and Han gain the subtitle; Eichstaedt et al. 115(44), 11203-11208; Helmich et al.
+*Clinical Psychological Science* 11(6), 994-1010 (the journal name was added with the volume). Nothing else in
+the references changed.
 
 Added in v3, all verified in `paper-citations.md` ("Ergodicity and person-level generalization (round
 2)"): Molenaar (2004); Fisher, Medaglia and Jeronimus (2018); Adolf and Fried (2019), a PNAS letter;
@@ -174,7 +243,7 @@ SUBMISSION.md is a build product and is not committed.
    reporting-only metrics with a DOI (OSF or Zenodo), which also gives the external timestamp a local
    commit cannot.
 2. Make Mettu (2026a, 2026b) retrievable (deposit or preprint).
-3. Confirm or replace the bracketed ethics sentence in Statements.
+3. Confirm or replace the bracketed ethics sentence, now in the Disclosures block before section 3.
 
 ### Round 3 (coordinator, v3)
 
@@ -215,6 +284,36 @@ isolate), which needs a new run.
 9. Whether section 3.11 stays in the submitted version (spec 001 section 18.3 point 3), and whether the word
    limit (item 6) absorbs its roughly 260 words. Inserted 2026-10-07 under the owner's delegation of the
    pending paper decisions.
+10. The H3 paragraph in section 3.13 still carries its "[author wording]" marker. Its content follows section 9's
+   order (frozen FAIL first, post hoc interval reading second and labelled, review disclosed, Monte Carlo labelled
+   design-stage); the wording decision stands with the author, and the marker must go before submission.
+11. Word limit (items 6 and 9) now also covers sections 3.12 (about 400 words) and 3.13 (about 1,670 words,
+   including Table 3); after the science review they are about 460 and 1,850 words. Body, title through
+   the declarations block, excluding Appendix A and references: 11,424 words after the AMPPS restructure
+   (11,084 before it) (v4 was 8,410 by the same count, v4.1 8,690). Candidates for cutting if needed: the observer-step paragraph
+   (exploratory) and the family glosses repeated in Table 3's caption.
+12. The abstract, section 3.1 and the Data and code availability statement now carry the science review's
+   minimal sentences for spec 003 (item B3). Confirm the wording, and whether `REVIEW.md` (outside the repository,
+   cited by hash in 3.13) should be deposited with the supplement.
+13. Section 3.12 calls the reviewer "a separate AI agent" and the freezer "the freezing lane (the agent session
+   that froze the file)"; confirm this description against the AI-use statement, which does not yet mention
+   the spec 003 freeze or review.
+14. The manuscript header still reads "Manuscript draft v4, 2026-09-28"; it was not bumped for v4.1 or v4.2.
+15. Declarations are DRAFT until the author confirms. The "Author contributions and conflicts" block is marked
+   "[DRAFT declarations, pending the author's confirmation]": sole author, independent researcher, no external
+   funding, no competing interests, the ORCID line, and the candidate AI line "Claude assisted with code
+   development and manuscript preparation." beside placeholders for the model and version, purpose, what was
+   checked and limits, which the venue asks for. None of these was asserted beyond what the coordinator supplied.
+   AMPPS layout (submission guidelines as fetched by the coordinator, 2026-10-07): disclosures (preregistration
+   distinction, data and materials links and why anything is unavailable, simulation reporting, ethics) sit in a
+   "Disclosures" block before section 3; author contributions and conflicts sit after the body, before Appendix
+   A. The former "Statements" section is gone; its AI-use paragraph moved into the declarations block and its
+   ethics and data paragraphs into Disclosures, every bracketed placeholder kept. New placeholders: the corpus
+   audit's preregistration status, the persistent link, and "[owner to confirm: no other person's content was
+   read]". Items 1 and 2 above are partly answered by this block once confirmed.
+16. (reworded 2026-10-07 16:22 under the owner's 16:19 grant: 4.1 now says payloads are walked in memory only to count characters and are not stored or classified; the Disclosures state the parse does not establish whose words each payload contains.) Section 4.1 said "Tool-result payloads are never read", but `pilot/trace_audit.py` walks tool_result content in
+   memory to count characters (provenance row "corpus no-read claims"). Reword 4.1 or confirm the intended
+   meaning; not changed here.
 
 ## 9. Rationale for post-evaluation material (2026-10-07)
 
@@ -241,6 +340,7 @@ Dropping it would remove the disclosure of a known mismatch. The word-limit ques
    lane did not read it. Its blocking objection to the point rule is stated.
 4. The review's Monte Carlo is labelled synthetic and design-stage (500 populations per N), not confirmatory
    power and not evidence about the evaluation draw.
-The candidate text is `~/lanes/anchor-research/drafts/paper-spec003-results-draft.md`, not inserted.
+The candidate text is `~/lanes/anchor-research/drafts/paper-spec003-results-draft.md`, inserted in v4.2 as
+section 3.13, with the methods in section 3.12 (provenance rows in section 1).
 
 Full amendment: `sim/POST-EVALUATION-003.md` (provenance row in section 1).
