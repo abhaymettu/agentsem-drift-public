@@ -17,11 +17,12 @@ were made in that file's earlier section. Both kinds are his to overturn before 
 - Re-baseline window `W = 14` days (owner-delegated). `W = 21` was evaluated and not taken: it puts PS-sub's
   L1/S at 1.025 [0.831, 1.230] on the design seed (PS-use not run under 21) and cuts DR+PS L1's 21-day
   sensitivity from 0.081 to 0.020 (DECIDE-003 part c), blinding L1 in `(c, c + W]`.
-- Evaluation N: **2000 persons per cell (lane decision).** Every thresholded registered item except H3's L1
-  clause has a projected interval-level probability of about 0.88 or more at N 2000 (DECIDE-003 part a).
-  Under H3's registered point rule the L1 clause is projected to hold with probability 0.797 (PS-sub) and 0.915
-  (PS-use) at N 2000, against 0.880 and 0.974 at N 4000. The joint probability over all H3 clauses was not
-  computed. N 2000 is the middle size, and the lower power for H3 is accepted; N is his to raise.
+- Evaluation N: **4000 persons per cell (owner-delegated, 2026-10-07).** The lane had drafted 2000. Every
+  thresholded registered item except H3's L1 clause has a projected interval-level probability of about 0.88 or
+  more at N 2000 (DECIDE-003 part a). Under H3's registered point rule the L1 clause is projected to hold with
+  probability 0.797 (PS-sub) and 0.915 (PS-use) at N 2000, against 0.880 and 0.974 at N 4000. The joint
+  probability over all H3 clauses was not computed. N was raised to 4000 because the only cost is compute and
+  the registered prediction gets a more decisive test either way.
 - Evaluation bootstrap: 1000 person resamples, shared across statistics, 95% percentile intervals.
 - Evaluation seed: not chosen by hand. `study003.py score --prereg-sha <sha>` derives it as
   `sha256("<sha>:study003")` of the frozen file, so it is fixed by the freeze commit, and the scorer refuses unless
@@ -140,20 +141,32 @@ number cited above was seen. Forking paths:
 - N 2000 was chosen after the projection table.
 
 Scorer changes made after the design run: the PPV fix of `e193a51` (only pre-onset alarms count as false).
+- 2026-10-07: `run_study` takes the person count `n`; `N = 1000` stays the default, so `design` reproduces
+  `design_003.json` (every committed key, recomputed); `score` runs at `N_SCORE = 4000` (section 1), `--n`
+  overrides.
+- 2026-10-07: `probe_rule` (`all`, `wait`, `stop`) moved unchanged from `decide_003.py` into `study003.py`;
+  `run_study` writes the section 5 budget table (`budget`, every `phi_D`), equal to `decide_003.json`'s on the
+  design seed.
+- 2026-10-07: `verdicts(out)` applies sections 2 and 3 to a run's output from one threshold table; `score`
+  writes `verdicts` into `results_003.json`, and `study003.py verdicts <file>` prints them for any results file.
+- 2026-10-07: L1_step added to `policy_log` as the unregistered arm of section 4 (`obs_003.step_rule(False)`),
+  reported beside L1 for H3 and H4 in `verdicts` with `scored: false`. Its design-seed values were seen when the
+  design run was reproduced to test the change (not committed): H3 L1_step/S PS-sub 0.977 [0.844, 1.108], PS-use
+  0.960 [0.836, 1.095]; H4 L2 - L1_step 0.174 [0.127, 0.224].
 Any further scorer change before the freeze must be listed here.
 
-## 8. Still his before the freeze
+## 8. Decisions and what remains before the freeze
 
-- Overturn or keep every **lane decision**: N 2000, H3's point-estimate rule and all-six-clauses reading, H5's
-  clause handling, the `wait` rule and its reporting scope.
-- Scorer gaps found 2026-10-06. Closing them changes the scorer after the design run, so each is listed under
-  Disclosure when done:
-  1. `study003.py` has `N = 1000`; the draft registers 2000. `score` runs at 1000 unless N is changed.
-  2. `score` and `run_study` have no `wait` or `stop` probe rule (they live only in `decide_003.py`), so the budget
-     table of section 5 cannot be produced by `score`; it needs the `decide_003.py` budget routine on the
-     evaluation seed, or a port.
-  3. `study003.py` emits no pass/fail verdicts and has no L1_step arm (no match for either); the verdicts are
-     read off `results_003.json` against section 2 and 3 by hand.
-- He confirms the wording of H3 and H5 in spec 003 section 11.
-- Spec 003 section 13's other open items: the PS-use intercept size and the unverified S34 to S36 sources.
-- Freeze lift, commit of the frozen file, and any push.
+Owner delegation, 2026-10-07 11:05 CDT, verbatim: "Make all the decisions for me. Whatever would be ideal for the
+paper." Under it, the lane took every lane decision through to a choice:
+- N: raised from 2000 to 4000 (section 1).
+- H3: the point-estimate rule and the all-six-clauses reading stand (section 2); a pass on the point is reported
+  as weaker than a pass on the interval.
+- H5: the M1 clause is scored, the L0+label clause is true by construction and not scored (section 3).
+- Probe budget rule `wait`, with the `phi_D` 0.7 reporting scope; H1 and H2 scored under `all` (sections 1, 5).
+- The three scorer gaps found 2026-10-06 are closed and listed in section 7.
+- Spec 003 section 11 wording of H3 and H5 is taken as it stands.
+
+Remaining before `score`: the freeze commit, which lists here the sha256 of `study003.py` and `tuning_003.json`
+at that commit. Spec 003 section 13's other open items (the PS-use intercept size, the S34 to S36 sources) do
+not bear on the scorer and stay open. No push.

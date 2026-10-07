@@ -5,8 +5,11 @@ non-diagnostic wellbeing/functioning state; no condition is named; no real data 
     python3 sim/study003.py --check                    # bit-identity with drift_sim + known answers
     python3 sim/study003.py tune                       # tuning seed only -> sim/tuning_003.json
     python3 sim/study003.py design                     # design seed only -> sim/design_003.json
-    python3 sim/study003.py score --prereg-sha <sha>   # refuses unless sim/PREREG-003.md matches <sha> and
-                                                       # lists the sha256 of study003.py and tuning_003.json
+    python3 sim/study003.py score --prereg-sha <sha> [--n <int>]
+                                                       # refuses unless sim/PREREG-003.md matches <sha> and
+                                                       # lists the sha256 of study003.py and tuning_003.json;
+                                                       # N_SCORE persons per cell unless --n is given
+    python3 sim/study003.py verdicts <results.json>    # print the PREREG-003 verdicts of any results file
 
 `design` sizes PREREG-003 (spec 003 section 11): it scores no prediction and its seed is neither the
 tuning seed nor a PREREG-003 evaluation seed. Imports drift_sim.py and attribution.py unchanged.
@@ -46,6 +49,31 @@ FIXED_LAG = 9
 W_LABEL = (14, 28)
 DESIGN_SEED = 20261003
 NBOOT = 1000
+N_SCORE = 4000  # PREREG-003 section 1 evaluation N (owner-delegated 2026-10-07); `design` keeps N
+
+# Verdict table, from PREREG-003 sections 2 (H2a, H3) and 3 (H1a, H1b, H4, H5) only: (item, clause) -> (path in
+# run_study's output, rule, threshold). An item holds only if all its clauses hold. A-fixed k = 0.5 throughout.
+_CF, _PL = ("confirmation",), ("policy_log", "A-k0.5")
+VERDICT_RULES = {
+    ("H1a", None): (_CF + ("phi0.7_B28_m4_H1_S_spaced_minus_next_day",), "hi<=", -0.15),
+    ("H1b", None): (_CF + ("phi0.7_B28_m4_H1_DR-1.0_spaced_over_next_day",), "lo>=", 0.70),
+    ("H2a", None): (_CF + ("phi0.9_B28_m4_spaced", "S_gap_block_minus_oracle"), "lo>=", 0.10),
+    **{("H3", f"{r}_{f}"): (_PL + (f, f"{r}_logged_ratio_to_S"), "lo>" if r == "L0" else "est<", 1.5)
+       for r in ("L1", "L2", "L0") for f in ("PS-sub", "PS-use")},
+    ("H4", None): (_PL + ("dr", "H4_L2_minus_L1_onset_in_window"), "lo>", 0.0),
+    ("H5", "M1"): (_PL + ("H5_M1_DR_minus_unlogged_PSprop",), "inside", 0.10),
+}
+RULE_WORDS = {"hi<=": "95% interval lies at or below {}", "lo>=": "95% interval lies at or above {}",
+              "lo>": "95% interval lies above {}", "est<": "point estimate below {}",
+              "inside": "95% interval lies inside (-{0}, {0})"}
+# Reported with scored: false (PREREG-003 sections 3 and 4): place in the verdicts -> path.
+UNSCORED = {("H2b",): _CF + ("phi0.9_H2_gap_B28m4_minus_B56m4",),
+            ("H5", "L0label"): _PL + ("H5_L0label_DR_minus_unlogged_PSprop",),  # true by construction
+            ("H6", "DR-1.0"): ("detection", "phi0.7_B28_H6_DR-1.0_kstar_minus_k05"),
+            ("H6", "DR-1.5"): ("detection", "phi0.7_B28_H6_DR-1.5_kstar_minus_k05"),
+            ("H3", "L1_step", "PS-sub"): _PL + ("PS-sub", "L1_step_logged_ratio_to_S"),
+            ("H3", "L1_step", "PS-use"): _PL + ("PS-use", "L1_step_logged_ratio_to_S"),
+            ("H4", "L1_step"): _PL + ("dr", "H4_L2_minus_L1_step_onset_in_window")}
 
 # family -> (frozen family whose mechanism it uses, delta_D)
 FAMILY = {f: (f, 1.0 if f in ("DR", "DV", "BD") else 0.0) for f in ds.FAMILIES}
@@ -262,6 +290,8 @@ def apply_log(p, z, usable, reason, Xr, rule, log_day=None, log_map=None):
     only holds S, so L1 is not the frozen code's (iv)).
     L2: only the mapped indicators held and re-baselined; S keeps running on the rest. Endogenous entries
     never act. Returns (z, usable, reason, reset mask or None)."""
+    if rule == "L1_step":
+        return l1_step(p, z, usable, reason, Xr, log_day, log_map)
     log_day = p["log_day"] if log_day is None else log_day
     log_map = p["log_map"] if log_map is None else log_map
     has = ~np.isnan(log_day) if p["log_exo"] and len(log_map) else np.zeros(len(log_day), dtype=bool)
@@ -286,6 +316,22 @@ def apply_log(p, z, usable, reason, Xr, rule, log_day=None, log_map=None):
         reason[hold & used] = 4
         reset = day == c + 1
     return z, usable, reason, reset
+
+
+def l1_step(p, z, usable, reason, Xr, log_day=None, log_map=None):
+    """L1_step (unregistered arm, PREREG-003 section 4), as obs_003.step_rule(False) with rule L1: L1, but after
+    the hold the mapped indicators read the baseline z minus their hold-mean baseline z (the estimated observer
+    step; 0 with fewer than 2 usable hold days) and unmapped indicators keep the baseline z. As obs_003, the
+    windows come from p's own log day."""
+    z1, u1, reason, reset = apply_log(p, z, usable, reason, Xr, "L1", log_day, log_map)
+    lm = list(p["log_map"] if log_map is None else log_map)
+    day, c = np.arange(T)[None, :], p["log_day"][:, None]
+    h = ((day > c) & (day <= c + ds.REBASELINE_WINDOW))[..., None] & usable
+    cnt = h.sum(1)
+    m = np.where(cnt >= 2, np.where(h, z, 0.0).sum(1) / np.maximum(cnt, 1), 0.0)
+    zs = z.copy()
+    zs[..., lm] -= m[:, None, lm]
+    return np.where((day > c + ds.REBASELINE_WINDOW)[..., None] & u1, zs, z1), u1, reason, reset
 
 
 def cusum(C, h, k, reset=None):
@@ -381,6 +427,29 @@ def confirm_all(p, alarm, lag, base_days, B, onset=None):
     return alarm[:, B:].sum(1) * 1.0, n_c, n_t, n_f
 
 
+def probe_rule(p, alarm, lag, bd, B, onset, rule):
+    """PREREG-003 section 5's probe rules, per person: (probed alarms, confirmed, confirmed in [onset, onset + 21),
+    confirmed before onset). 'all' probes every alarm (confirm_all); 'wait' probes no new alarm until the last
+    probed alarm's third probe day has passed (3 x lag + 1 days); 'stop' is 'wait' with no probes after a
+    person's first confirmed alarm. Ported from decide_003.py unchanged."""
+    n = len(alarm)
+    probed, n_c, n_t, n_f = (np.zeros(n) for _ in range(4))
+    nxt, stopped = np.full(n, B), np.zeros(n, dtype=bool)
+    for t in range(B, T):
+        el = alarm[:, t] if rule == "all" else alarm[:, t] & (t >= nxt) & ~stopped
+        if not el.any():
+            continue
+        c = confirm(p, np.where(el, t, -1), lag, bd)[0]
+        probed += el
+        n_c += c
+        if onset is not None:
+            n_t += c & (t >= onset) & (t < onset + 21)
+            n_f += c & (t < onset)
+        nxt = np.where(el, t + M_CONF * lag + 1, nxt)
+        stopped |= c & (rule == "stop")
+    return probed, n_c, n_t, n_f
+
+
 def share(cf):
     """Confirmed share among confirmable first alarms; unconfirmable ones are reported, not counted."""
     return ratio(cf[0] * 1.0, (cf[0] | cf[1]) * 1.0)
@@ -420,12 +489,14 @@ def seeds(base, phi, cell):
     return np.random.default_rng([base, tag]), np.random.default_rng([base, tag, 1])
 
 
-def panels(base_seed, phi, fams, cell=0, **cellkw):
-    """Generate the listed families for one (phi, cell): one main seed, one side seed, paired persons."""
+def panels(base_seed, phi, fams, cell=0, n=None, **cellkw):
+    """Generate the listed families for one (phi, cell): one main seed, one side seed, paired persons.
+    n=None reads the module's N at call time."""
+    n = N if n is None else n
     out = {}
     for fam in fams:
         rng, side = seeds(base_seed, phi, cell)
-        out[fam] = gen(rng, events(side, fam, N), fam, n=N, phi=phi, **cellkw)
+        out[fam] = gen(rng, events(side, fam, n), fam, n=n, phi=phi, **cellkw)
     return out
 
 
@@ -473,31 +544,32 @@ def run_tune():
 
 
 # ---------------------------------------------------------------------------------------------- study
-def endo_panel(base_seed, phi, s_panel, h_ref, cell=0, **cellkw):
+def endo_panel(base_seed, phi, s_panel, h_ref, cell=0, n=None, **cellkw):
     """PS-endo: PS-use's change 3 days after the person's first post-baseline alarm of the reference
     detector (A-fixed, k = 0.5, 28 days); always logged as endogenous. Persons without an alarm get none.
     An alarm on days 207-209 puts the change at T or later: logged, never observed in detection."""
+    n = N if n is None else n
     C, _, _ = detector_C(s_panel, 28, "A")
-    a = first_in(cusum(C, h_ref, ds.K_CUSUM), np.full(N, 28), np.full(N, T))
+    a = first_in(cusum(C, h_ref, ds.K_CUSUM), np.full(n, 28), np.full(n, T))
     rng, side = seeds(base_seed, phi, cell)
-    ev = events(side, "S", N)
+    ev = events(side, "S", n)
     ev["cday"] = np.where(a >= 0, a + 3, np.nan).astype(float)
     ev["logged"] = a >= 0
-    p = gen(rng, ev, "PS-endo", n=N, phi=phi, **cellkw)
+    p = gen(rng, ev, "PS-endo", n=n, phi=phi, **cellkw)
     C2, _, _ = detector_C(p, 28, "A")
-    a2 = first_in(cusum(C2, h_ref, ds.K_CUSUM), np.full(N, 28), np.full(N, T))
+    a2 = first_in(cusum(C2, h_ref, ds.K_CUSUM), np.full(n, 28), np.full(n, T))
     assert np.array_equal(a, a2), "PS-endo's change altered the alarm that triggered it"
     return p
 
 
-def run_study(base_seed, tun):
+def run_study(base_seed, tun, n=N):
     """All spec 003 quantities for one seed base. `design` passes DESIGN_SEED; `score` an evaluation seed."""
-    brng = np.random.default_rng([base_seed, 99]).integers(0, N, (NBOOT, N))  # shared resample matrix
-    out = dict(seed=base_seed, n=N, T=T, T_gen=T_GEN, onset=list(ONSET), margin=MARGIN, nboot=NBOOT,
+    brng = np.random.default_rng([base_seed, 99]).integers(0, n, (NBOOT, n))  # shared resample matrix
+    out = dict(seed=base_seed, n=n, T=T, T_gen=T_GEN, onset=list(ONSET), margin=MARGIN, nboot=NBOOT,
                lags={str(phi): lag_for(phi) for phi in PHIS}, detection={}, confirmation={}, policy_log={},
-               cells={}, regression={})
-    ones = np.ones(N)
-    pseudo = np.random.default_rng([base_seed, 2]).integers(*ONSET, N).astype(float)
+               cells={}, regression={}, budget={})
+    ones = np.ones(n)
+    pseudo = np.random.default_rng([base_seed, 2]).integers(*ONSET, n).astype(float)
 
     def alarms(p, B, det, rule="L0", **log):
         tc = tun["cells"][str(p["phi"])]
@@ -510,7 +582,7 @@ def run_study(base_seed, tun):
 
     # ---- Q1 detection, and baseline error / alarm-day D on S (spec 003 s10)
     for phi in PHIS:
-        P = panels(base_seed, phi, ("S", "DR-0.5", "DR-1.0", "DR-1.5"))
+        P = panels(base_seed, phi, ("S", "DR-0.5", "DR-1.0", "DR-1.5"), n=n)
         for p in P.values():
             p["phi"] = phi
         for B in (28, 56):
@@ -518,26 +590,26 @@ def run_study(base_seed, tun):
                 key = f"phi{phi}_B{B}_{det}"
                 aS, rS = alarms(P["S"], B, det)
                 trS = (rS[:, B:] == 0).sum(1) / 30.0
-                r = {"S_fa_per_month": boot(ratio(aS[:, B:].sum(1), trS), N, brng),
-                     "S_chance_sens21": boot(ratio(sens(aS, pseudo, 21), ones), N, brng)}
+                r = {"S_fa_per_month": boot(ratio(aS[:, B:].sum(1), trS), n, brng),
+                     "S_chance_sens21": boot(ratio(sens(aS, pseudo, 21), ones), n, brng)}
                 if det == "A-k0.5":
                     bm = P["S"]["D"][:, :B].mean(1)
                     who = aS[:, B:].any(1)
-                    r["S_true_baseline_D_alarmed"] = boot(ratio(bm * who, who * 1.0), N, brng)
-                    r["S_true_baseline_D_not"] = boot(ratio(bm * ~who, ~who * 1.0), N, brng)
+                    r["S_true_baseline_D_alarmed"] = boot(ratio(bm * who, who * 1.0), n, brng)
+                    r["S_true_baseline_D_not"] = boot(ratio(bm * ~who, ~who * 1.0), n, brng)
                     dS = np.where(aS[:, B:], P["S"]["D"][:, B:T], 0.0)
-                    r["S_alarm_day_D"] = boot(ratio(dS.sum(1), aS[:, B:].sum(1) * 1.0), N, brng)
+                    r["S_alarm_day_D"] = boot(ratio(dS.sum(1), aS[:, B:].sum(1) * 1.0), n, brng)
                 for d in ("DR-0.5", "DR-1.0", "DR-1.5"):
                     pd = P[d]
                     a, rr = alarms(pd, B, det)
                     t0 = pd["t0"]
                     pre = (np.arange(T)[None, :] >= B) & (np.arange(T)[None, :] < t0[:, None])
-                    r[d] = {"sens21": boot(ratio(sens(a, t0, 21), ones), N, brng),
-                            "sens42": boot(ratio(sens(a, t0, 42), ones), N, brng),
-                            "rmst42": boot(ratio(ds._rmst42(a, t0), ones), N, brng),
-                            "pre_onset_fa_per_month": boot(ratio((a & pre).sum(1), ((rr == 0) & pre).sum(1) / 30.0), N, brng),
+                    r[d] = {"sens21": boot(ratio(sens(a, t0, 21), ones), n, brng),
+                            "sens42": boot(ratio(sens(a, t0, 42), ones), n, brng),
+                            "rmst42": boot(ratio(ds._rmst42(a, t0), ones), n, brng),
+                            "pre_onset_fa_per_month": boot(ratio((a & pre).sum(1), ((rr == 0) & pre).sum(1) / 30.0), n, brng),
                             "post_onset_alarms_per_month": boot(ratio((a & ~pre & (np.arange(T)[None, :] >= B)).sum(1),
-                                                                      ((rr == 0) & ~pre & (np.arange(T)[None, :] >= B)).sum(1) / 30.0), N, brng)}
+                                                                      ((rr == 0) & ~pre & (np.arange(T)[None, :] >= B)).sum(1) / 30.0), n, brng)}
                 out["detection"][key] = r
             # H6: matched k minus k = 0.5, DR sensitivity at 21 days, paired persons, each at its own h
             for d in ("DR-1.0", "DR-1.5"):
@@ -545,7 +617,7 @@ def run_study(base_seed, tun):
                 a1, _ = alarms(P[d], B, "A-kstar")
                 s0, s1 = sens(a0, P[d]["t0"], 21), sens(a1, P[d]["t0"], 21)
                 out["detection"][f"phi{phi}_B{B}_H6_{d}_kstar_minus_k05"] = boot(
-                    lambda idx: s1[idx].mean() - s0[idx].mean(), N, brng)
+                    lambda idx: s1[idx].mean() - s0[idx].mean(), n, brng)
 
         # ---- Q2 confirmation, A-fixed k = 0.5, rule L0, all four baseline arms; lags: design-known spaced,
         # fixed 9, next-day (a+1..a+3, as design_check_003.py; M2x3 used a+1, a+3, a+5) and the frozen 7-day rule
@@ -554,7 +626,7 @@ def run_study(base_seed, tun):
             bd = probe_days(B, m)
             fams = {f: P[f] for f in ("S", "DR-0.5", "DR-1.0", "DR-1.5")}
             al = {f: alarms(p, B, "A-k0.5") for f, p in fams.items()}
-            first = {"S": first_in(al["S"][0], np.full(N, B), np.full(N, T))}
+            first = {"S": first_in(al["S"][0], np.full(n, B), np.full(n, T))}
             for d in ("DR-0.5", "DR-1.0", "DR-1.5"):
                 t0 = fams[d]["t0"]
                 first[d] = np.where(sens(al[d][0], t0, 21) > 0, first_in(al[d][0], t0, t0 + 21), -1)
@@ -563,79 +635,100 @@ def run_study(base_seed, tun):
                 cf = res[lagname] = {f: confirm(fams[f], first[f], lag, bd) for f in fams}
                 cS, uS, xS, oS, _ = cf["S"]
                 r = {"lag": lag, "S_n_first_alarms": int((first["S"] >= 0).sum()),
-                     "S_confirmed_share": boot(share(cf["S"]), N, brng),
-                     "S_oracle_ref_share": boot(ratio(oS * 1.0, (cS | uS) * 1.0), N, brng),
+                     "S_confirmed_share": boot(share(cf["S"]), n, brng),
+                     "S_oracle_ref_share": boot(ratio(oS * 1.0, (cS | uS) * 1.0), n, brng),
                      "S_gap_block_minus_oracle": boot(
-                         lambda idx: share(cf["S"])(idx) - ratio(oS * 1.0, (cS | uS) * 1.0)(idx), N, brng),
-                     "S_unconfirmable_share": boot(ratio(xS * 1.0, (first["S"] >= 0) * 1.0), N, brng)}
+                         lambda idx: share(cf["S"])(idx) - ratio(oS * 1.0, (cS | uS) * 1.0)(idx), n, brng),
+                     "S_unconfirmable_share": boot(ratio(xS * 1.0, (first["S"] >= 0) * 1.0), n, brng)}
                 for f in fams:
                     c, x, d_ = cf[f][0], cf[f][2], cf[f][4]
                     n_al, n_c, n_t, n_f = confirm_all(fams[f], al[f][0], lag, bd, B, None if f == "S" else fams[f]["t0"])
                     tr = (al[f][1][:, B:] == 0).sum(1) / 30.0
                     g = r.setdefault(f, {})
-                    g["days_to_confirmation"] = boot(ratio(d_ * 1.0, c * 1.0), N, brng)
+                    g["days_to_confirmation"] = boot(ratio(d_ * 1.0, c * 1.0), n, brng)
                     # confirmation probes plus the arm's baseline block (m per person), per tracked month
-                    g["probes_per_tracked_month"] = boot(ratio((7 if lag is None else M_CONF) * n_al + m, tr), N, brng)
+                    g["probes_per_tracked_month"] = boot(ratio((7 if lag is None else M_CONF) * n_al + m, tr), n, brng)
                     if f == "S":
-                        g["confirmed_fa_per_tracked_month"] = boot(ratio(n_c, tr), N, brng)
+                        g["confirmed_fa_per_tracked_month"] = boot(ratio(n_c, tr), n, brng)
                     else:
-                        g.update(n_detected=int((first[f] >= 0).sum()), confirmed_share=boot(share(cf[f]), N, brng),
-                                 unconfirmable_share=boot(ratio(x * 1.0, (first[f] >= 0) * 1.0), N, brng),
-                                 confirmed_ppv=boot(ratio(n_t, n_t + n_f), N, brng),
-                                 pre_onset_confirmed_fa_per_tracked_month=boot(ratio(n_f, tr), N, brng))
+                        g.update(n_detected=int((first[f] >= 0).sum()), confirmed_share=boot(share(cf[f]), n, brng),
+                                 unconfirmable_share=boot(ratio(x * 1.0, (first[f] >= 0) * 1.0), n, brng),
+                                 confirmed_ppv=boot(ratio(n_t, n_t + n_f), n, brng),
+                                 pre_onset_confirmed_fa_per_tracked_month=boot(ratio(n_f, tr), n, brng))
                 out["confirmation"][f"phi{phi}_B{B}_m{m}_{lagname}"] = r
             sp, nd = res["spaced"], res["next_day"]
             out["confirmation"][f"phi{phi}_B{B}_m{m}_H1_S_spaced_minus_next_day"] = boot(
-                lambda idx: share(sp["S"])(idx) - share(nd["S"])(idx), N, brng)
+                lambda idx: share(sp["S"])(idx) - share(nd["S"])(idx), n, brng)
             out["confirmation"][f"phi{phi}_B{B}_m{m}_H1_DR-1.0_spaced_over_next_day"] = boot(
-                lambda idx: share(sp["DR-1.0"])(idx) / share(nd["DR-1.0"])(idx), N, brng)
+                lambda idx: share(sp["DR-1.0"])(idx) / share(nd["DR-1.0"])(idx), n, brng)
             gaps[(B, m)] = lambda idx, c=sp["S"]: share(c)(idx) - ratio(c[3] * 1.0, (c[0] | c[1]) * 1.0)(idx)
         out["confirmation"][f"phi{phi}_H2_gap_B28m4_minus_B56m4"] = boot(
-            lambda idx: gaps[(28, 4)](idx) - gaps[(56, 4)](idx), N, brng)
+            lambda idx: gaps[(28, 4)](idx) - gaps[(56, 4)](idx), n, brng)
+
+        # ---- probe budget (PREREG-003 section 5): spaced lag, 28 days, 4 probes, rules all / wait / stop
+        bd, lag = probe_days(28, 4), lag_for(phi)
+        for fam in ("S", "DR-1.0", "DR-1.5"):
+            p = P[fam]
+            a, rr = alarms(p, 28, "A-k0.5")
+            tr = (rr[:, 28:] == 0).sum(1) / 30.0
+            r = {}
+            for rule in ("all", "wait", "stop"):
+                pr, n_c, n_t, n_f = probe_rule(p, a, lag, bd, 28, None if fam == "S" else p["t0"], rule)
+                g = r[rule] = {"probes_per_tracked_month": boot(ratio(M_CONF * pr + 4, tr), n, brng),
+                               "probed_share_of_alarms": boot(ratio(pr, a[:, 28:].sum(1) * 1.0), n, brng)}
+                if fam == "S":
+                    g["confirmed_fa_per_tracked_month"] = boot(ratio(n_c, tr), n, brng)
+                else:
+                    g["confirmed_ppv"] = boot(ratio(n_t, n_t + n_f), n, brng)
+                    g["persons_confirmed_in_window"] = boot(ratio((n_t > 0) * 1.0, ones), n, brng)
+            # the 'all' rule is the design rule: same persons, same numbers as the confirmation block
+            want = out["confirmation"][f"phi{phi}_B28_m4_spaced"][fam]["probes_per_tracked_month"]["est"]
+            assert r["all"]["probes_per_tracked_month"]["est"] == want, (phi, fam, want)
+            out["budget"][f"phi{phi}_{fam}"] = r
 
         # ---- Q3 policy log at phi 0.7, 28 days, both A-fixed k
         if phi == 0.7:
             fams = ("PS-sub", "PS-use", "PS-prop", "DR+PS", "AV", "AV2")
-            Q = panels(base_seed, phi, fams)
+            Q = panels(base_seed, phi, fams, n=n)
             Q["S"], Q["DR-1.0"] = P["S"], P["DR-1.0"]
-            Q["PS-endo"] = endo_panel(base_seed, phi, P["S"], tun["cells"]["0.7"]["h"]["28"]["A-k0.5"])
+            Q["PS-endo"] = endo_panel(base_seed, phi, P["S"], tun["cells"]["0.7"]["h"]["28"]["A-k0.5"], n=n)
             for p in Q.values():
                 p["phi"] = phi
-            out["policy_log"] = policy_log(Q, alarms, sens, brng, tun)
+            out["policy_log"] = policy_log(Q, alarms, sens, brng, tun, n)
 
     # ---- cells at phi 0.7: usage (kappa -0.3, +0.3, change-dependent 0.3) and probe response m1 0.5, 1.5
     for ci, (name, kw) in enumerate((("kappa-0.3", dict(kappa=-0.3)), ("kappa+0.3", dict(kappa=0.3)),
                                      ("change_dep_0.3", dict(kappa_c=0.3)), ("m1_0.5", dict(m1=0.5)),
                                      ("m1_1.5", dict(m1=1.5))), start=1):
-        P = panels(base_seed, 0.7, ("S", "DR-1.0"), cell=ci, **kw)
+        P = panels(base_seed, 0.7, ("S", "DR-1.0"), cell=ci, n=n, **kw)
         for p in P.values():
             p["phi"] = 0.7
         aS, rS = alarms(P["S"], 28, "A-k0.5")
         aD, _ = alarms(P["DR-1.0"], 28, "A-k0.5")
-        fS = first_in(aS, np.full(N, 28), np.full(N, T))
+        fS = first_in(aS, np.full(n, 28), np.full(n, T))
         t0 = P["DR-1.0"]["t0"]
         fD = np.where(sens(aD, t0, 21) > 0, first_in(aD, t0, t0 + 21), -1)
         # CHOICE: the cells reuse phi 0.7's h (frozen precedent), its lag 9 and the 28-day, 4-probe arm
         cS, uS, xS, _, _ = confirm(P["S"], fS, 9, probe_days(28, 4))
         cD, uD, xD, _, _ = confirm(P["DR-1.0"], fD, 9, probe_days(28, 4))
         out["cells"][name] = {
-            "S_fa_per_month": boot(ratio(aS[:, 28:].sum(1), (rS[:, 28:] == 0).sum(1) / 30.0), N, brng),
-            "DR-1.0_sens21": boot(ratio(sens(aD, t0, 21), ones), N, brng),
-            "S_spaced_confirmed_share": boot(ratio(cS * 1.0, (cS | uS) * 1.0), N, brng),
-            "DR-1.0_spaced_confirmed_share": boot(ratio(cD * 1.0, (cD | uD) * 1.0), N, brng),
-            "S_unconfirmable_share": boot(ratio(xS * 1.0, (fS >= 0) * 1.0), N, brng),
-            "DR-1.0_unconfirmable_share": boot(ratio(xD * 1.0, (fD >= 0) * 1.0), N, brng)}
+            "S_fa_per_month": boot(ratio(aS[:, 28:].sum(1), (rS[:, 28:] == 0).sum(1) / 30.0), n, brng),
+            "DR-1.0_sens21": boot(ratio(sens(aD, t0, 21), ones), n, brng),
+            "S_spaced_confirmed_share": boot(ratio(cS * 1.0, (cS | uS) * 1.0), n, brng),
+            "DR-1.0_spaced_confirmed_share": boot(ratio(cD * 1.0, (cD | uD) * 1.0), n, brng),
+            "S_unconfirmable_share": boot(ratio(xS * 1.0, (fS >= 0) * 1.0), n, brng),
+            "DR-1.0_unconfirmable_share": boot(ratio(xD * 1.0, (fD >= 0) * 1.0), n, brng)}
 
     # ---- regression families (no prediction): alarm rate per tracked person-month, phi 0.7, 28 days, L0
-    R = panels(base_seed, 0.7, ("VA", "DE", "SP", "CS", "BD", "DV", "BI"), cell=9)
+    R = panels(base_seed, 0.7, ("VA", "DE", "SP", "CS", "BD", "DV", "BI"), cell=9, n=n)
     for fam, p in R.items():
         p["phi"] = 0.7
         a, rr = alarms(p, 28, "A-k0.5")
-        out["regression"][fam] = boot(ratio(a[:, 28:].sum(1), (rr[:, 28:] == 0).sum(1) / 30.0), N, brng)
+        out["regression"][fam] = boot(ratio(a[:, 28:].sum(1), (rr[:, 28:] == 0).sum(1) / 30.0), n, brng)
     return out
 
 
-def policy_log(Q, alarms, sens, brng, tun):
+def policy_log(Q, alarms, sens, brng, tun, n):
     """Spec 003 s8 at phi 0.7, 28-day baseline. Every alarm is scored against the generator status."""
     out = {}
     day = np.arange(T)[None, :]
@@ -655,18 +748,19 @@ def policy_log(Q, alarms, sens, brng, tun):
             arms = [("L0", {}), ("L1", {}), ("L2", {}), ("oracle", {})]
             if fam in ("PS-sub", "PS-use"):  # L1 ignores the map, so L1_map_omits_6 equals L1 (a check)
                 arms += [("L1_map_omits_6", dict(log_map=PS_MAP[:2])), ("L2_map_omits_6", dict(log_map=PS_MAP[:2])),
-                         ("L1_coverage_1", dict(log_day=p["cday"])), ("L2_coverage_1", dict(log_day=p["cday"]))]
+                         ("L1_coverage_1", dict(log_day=p["cday"])), ("L2_coverage_1", dict(log_day=p["cday"])),
+                         ("L1_step", {})]  # L1_step: unregistered arm, PREREG-003 section 4
             for name, kw in arms:
-                a, rr = alarms(p, 28, det, name.split("_")[0], **kw)
+                a, rr = alarms(p, 28, det, name if name == "L1_step" else name.split("_")[0], **kw)
                 s, t_ = (a & post).sum(1), ((rr == 0) & post).sum(1) / 30.0
                 for g, w in groups.items():
                     if fam == "PS-endo" and g != "logged":
                         continue
                     num, den = s * w, t_ * w
-                    fr[f"{name}_{g}_post_fa_per_month"] = boot(ratio(num, den), N, brng)
+                    fr[f"{name}_{g}_post_fa_per_month"] = boot(ratio(num, den), n, brng)
                     # paired: the same persons and post-change window on S
                     fr[f"{name}_{g}_ratio_to_S"] = boot(
-                        lambda idx, num=num, den=den, w=w: ratio(num, den)(idx) / ratio(sS * w, tS * w)(idx), N, brng)
+                        lambda idx, num=num, den=den, w=w: ratio(num, den)(idx) / ratio(sS * w, tS * w)(idx), n, brng)
             r[fam] = fr
         # L0+label: person-labelled share of post-change / post-onset alarms, W = 14 and 28.
         # CHOICE: scoring window [x0, x0 + 42), x0 = the change day (PS) or onset (DR-1.0, DR+PS).
@@ -678,15 +772,15 @@ def policy_log(Q, alarms, sens, brng, tun):
             win = (day >= x0[:, None]) & (day < x0[:, None] + 42) & (day >= 28)
             aw = a & win
             for W in W_LABEL:
-                ld = p["log_day"] if p["log_exo"] and len(p["log_map"]) else np.full(N, np.nan)
+                ld = p["log_day"] if p["log_exo"] and len(p["log_map"]) else np.full(n, np.nan)
                 ldv = np.where(np.isnan(ld), -np.inf, ld)[:, None]
                 obs = aw & (ldv >= day - W) & (ldv <= day)
-                for g, w in (("all", np.ones(N, dtype=bool)), ("unlogged", np.isnan(ld))):
+                for g, w in (("all", np.ones(n, dtype=bool)), ("unlogged", np.isnan(ld))):
                     lab[f"{fam}_W{W}_{g}"] = ((aw & ~obs).sum(1) * w, aw.sum(1) * w)
-        r["label_person_share"] = {k: boot(ratio(*v), N, brng) for k, v in lab.items()}
+        r["label_person_share"] = {k: boot(ratio(*v), n, brng) for k, v in lab.items()}
         for fam in ("PS-sub", "PS-use", "PS-prop", "DR+PS"):  # separation: DR-1.0's share minus the family's
             r["label_person_share"][f"sep_DR-1.0_minus_{fam}_W14"] = boot(
-                lambda idx, f=fam: ratio(*lab["DR-1.0_W14_all"])(idx) - ratio(*lab[f"{f}_W14_all"])(idx), N, brng)
+                lambda idx, f=fam: ratio(*lab["DR-1.0_W14_all"])(idx) - ratio(*lab[f"{f}_W14_all"])(idx), n, brng)
         # Spaced confirmation after each rule (lag 9, 28 days, 4 probes) on the first alarm from the change
         # day (PS) or onset (DR+PS). Person-confirmed under L0+label = labelled person (W = 14) and confirmed.
         pc = {}
@@ -696,22 +790,22 @@ def policy_log(Q, alarms, sens, brng, tun):
             x0 = np.maximum(p["t0"] if fam == "DR+PS" else np.nan_to_num(p["cday"], nan=T), 28)
             for rule in ("L0", "L1", "L2"):
                 a, _ = alarms(p, 28, det, rule)
-                f = first_in(a, x0, np.full(N, T))
+                f = first_in(a, x0, np.full(n, T))
                 cf = confirm(p, f, 9, bd)
-                pc[f"{fam}_{rule}_confirmed_share"] = boot(share(cf), N, brng)
-                pc[f"{fam}_{rule}_unconfirmable_share"] = boot(ratio(cf[2] * 1.0, (f >= 0) * 1.0), N, brng)
+                pc[f"{fam}_{rule}_confirmed_share"] = boot(share(cf), n, brng)
+                pc[f"{fam}_{rule}_unconfirmable_share"] = boot(ratio(cf[2] * 1.0, (f >= 0) * 1.0), n, brng)
                 if rule == "L0":
-                    ld = p["log_day"] if p["log_exo"] and len(p["log_map"]) else np.full(N, np.nan)
+                    ld = p["log_day"] if p["log_exo"] and len(p["log_map"]) else np.full(n, np.nan)
                     for W in W_LABEL:
                         person = (f >= 0) & ~((ld >= f - W) & (ld <= f))
                         pc[f"{fam}_L0label_W{W}_person_confirmed_share"] = boot(
-                            ratio((person & cf[0]) * 1.0, (cf[0] | cf[1]) * 1.0), N, brng)
+                            ratio((person & cf[0]) * 1.0, (cf[0] | cf[1]) * 1.0), n, brng)
         r["confirmation_after_rule"] = pc
         # H5 (known answer): unlogged PS-prop vs DR-1.0, person-attributed share, L0+label and M1
         num_d, den_d = lab["DR-1.0_W14_all"]
         num_p, den_p = lab["PS-prop_W14_unlogged"]
         r["H5_L0label_DR_minus_unlogged_PSprop"] = boot(
-            lambda idx: ratio(num_d, den_d)(idx) - ratio(num_p, den_p)(idx), N, brng)
+            lambda idx: ratio(num_d, den_d)(idx) - ratio(num_p, den_p)(idx), n, brng)
         m1 = {}
         for fam in ("DR-1.0", "PS-prop"):
             p = Q[fam]
@@ -719,31 +813,34 @@ def policy_log(Q, alarms, sens, brng, tun):
             z, usable, reason, _ = zscores(p, 28)
             a, _ = alarms(p, 28, det)
             f = first_in(a, x0, x0 + 42)
-            w = (f >= 0) & (np.ones(N, dtype=bool) if fam == "DR-1.0" else np.isnan(p["log_day"]))
+            w = (f >= 0) & (np.ones(n, dtype=bool) if fam == "DR-1.0" else np.isnan(p["log_day"]))
             f = np.where(w, f, -1)
             m1[fam] = (((f >= 0) & ~(q_at(z, reason, f) >= tun["q_star"])) * 1.0, w * 1.0)  # M1: person unless Q >= q*
         r["H5_M1_DR_minus_unlogged_PSprop"] = boot(
-            lambda idx: ratio(*m1["DR-1.0"])(idx) - ratio(*m1["PS-prop"])(idx), N, brng)
+            lambda idx: ratio(*m1["DR-1.0"])(idx) - ratio(*m1["PS-prop"])(idx), n, brng)
         # DR sensitivity under each rule (the log's cost on true change), and DR+PS
         dr, drps = {}, {}
-        for rule in ("L0", "L1", "L2", "oracle"):
+        for rule in ("L0", "L1", "L2", "oracle", "L1_step"):
             a, _ = alarms(Q["DR-1.0"], 28, det, rule)
-            dr[f"DR-1.0_{rule}_sens21_excl_false"] = boot(ratio(sens(a, Q["DR-1.0"]["t0"], 21, False), np.ones(N)), N, brng)
+            dr[f"DR-1.0_{rule}_sens21_excl_false"] = boot(ratio(sens(a, Q["DR-1.0"]["t0"], 21, False), np.ones(n)), n, brng)
             p = Q["DR+PS"]
             a, _ = alarms(p, 28, det, rule)
             s = sens(a, p["t0"], 21, False)
             # D's shift starts on t0 + 1, so it begins inside the hold (c, c + 14] when c <= t0 <= c + 13
             logged = ~np.isnan(p["log_day"])
             inwin = logged & (p["t0"] >= p["cday"]) & (p["t0"] <= p["cday"] + ds.REBASELINE_WINDOW - 1)
-            dr[f"DR+PS_{rule}_sens21_excl_false"] = boot(ratio(s, np.ones(N)), N, brng)
-            dr[f"DR+PS_{rule}_sens21_logged"] = boot(ratio(s * logged, logged * 1.0), N, brng)
-            dr[f"DR+PS_{rule}_sens21_onset_in_rebaseline_window"] = boot(ratio(s * inwin, inwin * 1.0), N, brng)
+            dr[f"DR+PS_{rule}_sens21_excl_false"] = boot(ratio(s, np.ones(n)), n, brng)
+            dr[f"DR+PS_{rule}_sens21_logged"] = boot(ratio(s * logged, logged * 1.0), n, brng)
+            dr[f"DR+PS_{rule}_sens21_onset_in_rebaseline_window"] = boot(ratio(s * inwin, inwin * 1.0), n, brng)
             obs_caused = (a & (day >= p["cday"][:, None]) & (day < p["t0"][:, None]) & (day >= 28)).sum(1)
-            dr[f"DR+PS_{rule}_observer_caused_fa_per_100_persons"] = boot(ratio(100 * obs_caused * 1.0, np.ones(N)), N, brng)
+            dr[f"DR+PS_{rule}_observer_caused_fa_per_100_persons"] = boot(ratio(100 * obs_caused * 1.0, np.ones(n)), n, brng)
             drps[rule] = (s, inwin, logged)
         (s1, w, lg), s2 = drps["L1"], drps["L2"][0]
-        dr["H4_L2_minus_L1_onset_in_window"] = boot(lambda idx: ratio(s2 * w, w * 1.0)(idx) - ratio(s1 * w, w * 1.0)(idx), N, brng)
-        dr["L2_minus_L1_logged"] = boot(lambda idx: ratio(s2 * lg, lg * 1.0)(idx) - ratio(s1 * lg, lg * 1.0)(idx), N, brng)
+        dr["H4_L2_minus_L1_onset_in_window"] = boot(lambda idx: ratio(s2 * w, w * 1.0)(idx) - ratio(s1 * w, w * 1.0)(idx), n, brng)
+        dr["L2_minus_L1_logged"] = boot(lambda idx: ratio(s2 * lg, lg * 1.0)(idx) - ratio(s1 * lg, lg * 1.0)(idx), n, brng)
+        s1s = drps["L1_step"][0]
+        dr["H4_L2_minus_L1_step_onset_in_window"] = boot(
+            lambda idx: ratio(s2 * w, w * 1.0)(idx) - ratio(s1s * w, w * 1.0)(idx), n, brng)
         dr["n_DRPS_onset_in_window"] = int(w.sum())
         r["dr"] = dr
         # AV / AV2 under the rules: overall alarm rate post-baseline
@@ -753,12 +850,49 @@ def policy_log(Q, alarms, sens, brng, tun):
             for rule in ("L0", "L1", "L2"):
                 a, rr = alarms(Q[fam], 28, det, rule)
                 al, tr = a[:, 28:].sum(1), (rr[:, 28:] == 0).sum(1) / 30.0
-                r["av"][f"{fam}_{rule}_fa_per_month"] = boot(ratio(al, tr), N, brng)
+                r["av"][f"{fam}_{rule}_fa_per_month"] = boot(ratio(al, tr), n, brng)
                 if fam == "AV":  # frozen P3's contrast: logged against unlogged
-                    r["av"][f"AV_{rule}_logged_fa_per_month"] = boot(ratio(al * lg, tr * lg), N, brng)
-                    r["av"][f"AV_{rule}_unlogged_fa_per_month"] = boot(ratio(al * ~lg, tr * ~lg), N, brng)
+                    r["av"][f"AV_{rule}_logged_fa_per_month"] = boot(ratio(al * lg, tr * lg), n, brng)
+                    r["av"][f"AV_{rule}_unlogged_fa_per_month"] = boot(ratio(al * ~lg, tr * ~lg), n, brng)
+        r["L1_step_label"] = "unregistered arm, PREREG-003 section 4"
         out[det] = r
     return out
+
+
+# ---------------------------------------------------------------------------------------------- verdicts
+def verdicts(out):
+    """VERDICT_RULES applied to a run_study output (design_003.json or results_003.json): per clause the
+    statistic, the rule in words, the threshold and `holds`; an item holds only if all its clauses do. UNSCORED
+    entries carry scored: false and are skipped when the file lacks them (L1_step is newer than the design run)."""
+    def stat(path):
+        b = out
+        for k in path:
+            b = b.get(k) if isinstance(b, dict) else None
+        return None if b is None else {k: b[k] for k in ("est", "lo", "hi")}
+    v = {}
+    for (item, clause), (path, rule, thr) in VERDICT_RULES.items():
+        b = stat(path)
+        est, lo, hi = b["est"], b["lo"], b["hi"]
+        holds = None not in (est, lo, hi) and {"hi<=": hi <= thr, "lo>=": lo >= thr, "lo>": lo > thr,
+                                               "est<": est < thr, "inside": -thr < lo and hi < thr}[rule]
+        c = dict(b, rule=RULE_WORDS[rule].format(thr), threshold=thr, holds=bool(holds))
+        if clause is None:
+            v[item] = c
+        else:
+            v.setdefault(item, {"clauses": {}})["clauses"][clause] = c
+    for item in ("H3", "H5"):
+        v[item]["holds"] = all(c["holds"] for c in v[item]["clauses"].values())
+    for place, path in UNSCORED.items():
+        b = stat(path)
+        if b is not None:
+            d = v
+            for k in place[:-1]:
+                d = d.setdefault(k, {})
+            d[place[-1]] = dict(b, scored=False)
+    for item in ("H3", "H4"):
+        if "L1_step" in v[item]:
+            v[item]["L1_step"]["label"] = "unregistered arm, PREREG-003 section 4"
+    return v
 
 
 # ---------------------------------------------------------------------------------------------- check
@@ -825,8 +959,40 @@ def check():
     # (f) constants
     assert [lag_for(x) for x in PHIS] == [3, 9, 29] and list(probe_days(28, 4)) == ds.PROBE_BASELINE_DAYS
     assert list(probe_days(28, 8)) == [2, 6, 9, 13, 16, 20, 23, 27] and list(probe_days(56, 4)) == [13, 27, 41, 55]
+    # (g) probe rules on a hand-built panel: lag 3, Y = 0 except person 1 from day 28 on (so each of person 1's
+    # alarms confirms: probe mean 1 against baseline mean 0), onset 45; person 2 has no alarm
+    yp = np.zeros((3, T_GEN))
+    yp[1, 28:] = 1.0
+    hp = dict(Y=yp, D=np.zeros((3, T_GEN)), responded=np.ones((3, T_GEN), dtype=bool))
+    al = np.zeros((3, T), dtype=bool)
+    al[0, [30, 32, 40, 60]] = al[1, [30, 35, 50]] = True
+    want = {"all": ([4, 3, 0], [0, 3, 0], [0, 1, 0], [0, 2, 0]),  # (probed, confirmed, in [45, 66), before 45)
+            "wait": ([3, 2, 0], [0, 2, 0], [0, 1, 0], [0, 1, 0]),  # 30 blocks until 30 + 3 x 3 + 1 = 40
+            "stop": ([3, 1, 0], [0, 1, 0], [0, 0, 0], [0, 1, 0])}  # person 1 stops after confirming at 30
+    for rule, w in want.items():
+        got = probe_rule(hp, al, 3, probe_days(28, 4), 28, np.full(3, 45.0), rule)
+        assert all(list(g) == list(x) for g, x in zip(got, w)), (rule, got)
+    # (h) verdicts read the keys PREREG-003 cites: the draft's design values, to three decimals
+    v = verdicts(json.loads((HERE / "design_003.json").read_text()))
+    h3 = v["H3"]["clauses"]
+    for got, w in ((v["H2a"], (0.201, 0.155, 0.246)), (h3["L1_PS-sub"], (1.421, 1.175, 1.706)),
+                   (h3["L1_PS-use"], (1.376, 1.135, 1.647)), (h3["L2_PS-sub"], (1.171,)), (h3["L2_PS-use"], (1.101,)),
+                   (h3["L0_PS-sub"], (3.061, 2.792, 3.380)), (h3["L0_PS-use"], (3.050, 2.790, 3.366)),
+                   (v["H1a"], (-0.236, -0.302, -0.173)), (v["H1b"], (0.810, 0.715, 0.916)),
+                   (v["H4"], (0.154, 0.100, 0.209)), (v["H5"]["clauses"]["M1"], (0.020, -0.013, 0.053)),
+                   (v["H2b"], (-0.003, -0.069, 0.057))):
+        assert all(abs(got[k] - x) <= 5e-4 + 1e-9 for k, x in zip(("est", "lo", "hi"), w)), (got, w)  # draft rounds half up
+    assert all(v[k]["holds"] for k in ("H1a", "H1b", "H2a", "H3", "H4", "H5")) and v["H2b"]["scored"] is False
+    # (i) run_study end to end at n = 60: budget for every phi, verdicts run, L1_step present
+    tun = json.loads((HERE / "tuning_003.json").read_text())
+    o = run_study(DESIGN_SEED, tun, n=60)
+    assert o["n"] == 60 and sorted(o["budget"]) == sorted(f"phi{x}_{f}" for x in PHIS for f in ("S", "DR-1.0", "DR-1.5"))
+    assert all(set(r) == {"all", "wait", "stop"} for r in o["budget"].values())
+    vo = verdicts(o)
+    assert set(vo) >= {"H1a", "H1b", "H2a", "H3", "H4", "H5", "H2b", "H6"} and "L1_step" in vo["H3"] and "L1_step" in vo["H4"]
     print("check OK: events, generator (14 cases) and composite/CUSUM bit-identical with drift_sim; help-off exact; "
-          "families paired; oracle rule on PS-sub equals S; L1/L2 inert without a log, hold as specified; lags 3/9/29")
+          "families paired; oracle rule on PS-sub equals S; L1/L2 inert without a log, hold as specified; lags 3/9/29; "
+          "probe rules all/wait/stop on a hand panel; verdicts reproduce the draft's design values; run_study at n 60")
 
 
 def sha256(path):
@@ -857,8 +1023,12 @@ def main():
             raise RuntimeError("PREREG-003 does not list the current sha256 of study003.py and tuning_003.json.")
         tun = json.loads((HERE / "tuning_003.json").read_text())
         seed = int(hashlib.sha256(f"{sha}:study003".encode()).hexdigest()[:16], 16) % (2**32 - 1)
-        out = dict(label="EVALUATION (PREREG-003)", prereg_sha256=sha, sha256=provenance(), **run_study(seed, tun))
+        n = int(sys.argv[sys.argv.index("--n") + 1]) if "--n" in sys.argv else N_SCORE
+        out = dict(label="EVALUATION (PREREG-003)", prereg_sha256=sha, sha256=provenance(), **run_study(seed, tun, n))
+        out["verdicts"] = verdicts(out)
         (HERE / "results_003.json").write_text(json.dumps(out, indent=1))
+    elif cmd == "verdicts":
+        print(json.dumps(verdicts(json.loads(Path(sys.argv[2]).read_text())), indent=1))
     else:
         raise SystemExit(__doc__)
 

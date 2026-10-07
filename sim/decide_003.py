@@ -78,26 +78,6 @@ def alarms_fn(tun):
     return alarms
 
 
-def probe_rule(p, alarm, lag, bd, B, onset, rule):
-    """Per person: (probed alarms, confirmed, confirmed in [onset, onset + 21), confirmed before onset)."""
-    n = len(alarm)
-    probed, n_c, n_t, n_f = (np.zeros(n) for _ in range(4))
-    nxt, stopped = np.full(n, B), np.zeros(n, dtype=bool)
-    for t in range(B, s3.T):
-        el = alarm[:, t] if rule == "all" else alarm[:, t] & (t >= nxt) & ~stopped
-        if not el.any():
-            continue
-        c = s3.confirm(p, np.where(el, t, -1), lag, bd)[0]
-        probed += el
-        n_c += c
-        if onset is not None:
-            n_t += c & (t >= onset) & (t < onset + 21)
-            n_f += c & (t < onset)
-        nxt = np.where(el, t + s3.M_CONF * lag + 1, nxt)
-        stopped |= c & (rule == "stop")
-    return probed, n_c, n_t, n_f
-
-
 def budget(tun, design, brng):
     alarms, out = alarms_fn(tun), {}
     B, m = 28, 4
@@ -112,7 +92,7 @@ def budget(tun, design, brng):
             onset = None if fam == "S" else p["t0"]
             r = {}
             for rule in ("all", "wait", "stop"):
-                pr, n_c, n_t, n_f = probe_rule(p, a, lag, bd, B, onset, rule)
+                pr, n_c, n_t, n_f = s3.probe_rule(p, a, lag, bd, B, onset, rule)
                 g = r[rule] = {"probes_per_tracked_month": s3.boot(s3.ratio(s3.M_CONF * pr + m, tr), s3.N, brng),
                                "probed_share_of_alarms": s3.boot(s3.ratio(pr, a[:, B:].sum(1) * 1.0), s3.N, brng)}
                 if fam == "S":
