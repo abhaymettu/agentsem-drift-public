@@ -92,8 +92,7 @@ that was frozen (L1/L2 on the point, L0 on the interval); "interval" is H3 holdi
 | construction checks, H1a + H1b + H4 + H5 | drafted | 0.936 | 0.998 | 1.000 |
 | everything | drafted / interval | 0.276 / 0.006 | 0.224 / 0.004 | 0.148 / 0.002 |
 
-The
-bootstrap was calibrated in the review's runs (mean SE over between-population SD 0.97 to 1.06 at N 1000 and
+The bootstrap was calibrated in the review's runs (mean SE over between-population SD 0.97 to 1.06 at N 1000 and
 2000; percentile coverage 92% to 96%; REVIEW.md section 2.2 item 6).
 
 ## (e) Budget reading amendment (post hoc)
@@ -178,8 +177,12 @@ additions are not taken. **Each item below is a definition or wording correction
 ## (g) What this amendment does not do
 
 - No rerun of any kind, no N 2000 run, no new seed, and no new simulation. Every number above is already in
+  `results_003.json`, `RESULTS-003.md`, the review's `REVIEW.md` or the fixes lane's `RESULT.md`.
 - No retroactive freeze: this file is not a pre-registration and does not claim to have been written before the
+  evaluation.
+- No change to the frozen file or its rules: `PREREG-003.md`, `study003.py`, `decide_003.py`, `tuning_003.json`,
   `results_003.json` and `RESULTS-003.md` are byte-identical to their commits (section (h)). The 1.5 threshold
+  does not move.
 - Nothing in (b) to (f) changes a frozen verdict or threshold.
 
 ## (h) Hashes
