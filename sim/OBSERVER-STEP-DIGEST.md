@@ -41,16 +41,18 @@ Consequences for text and tables:
 - At w = 2 the generator favours L1 at p = 1 at every rho; the population interval excludes 0 in only 16% (rho 1)
   and 9% (rho 2) of populations.
 
-## 2. Still single-draw: cite with the population stated, or rerun on the 200 populations first
+## 2. Replicated by REP2-003 (2026-10-07): cite the generator column
 
-| Result | Source | Design value (k 0.5, 63 d unless stated) |
-|---|---|---|
-| L0 interaction of D change with observer change | FACT-003 | 0.154 [0.079, 0.224] (W 14, 21 d) |
-| L1 gain from removing the D ramp from its re-baseline | ABSORB-003 | 0.190 to 0.348, +0.158 [0.117, 0.206] |
-| L1_did - L1, D-dependent | OBS-003, LOAD-003 | 0.194 [0.105, 0.272] at rho 1; 0.012 / 0.105 / 0.194 / 0.316 at rho 0 / 0.5 / 1 / 2 |
-| Added alarm share by rule, `conc0.5` | UNLOG-003 | L1 0.004, L1_step 0.283, L1_did 0.482, L2 0.397, oracle 0.300 |
-| L1_step - L1_bsd, step 3 of the chain (re-centring unmapped) | HYB-003 | 0.040 [-0.013, 0.094] at rho 0 to 0.202 [0.138, 0.267] at rho 2; no-change step 3 -0.069 [-0.120, -0.025] |
-| L1_step - L1 added false alarms by shift arm | STEP-003 B | `conc0.5` 0.279, `post0.5` 0.065 (covers 0), `conc-0.5` -0.138; generator means of Fs - F0 over the 200 populations 0.258, 0.016, -0.125 (point values; per-term MCSE 0.002) |
+| Result | Source | Design value (k 0.5, 63 d unless stated) | Generator mean (REP2-003, 200 populations) |
+|---|---|---|---|
+| L0 interaction of D change with observer change | FACT-003 | 0.154 [0.079, 0.224] (W 14, 21 d) | 0.108 |
+| L1 gain from removing the D ramp from its re-baseline | ABSORB-003 | 0.190 to 0.348, +0.158 [0.117, 0.206] | +0.164 |
+| L1_did - L1, D-dependent | OBS-003, LOAD-003 | 0.194 [0.105, 0.272] at rho 1; 0.012 / 0.105 / 0.194 / 0.316 at rho 0 / 0.5 / 1 / 2 | -0.001 / 0.071 / 0.150 / 0.273 at rho 0 / 0.5 / 1 / 2 |
+| Added alarm share by rule, `conc0.5` | UNLOG-003 | L1 0.004, L1_step 0.283, L1_did 0.482, L2 0.397, oracle 0.300 | L1 0.005, L1_step 0.263, L1_did 0.488, L2 0.404, oracle 0.279 |
+| L1_step - L1_bsd, step 3 of the chain (re-centring unmapped) | HYB-003 | 0.040 [-0.013, 0.094] at rho 0 to 0.202 [0.138, 0.267] at rho 2; no-change step 3 -0.069 [-0.120, -0.025] | 0.005 / 0.056 / 0.113 / 0.208 at rho 0 / 0.5 / 1 / 2; no-change step 3 -0.034 |
+| L1_step - L1 added false alarms by shift arm | STEP-003 B | `conc0.5` 0.279, `post0.5` 0.065 (covers 0), `conc-0.5` -0.138; generator means of Fs - F0 over the 200 populations 0.258, 0.016, -0.125 (point values; per-term MCSE 0.002) | from REP-003, in the design value cell |
+
+The rho-0 readings of OBS/LOAD and HYB are design-draw sensitive (`design_side` 0.465 and 0.51, about 0.5) and should be cited as about zero.
 
 The L1_did - L1 values are L1_step - L1 values plus L1_did - L1_step, so the rho-0 reading carries the same F0
 and T0 draw as section 1. The F0 draw offsets part A by 0.024 w at every rho, so treat every rho in the OBS/LOAD row as design-draw-sensitive, most at rho 0.
@@ -75,5 +77,4 @@ at that weight, is 0.33 at rho 0 and 0.86 at rho 2.
 
 - Whether the paper tables cite section 1's generator column and drop the design-draw rho-0 readings.
 - Whether committed STEP-003.md, BREAK-003.md and HYB-003.md get a pointer to REP-003 for those readings.
-- Whether the section 2 results are rerun on the 200 populations (proposal at ~/code/agentsem/RUNLOG.md
-  line 130: about 7 min wall at load ~100 for the observer-step numbers; may not cover the FACT, ABSORB and LOAD scripts).
+- Rerun done: REP2-003 (owner-delegated 2026-10-07).
