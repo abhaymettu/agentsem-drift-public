@@ -22,6 +22,9 @@ referee-response map, and open items. v0 `a497ae3`, v1 `d0db495`, v2 `3fb50cd`, 
 | Mettu (2026a) | `~/code/ghost-respondents/paper/GHOST-RESPONDENTS-DRAFT.md`, section 2.2 (E5, E7) |
 | exploratory robustness grid | plan `sim/ROBUSTNESS-PLAN.md`, sha256 `e1dbc8b74be6b3067e9433b76a1d1b24b01b705994b6a248771ad65f11836606`, committed in `3fb50cd` (2026-09-27 23:43:25 CDT); results `sim/robustness.json`, `sim/ROBUSTNESS.md`; two cells (`default`, `m1_15`) computed before the commit for a refactor check, disclosed as `sim/POSTFREEZE-DEVIATIONS.md` item 9 |
 | matched-baseline sensitivity (section 3.11) | plan `sim/SENS-BASELINE-PLAN.md`, sha256 `e9768ee5f8d9273b0c6f4c63de7ef478fdacebe73f4e0e5c888025d70013488c`, committed in `3fa1a03` (2026-10-03); results `sim/sens_baseline.json`, sha256 `7c18568e4b3e0a6d01ee90682ac40b62c5cf84a84de9dfd7c92374396934ab81`, `sim/SENS-BASELINE.md`, commit `24ddeb6`; byte-identical rerun. The level offset (+0.14 against +0.03) and scale factor (about 1.2) are from `~/audit/agentsem-next4-2026-10-03.md` section 1, attribution round-3 panels |
+| spec 003 pre-registration | `sim/PREREG-003.md`, frozen at commit `57208bc` (2026-10-07 12:27:07 CDT), sha256 `06ee47576d02bc440560115b07aad029e8c7574480b684b4c7779d796c99bb79` |
+| spec 003 evaluation | `sim/results_003.json`, sha256 `922cd808aa05602750d3e2908b9354f8ec91ddb2736b8381faa8fd56c0e8000c`, with `sim/RESULTS-003.md`, commit `52286ad` (2026-10-07 12:33:54 CDT); `n` 4000, seed 192815961 derived from the frozen file's sha256 |
+| spec 003 post-evaluation amendment | `sim/POST-EVALUATION-003.md`, dated 2026-10-07, written after the evaluation, uncommitted when this row was written, sha256 `a1ed097acf0f00ef2ae72fe873a843c94b8e3eb77bf716fe6b865e9866633478`; post hoc readings only, frozen verdicts unchanged (section 9) |
 | figures | `paper/figures.py` renders `paper/fig1` to `fig4` (.svg) from `sim/results.json`, `sim/metrics.json` and `pilot/results.json`. File numbers match figure numbers in the draft (renamed 2026-09-27). v4 edited text labels only (fig1 subtitle and footnote, fourth stage renamed "Use"; fig3 title and description); after re-running `figures.py`, every numeric token in all four SVGs is identical to `HEAD` (`201f649`) |
 | citation verification files | `~/lanes/bridge-jobs/agentsem-overnight-20260927/paper-citations.md`, `prior-art-passive.md`, `lit-verify.md` |
 
@@ -212,3 +215,32 @@ isolate), which needs a new run.
 9. Whether section 3.11 stays in the submitted version (spec 001 section 18.3 point 3), and whether the word
    limit (item 6) absorbs its roughly 260 words. Inserted 2026-10-07 under the owner's delegation of the
    pending paper decisions.
+
+## 9. Rationale for post-evaluation material (2026-10-07)
+
+Numbered to match open item 9 of section 6, which it answers for section 3.11; it also sets the terms for any
+spec 003 material. Everything named here is synthetic.
+
+**Why section 3.11 stays.** It discloses an as-run choice found after scoring (the baseline series for
+indicators 4 and 5) and reports a sensitivity analysis that was planned and hashed before it ran. Its claims stay
+inside what that analysis supports, and the section says so in its own text:
+- one seed set: the frozen evaluation seeds, re-scored;
+- one alternative: the baseline fit on the filtered series (re-tuned, and with the frozen thresholds kept);
+- no paired interval: the detection drop is reported as not established;
+- frozen verdicts unchanged: none of the 14 primary verdicts in Table 1 changes, and the as-run baseline is
+  called a disclosed choice, not a fix.
+Dropping it would remove the disclosure of a known mismatch. The word-limit question (item 6) stays open.
+
+**When a spec 003 subsection enters the paper.** Only if all of the following hold:
+1. The frozen H3 verdict comes first: H3 FAILS under the frozen point rule, because PS-sub's L1 ratio,
+   1.5756 [1.4205, 1.7489], is not below 1.5; the registered tally is one of two (H2a holds).
+2. The interval reading comes second and is labelled post hoc: both L1 clauses are inconclusive (each interval
+   crosses 1.5), L2 and L0 hold on both families, and the conjunction is inconclusive. Neither L1 point is
+   called a pass.
+3. The pre-freeze review is disclosed: it was complete at 10:44 CDT, before the 12:27 freeze, and the freezing
+   lane did not read it. Its blocking objection to the point rule is stated.
+4. The review's Monte Carlo is labelled synthetic and design-stage (500 populations per N), not confirmatory
+   power and not evidence about the evaluation draw.
+The candidate text is `~/lanes/anchor-research/drafts/paper-spec003-results-draft.md`, not inserted.
+
+Full amendment: `sim/POST-EVALUATION-003.md` (provenance row in section 1).
