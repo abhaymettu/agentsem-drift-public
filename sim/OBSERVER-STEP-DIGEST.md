@@ -2,8 +2,8 @@
 
 **Status: DESIGN STAGE, EXPLORATORY. Every number is synthetic. This is a reading guide over committed results.** It maps each headline number from NET-003 through
 BREAK-003 to its replication status in REP-003 (200 fresh populations, `rep_003.json`, sha256 4f046f45...), so a
-paper table quotes the right column. Which rule the paper adopts (L1 or L1_step) and the false-alarm weight w
-are his CHOICE items and are not set here.
+paper table quotes the right column. The frozen PREREG-003 (57208bc, section 4, under the 2026-10-07 delegation)
+carries L1_step as the rule and registers no single false-alarm weight w; this guide sets neither.
 
 Setting for every row unless stated: DR+PS pair, `phi_D` 0.7, W 14, k 0.5, 63 d, in-window persons, `conc0.5`
 shift, rho = how much of D's realized effect reaches the unmapped indicators (LOAD-003). "Design" is the single
@@ -75,6 +75,6 @@ at that weight, is 0.33 at rho 0 and 0.86 at rho 2.
 
 ## 4. For him to decide
 
-- Whether the paper tables cite section 1's generator column and drop the design-draw rho-0 readings.
+- Settled in `sim/PREREG-003.md` section 4 (frozen 2026-10-07): the paper cites the generator means, not the design draw.
 - Whether committed STEP-003.md, BREAK-003.md and HYB-003.md get a pointer to REP-003 for those readings.
 - Rerun done: REP2-003 (owner-delegated 2026-10-07).

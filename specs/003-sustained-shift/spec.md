@@ -1,7 +1,8 @@
 # Spec 003: detecting a sustained mean shift, and separating it from observer change
 
-Status: DRAFT r3, not frozen. Nothing here is a result. It becomes `sim/PREREG-003.md` only after a
-confirmation review, with its own hash, seeds and thresholds (constitution III). Spec 001,
+Status: living spec, r5 (2026-10-07), not itself frozen; nothing here is a result. The registered text is
+`sim/PREREG-003.md`, frozen at commit `57208bc` with its own hash, seeds and thresholds (constitution III) and
+scored once; section 15 points to the results and the post-evaluation amendment. Spec 001,
 `sim/PREREG.md`, the frozen results, `sim/ATTRIBUTION*` and paper v4 are unchanged.
 
 Base: spec 001 sections 3 to 5 (generator, architectures, metrics), as amended by sections 11 to 15. This
@@ -208,6 +209,11 @@ target (spec 001 section 15).
 **Budget.** 3 probes per alarm, plus the baseline block, reported per family and arm. Design run: S runs
 at 1.32 per tracked month. On a sustained shift the detector keeps alarming after each refractory period,
 and each alarm draws 3 probes, so DR-1.0 reaches 2.39 and DR-1.5 3.24 (`sim/DESIGN-003.md` s3 item 8).
+The probe rules `all`, `wait` and `stop` and the 3.0 target are set in `sim/PREREG-003.md` section 5. `wait`
+(`sim/POST-EVALUATION-003.md` (f) item 5): after a probed alarm on day `a`, the next alarm can be probed from day
+`a + 3L + 1`, whether or not any probe was answered, so at most one confirmation is in flight per person. It is not
+"confirm once per person episode": on a sustained shift it probes again every `3L + 1` days (28 at `phi_D` 0.7)
+while alarms continue.
 
 ## 8. The policy log, primary separator of person from observer change
 
@@ -233,8 +239,8 @@ alarms. In each case the rule acts at a logged exogenous change.
 
 **Scoring.** Every alarm is scored against the section 2 status, never against a rule's label.
 
-- *Separation* for L1, L2 and the oracle is the ratio of each PS family's false-alarm rate to S's, read
-  beside DR sensitivity. For L0+label, it is DR's person-labelled share minus each PS family's.
+- *Separation* for L1, L2 and the oracle is the ratio of each PS family's false-alarm rate to S's (for H3,
+  the rate defined in section 11), read beside DR sensitivity. For L0+label, it is DR's person-labelled share minus each PS family's.
 - Spaced confirmation (section 7) can follow any rule. "Person-confirmed" means person-labelled, or
   surviving the rule, and then confirmed.
 - **DR+PS.** The reference label is "person". Alarms in `[change day, t0)` were caused by the observer
@@ -314,11 +320,11 @@ and arm, with paired person-bootstrap SEs.
 - Baseline error: the true baseline mean of `D` among alarmed and non-alarmed S persons, per baseline
   arm.
 - Separation and the observer-caused tally, per section 8.
-- Policy-log cost: DR+PS sensitivity for onsets inside the re-baseline window, L1 against L2.
+- Policy-log cost: DR+PS sensitivity on H4's persons (section 11), L1 against L2.
 
 ## 11. Candidate predictions (hypotheses; thresholds fixed in `PREREG-003` after review)
 
-`sim/PREREG-003.md` (a draft, not frozen) restates every threshold on the new defaults, which are help-off
+`sim/PREREG-003.md`, frozen at `57208bc` on 2026-10-07, restates every threshold on the new defaults, which are help-off
 with onsets U[70, 120], using the design seed and the planned SEs. The design numbers below are the earlier
 design check; the design run's values are in `sim/DESIGN-003.md` and the draft.
 
@@ -330,8 +336,13 @@ design check; the design run's values are in `sim/DESIGN-003.md` and the draft.
   4, is an exploratory estimate, not a registered prediction (owner-delegated, 2026-10-05): the design run gave
   -0.003 [-0.069, 0.057].
 - **H3.** On logged PS-sub and PS-use persons, L1 and L2 bring false alarms within 1.5x of S. L0 does
-  not. The draft's decision rule: point estimate below 1.5 for L1 and L2, interval lower bound above 1.5 for
-  L0. Design run: L1 1.421 and 1.376, L2 1.171 and 1.101, L0
+  not. The rate (`sim/POST-EVALUATION-003.md` (f) item 1): for each rule and family, the logged persons' alarms
+  over `[max(c, B), T)` per 30 of their tracked days in that window, pooled over persons (total alarms over total
+  tracked days), divided by the same persons' pooled rate on the S panel over the same window. A tracked day is
+  one with `reason == 0`, on which the detector neither abstains nor holds: days in the CUSUM's 14-day
+  refractory period count as tracked, and L1's hold days `(c, c + 14]` do not. The frozen decision rule
+  (PREREG-003 section 2): point estimate below 1.5 for L1 and L2, interval lower bound above 1.5 for L0. Design
+  run: L1 1.421 and 1.376, L2 1.171 and 1.101, L0
   3.061 and 3.050 (PS-sub, PS-use).
 - **H6.** Matched `k` against `k = 0.5` at matched false alarms. No direction is predicted; the result
   is reported as an estimate with its interval.
@@ -339,14 +350,22 @@ design check; the design run's values are in `sim/DESIGN-003.md` and the draft.
 **Construction checks.** These are labelled in the paper as checks, not findings:
 
 - **H1.** At `phi_D = 0.7`, spaced confirmation lowers S's confirmed share by at least 0.15 against the
-  next-day rule, and keeps at least 0.70 of DR-1.0's next-day share (H1b; 0.85 was not taken, owner-delegated,
-  because it misses at every N). Design check: -0.256 and 0.91 at about 186 DR persons; design run -0.236 and
+  next-day rule, and keeps at least 0.70 of DR-1.0's next-day share (H1b). H1b's persons
+  (`sim/POST-EVALUATION-003.md` (f) item 2) are DR-1.0 persons with an alarm in `[t0, t0 + 21)` and none before
+  `t0`; each one's first in-window alarm is confirmed, and the statistic is the spaced confirmed share over the
+  next-day confirmed share, each among confirmable alarms. 0.85 was not taken (owner-delegated); the reason
+  given, that it misses at every N, was a plug-in projection conditional on the design draw (9th percentile), and
+  the generator puts H1b at 0.876 ((f) item 7). The registered 0.70 is unchanged. Design check: -0.256 and 0.91 at about 186 DR persons; design run -0.236 and
   0.810. AR(1) decay makes the first part close to true by construction.
-- **H4.** On DR+PS, L2 loses less sensitivity than L1 for onsets inside the re-baseline window. L2 keeps
-  the unmapped indicators running.
-- **H5** (a known answer). For unlogged PS-prop, no indicator-only rule (L0+label, M1) separates it from
-  DR-1.0 by more than 0.10 in person-attributed share. The draft scores the M1 clause and labels the
-  L0+label clause true by construction (neither carries a label).
+- **H4.** On logged DR+PS persons whose shift begins inside L1's hold, L2 loses less sensitivity than L1.
+  These are the persons with `t0` in `[c, c + 13]`, so that D's shift, first nonzero on day `t0 + 1`, begins
+  inside `(c, c + 14]`; the statistic is 21-day sensitivity with `exclude_pre_onset_alarms=False`
+  (`sim/POST-EVALUATION-003.md` (f) item 3). L2 keeps the unmapped indicators running.
+- **H5** (a known answer). M1, the indicator-pattern rule, does not separate unlogged PS-prop from DR-1.0 by
+  more than 0.10 in person-attributed share: among persons with an alarm in `[x0, x0 + 42)` (A-fixed `k = 0.5`,
+  rule L0; `x0` is `t0` for DR-1.0 and `c` for PS-prop), the share whose first such alarm M1 calls person,
+  DR-1.0 minus PS-prop. L0+label is excluded: it reads the policy log, so it is not indicator-only, and with no
+  entry in either arm its difference is 0 by definition (`sim/POST-EVALUATION-003.md` (f) item 4).
 
 ## 12. Out of scope
 
@@ -361,8 +380,12 @@ Constitution I and VII bind all of it.
 
 ## 13. Open before freeze
 
+The freeze happened on 2026-10-07 (`57208bc`). The first two items stay open and do not bear on the scorer
+(PREREG-003 section 8); the third was settled in the frozen file.
+
 - The PS-use intercept size. It stays at a value not tuned for alarms.
-- The S34 to S36 sources, still unverified.
+- The S34 to S36 sources: NOT FOUND (checked 2026-10-07); the register that numbers them is not on disk and its
+  dashboard copy returned 404 to a logged-out request.
 - The lane decisions in `sim/PREREG-003.md` section 8 (N, H3's decision rule, H5's clauses, the probe budget
   rule and its scope), the evaluation seeds and scoring commands.
 
@@ -433,3 +456,26 @@ Constitution I and VII bind all of it.
 - **r4, lane `agentsem-resume-oct06`.** Sections 11 and 13 reconciled with `sim/PREREG-003.md` (draft): the
   stale "no design evidence yet" sentence replaced, H1b 0.70 and H2b exploratory (owner-delegated) stated,
   H3 and H5 marked as lane decisions open for his review. No threshold was frozen and no number rerun.
+- **r5, 2026-10-07: post-evaluation reconciliation.** Definitions brought into line with
+  `sim/POST-EVALUATION-003.md` section (f), which was checked against the frozen `study003.py`: H3's rate and
+  tracked days (item 1), H1b's persons and the plug-in reason for not taking 0.85 (items 2 and 7), H4's persons
+  and window (item 3), H5's claim limited to M1 with L0+label true by definition (item 4), and `wait`'s semantics
+  (item 5, section 7). Status line, section 11's preamble and section 13 updated for the freeze; S34 to S36
+  recorded as not found (candidate references in the lane report, not here). Section 15 added.
+  No threshold, claim or number changed, and nothing was rerun.
+
+## 15. Evaluation and post-evaluation reading (2026-10-07)
+
+Pointers only; every number is synthetic and lives in the files named.
+- `sim/RESULTS-003.md` (commit `52286ad`) scores `sim/PREREG-003.md` as frozen at `57208bc`, once, at N 4000.
+  Frozen verdicts: H2a holds (0.2019 [0.1748, 0.2267]); **H3 FAILS**, because L1 on PS-sub has a point estimate
+  of 1.5756 [1.4205, 1.7489], not below 1.5, while the other five clauses hold. The registered tally is one of
+  two. The four construction checks (H1a, H1b, H4, H5) hold.
+- `sim/POST-EVALUATION-003.md`, dated 2026-10-07 and written after the evaluation, keeps those verdicts first
+  and adds post hoc readings only: (c) the pre-freeze review's three-way interval reading, under which both L1
+  clauses are inconclusive, L2 and L0 hold, and H3 is inconclusive; (d) the review's Monte Carlo, synthetic and
+  design-stage, not confirmatory power; (e) the 3.0 budget target read on the 95% upper bound, met by `wait` for
+  every family at `phi_D` 0.7; (f) nine definition and wording corrections, carried into sections 7, 8, 10 and
+  11 above. No threshold moves and nothing is rescored.
+- The unregistered L1_step arm (PREREG-003 section 4) is reported as a comparison only and does not enter the
+  H3 verdict.
