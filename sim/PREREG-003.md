@@ -1,17 +1,18 @@
-# sim/PREREG-003.md -- DRAFT pre-registration for spec 003
+# sim/PREREG-003.md -- pre-registration for spec 003 (frozen 2026-10-07)
 
-**Status: DRAFT. Not frozen, not pushed. Nothing here is a result.** It becomes a pre-registration only when he
-lifts the freeze and commits it. No evaluation seed has been run. Every number cited is a synthetic design-stage
-number (`sim/DESIGN-003.md`, `sim/DECIDE-003.md`, `sim/REP-003.md`) and is listed under Disclosure as seen
-before the freeze. Decisions marked **(lane decision)** were made by the lane under the 2026-10-05 relay
-(`/Users/abhay/.instinct/DECISIONS-20261005.md`, Update 9:27, which delegated "the probe budget rule, H5 and the
-PREREG-003 slot text"; N and H3's decision rule rest on reading "slot text" broadly). **(owner-delegated)**
-were made in that file's earlier section. Both kinds are his to overturn before the freeze.
+**Status: FROZEN 2026-10-07, not pushed, not lodged with any registry.** Frozen by the anchor-research lane under
+the owner's delegation of 2026-10-07 11:05 CDT (section 8), with the file hashes in section 1. The evaluation
+seed derives from this file's sha256 at the freeze commit and had not been run when the file was committed. Every
+number cited is a synthetic design-stage number (`sim/DESIGN-003.md`, `sim/DECIDE-003.md`, `sim/REP-003.md`) and
+is listed under Disclosure as seen before the freeze. Decisions marked **(lane decision)** were made by the lane
+under the 2026-10-05 relay (`/Users/abhay/.instinct/DECISIONS-20261005.md`, Update 9:27) and confirmed under the
+2026-10-07 delegation; **(owner-delegated)** were made in that file's earlier section.
 
 ## 1. Fixed setup
 
-- Generator and scorer: `sim/study003.py` at the commit recorded at freeze. Frozen `drift_sim.py` and
-  `attribution.py` unchanged.
+- Generator and scorer: `sim/study003.py` at commit 6dcead9, sha256 `037f31ec7534c8c4afd5364dd9b55f504c5f8f7479d7e2750f0b0ec8b00c031e`;
+  `sim/tuning_003.json` sha256 `c7002d79ffb9cf99eabcbd0888fa375ae2c2528fd968237d6ce40fd4384bd51d`. Frozen `drift_sim.py` (sha256
+  `206a549651f351dfa47e0d72468f1c787d6df9d83d2df5a8516fb74b9837db87`) and `attribution.py` (sha256 `06060e3c3fefd97a30d6bd6fc65235ff4ab544a4a2d97275559f3a12deb78655`) unchanged.
 - Defaults: help-off, onsets U[70, 120], `phi_D` 0.7, 28-day baseline, 4 baseline probes (spaced), A-fixed
   `k = 0.5`, `T = 210`.
 - Re-baseline window `W = 14` days (owner-delegated). `W = 21` was evaluated and not taken: it puts PS-sub's
@@ -167,6 +168,7 @@ paper." Under it, the lane took every lane decision through to a choice:
 - The three scorer gaps found 2026-10-06 are closed and listed in section 7.
 - Spec 003 section 11 wording of H3 and H5 is taken as it stands.
 
-Remaining before `score`: the freeze commit, which lists here the sha256 of `study003.py` and `tuning_003.json`
-at that commit. Spec 003 section 13's other open items (the PS-use intercept size, the S34 to S36 sources) do
+FROZEN 2026-10-07 by the anchor-research lane under the owner's delegation (commit lists the sha256 of
+`study003.py` and `tuning_003.json` in section 1; the evaluation seed derives from this file's sha256 at that
+commit). Spec 003 section 13's other open items (the PS-use intercept size, the S34 to S36 sources) do
 not bear on the scorer and stay open. No push.
