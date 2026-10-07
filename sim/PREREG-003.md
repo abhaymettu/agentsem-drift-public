@@ -23,8 +23,11 @@ were made in that file's earlier section. Both kinds are his to overturn before 
   (PS-use) at N 2000, against 0.880 and 0.974 at N 4000. The joint probability over all H3 clauses was not
   computed. N 2000 is the middle size, and the lower power for H3 is accepted; N is his to raise.
 - Evaluation bootstrap: 1000 person resamples, shared across statistics, 95% percentile intervals.
-- Evaluation seeds: to be fixed at freeze, none equal to the design (20261003, 20261004), tuning (20260927),
-  REP-003 (`sha256("rep003:r")`) or OBS/LOAD/STEP/HYB/BREAK/UNLOG-003 seeds. Not chosen here.
+- Evaluation seed: not chosen by hand. `study003.py score --prereg-sha <sha>` derives it as
+  `sha256("<sha>:study003")` of the frozen file, so it is fixed by the freeze commit, and the scorer refuses unless
+  this file lists the current sha256 of `study003.py` and `tuning_003.json` (listed at freeze, not here). It
+  equals none of the design (20261003, 20261004), tuning (20260927), REP-003 (`sha256("rep003:r")`) or
+  OBS/LOAD/STEP/HYB/BREAK/UNLOG-003 seeds.
 - **Probe rule for scoring.** H1, H2 and the budget comparison arm are scored under the design rule `all`, the
   rule they were sized under (reason in section 5).
 
@@ -143,7 +146,14 @@ Any further scorer change before the freeze must be listed here.
 
 - Overturn or keep every **lane decision**: N 2000, H3's point-estimate rule and all-six-clauses reading, H5's
   clause handling, the `wait` rule and its reporting scope.
-- Evaluation seeds and the exact scoring commands.
-- Rewrite spec 003 section 11's stale sentence ("H2's second clause and H3 have no design evidence yet").
+- Scorer gaps found 2026-10-06. Closing them changes the scorer after the design run, so each is listed under
+  Disclosure when done:
+  1. `study003.py` has `N = 1000`; the draft registers 2000. `score` runs at 1000 unless N is changed.
+  2. `score` and `run_study` have no `wait` or `stop` probe rule (they live only in `decide_003.py`), so the budget
+     table of section 5 cannot be produced by `score`; it needs the `decide_003.py` budget routine on the
+     evaluation seed, or a port.
+  3. `study003.py` emits no pass/fail verdicts and has no L1_step arm (no match for either); the verdicts are
+     read off `results_003.json` against section 2 and 3 by hand.
+- He confirms the wording of H3 and H5 in spec 003 section 11.
 - Spec 003 section 13's other open items: the PS-use intercept size and the unverified S34 to S36 sources.
 - Freeze lift, commit of the frozen file, and any push.

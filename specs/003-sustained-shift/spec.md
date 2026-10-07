@@ -318,29 +318,35 @@ and arm, with paired person-bootstrap SEs.
 
 ## 11. Candidate predictions (hypotheses; thresholds fixed in `PREREG-003` after review)
 
-`PREREG-003` restates every threshold on the new defaults, which are help-off with onsets U[70, 120],
-using a non-evaluation seed and the planned SEs. H1, H2 and H3 are sized there. H2's second clause and
-H3 have no design evidence yet.
+`sim/PREREG-003.md` (a draft, not frozen) restates every threshold on the new defaults, which are help-off
+with onsets U[70, 120], using the design seed and the planned SEs. The design numbers below are the earlier
+design check; the design run's values are in `sim/DESIGN-003.md` and the draft.
 
 **Predictions:**
 
 - **H2.** At `phi_D = 0.9`, with 28 days and 4 probes, S's spaced confirmed share against the baseline
-  block exceeds its oracle-reference share by at least 0.10. Design check: +0.176. A 56-day baseline
-  shrinks that gap by at least 0.05 with the probe count held at 4.
+  block exceeds its oracle-reference share by at least 0.10. Design check: +0.176; design run 0.201
+  [0.155, 0.246]. **H2b**, that a 56-day baseline shrinks that gap by at least 0.05 with the probe count held at
+  4, is an exploratory estimate, not a registered prediction (owner-delegated, 2026-10-05): the design run gave
+  -0.003 [-0.069, 0.057].
 - **H3.** On logged PS-sub and PS-use persons, L1 and L2 bring false alarms within 1.5x of S. L0 does
-  not.
+  not. The draft's decision rule: point estimate below 1.5 for L1 and L2, interval lower bound above 1.5 for
+  L0. Design run: L1 1.421 and 1.376, L2 1.171 and 1.101, L0
+  3.061 and 3.050 (PS-sub, PS-use).
 - **H6.** Matched `k` against `k = 0.5` at matched false alarms. No direction is predicted; the result
   is reported as an estimate with its interval.
 
 **Construction checks.** These are labelled in the paper as checks, not findings:
 
 - **H1.** At `phi_D = 0.7`, spaced confirmation lowers S's confirmed share by at least 0.15 against the
-  next-day rule, and keeps at least 0.85 of DR-1.0's next-day share. Design check: -0.256 and 0.91 at
-  about 186 DR persons. AR(1) decay makes the first part close to true by construction.
+  next-day rule, and keeps at least 0.70 of DR-1.0's next-day share (H1b; 0.85 was not taken, owner-delegated,
+  because it misses at every N). Design check: -0.256 and 0.91 at about 186 DR persons; design run -0.236 and
+  0.810. AR(1) decay makes the first part close to true by construction.
 - **H4.** On DR+PS, L2 loses less sensitivity than L1 for onsets inside the re-baseline window. L2 keeps
   the unmapped indicators running.
 - **H5** (a known answer). For unlogged PS-prop, no indicator-only rule (L0+label, M1) separates it from
-  DR-1.0 by more than 0.10 in person-attributed share.
+  DR-1.0 by more than 0.10 in person-attributed share. The draft scores the M1 clause and labels the
+  L0+label clause true by construction (neither carries a label).
 
 ## 12. Out of scope
 
@@ -357,8 +363,8 @@ Constitution I and VII bind all of it.
 
 - The PS-use intercept size. It stays at a value not tuned for alarms.
 - The S34 to S36 sources, still unverified.
-- The thresholds of H1b, H2b, H3's decision rule, H5's L0+label clause and the budget rule:
-  `sim/DESIGN-003.md` section 4 has proposals from the design run.
+- The lane decisions in `sim/PREREG-003.md` section 8 (N, H3's decision rule, H5's clauses, the probe budget
+  rule and its scope), the evaluation seeds and scoring commands.
 
 ## 14. Change log
 
@@ -424,3 +430,6 @@ Constitution I and VII bind all of it.
   before the freeze. One scoring rule follows section 2 rather than the frozen code: confirmed PPV counts
   only pre-onset alarms as false. Reviews: Opus methods and confirmation passes and an Opus accuracy check,
   plus ponytail; all applied but one ponytail cut (see the commits).
+- **r4, lane `agentsem-resume-oct06`.** Sections 11 and 13 reconciled with `sim/PREREG-003.md` (draft): the
+  stale "no design evidence yet" sentence replaced, H1b 0.70 and H2b exploratory (owner-delegated) stated,
+  H3 and H5 marked as lane decisions open for his review. No threshold was frozen and no number rerun.
