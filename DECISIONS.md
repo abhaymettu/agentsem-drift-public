@@ -90,3 +90,64 @@ wrong: the design interval [1.175, 1.706] crosses 1.5, so the clause was inconcl
 L1 versus L1_step question is recorded in sim/HYB-003.md, not the RUNLOG.
 
 Audit: ~/audit/agentsem-h3rule-2026-10-07.md
+
+### Referee, 2026-10-07 (lane agentsem-h3referee-oct07; fresh-context Opus reviewer, read-only on the evidence)
+
+**Verdict: AMEND.** Option B stays the only registered rule for future H3 work, with its rule text plus one added
+disclosure sentence (item 1) and one added pre-run quantity (item 4). Four statements in the Reasoning, "Why B
+stands" and "Reverse by" are wrong and are superseded by items 2, 3, 5 and 6. The entry above is left as written;
+where an item below names one of its sentences, the item governs.
+
+**Claim checked.** Future registrations read H3 on REVIEW.md 2.2's three-way interval rule as the only registered
+rule; 003 is not rescored and its frozen FAIL is reported first.
+
+**Checks that passed** (run by this referee). Every number cited above matches its source: REVIEW.md 2.1, 2.2 and
+3.2 (0.298 / 0.224 / 0.148; 0.002; 0.066 / 0.098 / 0.206; 1.585 and 1.496; 30,656; coverage 92% to 96%),
+DECIDE-003 (a) (0.880) and (c) ([1.175, 1.706]), POST-EVALUATION-003 (b) and (c), and sim/results_003.json (the
+six H3 clauses, L1_step 0.9344 [0.857, 1.0218] and 0.9273 [0.8494, 1.0141], n 4000). The six frozen sha256 values
+equal POST-EVALUATION-003 (h), and `python3 sim/study003.py --check` prints "check OK". The rule does not pass by
+construction (it holds in 0.002 of N 4000 populations under the generator) and rescores nothing, so it does not
+conflict with the frozen FAIL. C and D stay rejected for the reasons given. DECISIONS-20261005 keeps W=14 and
+contains no "1.5"; the 13:42 anchor-research entry in ~/code/agentsem/RUNLOG.md carries the open call;
+paper/AUTHOR-NOTES.md section 9 rule 2 uses the interval reading, labelled post hoc.
+
+**Amendments.**
+1. *The choice is post hoc; the rule says so.* "B is the only option written before any result" is wrong. A was
+   also written before the evaluation (DESIGN-003 section 4 item 3, frozen as PREREG-003 section 2), and C was
+   written beside B in REVIEW.md 2.2 at 10:44. All three predate the 12:27 freeze; the choice among them was made
+   on 2026-10-07 after the 003 results. B's advantage over C is that it keeps the registered all-six claim
+   (REVIEW.md 2.2), not its date. Append to the rule text: "This rule was adopted for future work on 2026-10-07,
+   after the 003 evaluation. Under 003's frozen rule H3 FAILS; under this rule 003 reads inconclusive."
+2. *What B was urged against.* "It was urged when the plug-in projection gave the point rule a 0.880 pass rate at
+   N 4000 ... so it argued against the result expected at the time" and "was pressed when it was expected to cost
+   a pass" misstate the record. The reviewer who urged B had the generator Monte Carlo, in which the point rule
+   holds 0.224 at N 2000 (REVIEW.md 2.1, 3.6), and expected B to return inconclusive about 0.90 (REVIEW.md 2.2).
+   The 0.880 is the lane's plug-in, at the N 4000 the lane chose after 11:05; the review recommended N 2000.
+   Read instead: B was written before the evaluation draw existed, by a reviewer who expected it to return
+   inconclusive, not to hold.
+3. *What A does.* "A fails it only through noise" is backwards. Under the generator (PS-sub L1/S about 1.585) A
+   returns FAIL in 0.852 of N 4000 populations (1 minus 0.148, REVIEW.md 3.2), the correct verdict; A *passes*
+   only through noise. B's cost, stated: at N 4000 it returns FAIL in at least 0.206 (PS-sub's L1 fail rate,
+   REVIEW.md 2.2 table) and inconclusive in most of the rest. B is chosen because both of its decisive verdicts
+   are error-controlled, not because it is more decisive; at practical N it is less decisive than A.
+4. *Coverage, made checkable.* The 92% floor is H3's ratios at N 4000, where the bootstrap SE runs about 6% under
+   the between-population SD (REVIEW.md 2.2 item 6), so reversal trigger 3 already sits at its edge. The rule's
+   pre-run statement adds the generator coverage of the six H3 intervals at the registered N, from the same Monte
+   Carlo that gives the hold, fail and inconclusive probabilities. Without it trigger 3 has no measurement.
+5. *Reversal mechanics.* "Mechanically, `git revert` of this file's commit removes the entry; nothing else depends
+   on it" does not work. Tested in a scratch clone: at f71bcd4, `git revert --no-commit f71bcd4` stages
+   `D DECISIONS.md`, deleting the whole decision log; once any later entry exists (this sub-entry included) it
+   stops with `CONFLICT (modify/delete)` and exit 1. Reverse only by a new dated entry, as the first sentence of
+   "Reverse by" says.
+6. *L1 versus L1_step.* The entry calls this question open, citing sim/HYB-003.md (committed 2026-10-04).
+   PREREG-003 section 4, frozen later under the owner delegation, says "L1_step is the rule carried into the
+   paper", and sim/OBSERVER-STEP-DIGEST.md reads it so. What remains open is whether H3's claim is about L1_step.
+   Trigger 1 means an owner statement to that effect, not the existing PREREG-003 sentence, and its citation ban
+   also covers the design-stage L1_step values seen before the freeze, 0.977 [0.844, 1.108] and 0.960 [0.836,
+   1.095] (PREREG-003 section 7).
+7. *Grant wording.* The quoted grant ("a research or design call that waited on him ...") is the conductor's
+   lane-prompt summary of his 2026-10-07 multiple-choice answers
+   (~/.instinct/lanes/prompts/agentsem-h3rule-oct07-20261007-190016.txt), not his words.
+
+Not changed by this sub-entry: the frozen files and verdict, 1.5, W 14, the paper. Audit:
+~/audit/agentsem-h3referee-2026-10-07.md
