@@ -308,7 +308,7 @@ isolate), which needs a new run.
    cited by hash in 3.13, v4.3 section 3.7) should be deposited with the supplement.
 13. Section 3.12 (v4.3: section 3.6) calls the reviewer "a separate AI agent" and the freezer "the freezing lane (the agent session
    that froze the file)"; confirm this description against the AI-use statement, which does not yet mention
-   the spec 003 freeze or review.
+   the spec 003 freeze or review. Status 2026-10-07: candidate added in DRAFT, see DECISIONS.md.
 14. The manuscript header still reads "Manuscript draft v4, 2026-09-28"; it was not bumped for v4.1 or v4.2.
 15. Declarations are DRAFT until the author confirms. The "Author contributions and conflicts" block is marked
    "[DRAFT declarations, pending the author's confirmation]": sole author, independent researcher, no external
@@ -321,7 +321,8 @@ isolate), which needs a new run.
    A. The former "Statements" section is gone; its AI-use paragraph moved into the declarations block and its
    ethics and data paragraphs into Disclosures, every bracketed placeholder kept. New placeholders: the corpus
    audit's preregistration status, the persistent link, and "[owner to confirm: no other person's content was
-   read]". Items 1 and 2 above are partly answered by this block once confirmed.
+   read]". Items 1 and 2 above are partly answered by this block once confirmed. The candidate minimal line alone
+   would contradict `sim/PREREG-003.md` section 8, where the freezing lane made the registered decision rules.
 16. (reworded 2026-10-07 16:22 under the owner's 16:19 grant: 4.1 now says payloads are walked in memory only to count characters and are not stored or classified; the Disclosures state the parse does not establish whose words each payload contains.) Section 4.1 said "Tool-result payloads are never read", but `pilot/trace_audit.py` walks tool_result content in
    memory to count characters (provenance row "corpus no-read claims"). Reword 4.1 or confirm the intended
    meaning; not changed here.

@@ -541,6 +541,14 @@ stated in claims (FDA, 2026), and nothing in this paper states an intended use.
 **Use of AI tools.** The simulation code, the corpus-audit code, the analyses, the audit of the scoring
 code against the frozen text, and this draft were produced with AI coding agents (Anthropic Claude
 models) working under the author's direction.
+[owner to confirm, and to decide whether `DECISIONS.md` is deposited with the supplement: AI agents also made
+research-design decisions under the author's delegation. For spec 003, a separate agent reviewed the design before
+the freeze, and the freezing lane of section 3.6 made the choices that `sim/PREREG-003.md` marks as lane decisions,
+among them H3's point rule, and froze the file under a delegation quoted in its section 8. After the evaluation, on
+2026-10-07, AI reviewers decided that any future registration of H3 reads its six clauses on the pre-freeze
+review's interval rule, and that H3's L1 clause stays on L1 rather than L1_step. Both decisions are recorded, with
+the options considered and the conditions for reversing them, in the decision log `DECISIONS.md`; neither changed
+a frozen file, threshold or verdict.]
 Candidate minimal line: "Claude assisted with code development and manuscript preparation." The venue asks the
 statement to name the model, its purpose, what the author checked and its limits: [model and version: author to
 specify]; [purpose: author to specify]; [what the author checked: author to specify]; [limits: author to

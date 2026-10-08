@@ -233,3 +233,65 @@ it when he removes the marker; the open item is now a read, not a decision.
 record it; if the H3 future rule is reversed, change the sentence in the same commit.
 
 **Not changed:** frozen files and the frozen H3 FAIL, 1.5, W 14, the "[author wording]" marker, paper/SUPPLEMENT.md.
+
+## 2026-10-07 | The AI-use statement and the H3 paragraph's humanizer read
+
+**Decided by** an Opus reviewer (model opus, effort xhigh, read-only) under the owner's 2026-10-07 overnight grant
+(the conductor's summary of his multiple-choice answers, not his words). Open in RUNLOG.md since the 19:42 entry:
+"owner reads the H3 paragraph (humanizer) and removes the marker; AI-use statement names both DECISIONS.md calls".
+The marker itself was already decided (entry above, Decision 2: it stays for him) and was not reopened.
+
+### Decision 1: the AI-use statement (paper/DRAFT.md declarations block)
+
+**Decision.** B: a bracketed "[owner to confirm ...]" candidate in the Use of AI tools paragraph, after "working
+under the author's direction". It covers the spec 003 pre-freeze review, the freezing lane's lane decisions (among
+them H3's point rule) and freeze under the delegation quoted in PREREG-003 section 8, and both 2026-10-07 calls
+above, and says neither changed a frozen file, threshold or verdict. AUTHOR-NOTES items 13 and 15 note it.
+
+**New evidence the earlier entries did not weigh.** sim/PREREG-003.md line 7 says decisions marked "(lane
+decision)" were made by the lane; line 43 marks H3's decision rule as one; section 8 (line 161) quotes the owner's
+delegation verbatim. "Under the author's direction" understates this, and the candidate minimal line ("Claude
+assisted with code development and manuscript preparation") alone would contradict PREREG-003.
+
+**Deposit check.** DECISIONS.md is not on `main` (`git cat-file -e main:DECISIONS.md` fails), no remote branch
+contains aebb6f4, the Data statement does not list it, and it carries `~/` and `/Users/` paths. The sentence
+therefore names the file without claiming it is deposited; the deposit stays his.
+
+**Options considered.**
+- A. The same sentence unbracketed. Rejected: the declarations assert nothing beyond what the coordinator supplied
+  (AUTHOR-NOTES item 15), and the 2026-10-07 delegation is a summary of his answers, not his words.
+- B. Bracketed candidate. **Chosen.**
+- C. Add nothing. Rejected: leaves a known understatement in the statement a transparency-minded reader checks.
+
+**Strongest case against.** It tells reviewers an agent chose a rule knowing it passed on the design draw (section
+3.6), and it adds about 105 words to a body already over the 5,000-word guide. **Why it stands:** a methods reader
+who finds the lane decisions in the repository without a disclosure is the worse outcome for his application, and
+the bracket forces his read before submission.
+
+**Reverse by** deleting the bracketed sentence from paper/DRAFT.md and adding a dated entry here (never `git
+revert`). If he keeps it but does not deposit DECISIONS.md, replace "in the decision log `DECISIONS.md`" with "in
+the author's records".
+
+### Decision 2: humanizer read of the H3 paragraph
+
+**Decision.** (a): no agent rewrite. Paper paragraph and marker unchanged.
+
+**Options considered.**
+- (a) Nothing beyond the entry above. **Chosen.**
+- (b) A humanized candidate in AUTHOR-NOTES. Rejected: still agent prose, doubles his read without settling
+  authorship, and adds a second text to audit.
+- (c) Humanizer edits applied to the paper, marker kept. Rejected: rewrites a paragraph whose numbers and hedges
+  were just audited and pre-empts the read the marker exists for.
+
+**Reasoning.** The paragraph's main AI tells are its "X, not Y" contrasts ("not bad luck", "a comparison, not a
+rescue", "neither confirmatory power nor evidence"), each an audited hedge a humanizer would flatten. No academic
+voice sample exists for humanizer (only voice-dna.md for job prose and the PhD outreach drafts). The new sentence
+is already plain, with no em dashes.
+
+**Strongest case against.** The OPEN item and the global rule put prose under his name through humanizer.
+**Answer:** run humanizer when he reads the paragraph, on the whole paper before submission, holding fixed 1.576
+[1.421, 1.749], 1.309, 1.286, 0.792, 0.148 and 0.002 and keeping the post hoc and "not a rescue" hedges.
+Submission is his step.
+
+**Reverse by:** if he wants a candidate before his read, write one into AUTHOR-NOTES item 10 with the paper
+unchanged and the marker kept. Nothing to undo.
