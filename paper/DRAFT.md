@@ -387,14 +387,16 @@ design-stage Monte Carlo (500 populations per sample size), the generator's PS-s
 1.5, and the design draw on which the rule had been chosen sat at its 16th percentile, so a pass on the point
 would have been sampling noise. These Monte Carlo figures come from the review document (`REVIEW.md`, sha256
 `35adb9077bbc4fdc2e117c3f8861cdb23619f30a4f1fc8911f47a37c010accd4`), which is outside the supplementary
-repository; `sim/POST-EVALUATION-003.md` sections (c) and (d) mirror them. It recommended reading every clause on
+repository; `sim/POST-EVALUATION-003.md` sections (c) and (d) mirror them. The review recommended reading every clause on
 its 95 percent interval, with a three-way outcome: holds, fails or inconclusive. Read that way after the
 evaluation, and labelled post hoc, both L1 clauses are inconclusive, because each interval contains 1.5; L2 holds
 on both families (upper bounds 1.309 and 1.286), as does L0; and H3 as a whole is inconclusive. On this reading,
 neither L1 point estimate is read as a pass or a fail. This was the review's expected outcome: at N 4000 its Monte
 Carlo had PS-sub's L1 clause inconclusive on the interval in 0.792 of populations, and the frozen rule passing H3
 in only 0.148, so the frozen FAIL is the generator's usual outcome, not bad luck. That Monte Carlo describes the
-generator; it is neither confirmatory power nor evidence about the evaluation draw. An unregistered comparison
+generator; it is neither confirmatory power nor evidence about the evaluation draw. Any future registration of H3 will read the same six clauses on the review's
+interval rule, adopted on 2026-10-07 after this evaluation. For a pass that rule is stricter than the frozen
+one: at N 4000 the same Monte Carlo had H3 holding on the interval in 0.002 of populations. An unregistered comparison
 arm, L1_step (Supplement S11), was not sized or registered for H3 and is reported as a comparison, not a rescue:
 under the frozen rule H3 stands as failed.
 

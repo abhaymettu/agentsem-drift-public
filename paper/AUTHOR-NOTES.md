@@ -292,6 +292,10 @@ isolate), which needs a new run.
 10. The H3 paragraph in section 3.13 (v4.3: section 3.7) still carries its "[author wording]" marker. Its content follows section 9's
    order (frozen FAIL first, post hoc interval reading second and labelled, review disclosed, Monte Carlo labelled
    design-stage); the wording decision stands with the author, and the marker must go before submission.
+   Status 2026-10-07: content decided by an Opus reviewer under the overnight grant, two edits applied (antecedent
+   fix; one future-rule sentence citing 0.002, POST-EVALUATION-003 (d)), marker kept; see DECISIONS.md, "L1 versus
+   L1_step, and the paper's H3 paragraph". Before submission: read the paragraph, keep, change or cut the new
+   sentence, then remove the marker.
 11. Word limit (items 6 and 9). Superseded by the v4.3 trim: by the section 10 script, the body (title
    through the declarations block, excluding the abstract, Appendix A and references) is 5,373 words after the
    science review fixes (4,991 before them), down from 10,305 for v4.2 by the same script; spec 003 is now

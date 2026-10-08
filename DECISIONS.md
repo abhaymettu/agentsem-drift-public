@@ -151,3 +151,85 @@ paper/AUTHOR-NOTES.md section 9 rule 2 uses the interval reading, labelled post 
 
 Not changed by this sub-entry: the frozen files and verdict, 1.5, W 14, the paper. Audit:
 ~/audit/agentsem-h3referee-2026-10-07.md
+
+## 2026-10-07 | L1 versus L1_step, and the paper's H3 paragraph
+
+**Decided by** an Opus reviewer (model opus, effort xhigh) under the owner's 2026-10-07 overnight grant (the
+conductor's summary of his multiple-choice answers, not his words; referee amendment 7). Both calls were open in
+RUNLOG.md (19:31 entry: "L1 vs L1_step question and the paper H3 wording stay his"). No simulation was run.
+
+### Decision 1: L1 versus L1_step
+
+**Decision.** Two senses, answered separately.
+- (i) The rule the method carries: no new choice. PREREG-003 section 4 ("L1_step is the rule carried into the
+  paper; L1_did is dropped") records the owner-delegated pick "L1_step over L1_did" (~/.instinct/DECISIONS-20261005.md
+  line 24), which chose between the two observer-step variants, not L1_step over L1. The same section keeps L1
+  against L1_step a reported trade-off with no single `w`. That answers sim/HYB-003.md's "the choice is the project
+  owner's" (lines 175 to 180): it stays a trade-off, because both deciding quantities (how often unlogged changes
+  coincide with logged ones; how strongly D loads on the unmapped indicators early) are "not estimable here".
+  STEP-003 agrees ("L1_step over L1 does not hold unconditionally").
+- (ii) Future H3: the L1 clause stays on L1 under the three-way interval rule above; L1_step stays an unregistered
+  comparison. "Reverse by" trigger 1 of the H3-rule entry has not fired and this entry does not fire it.
+
+**Options considered.**
+- 1A. Status quo as above. **Chosen.**
+- 1B. Move H3's L1 clause to L1_step. Rejected: it switches the clause's target after L1 failed (1.5756) and
+  L1_step passed (option D of the H3-rule entry). It is also not a risky test: all four known L1_step intervals sit
+  at or below 1.108 against 1.5 (design 0.977 [0.844, 1.108], 0.960 [0.836, 1.095], PREREG-003 section 7;
+  evaluation 0.9344 [0.8570, 1.0218], 0.9273 [0.8494, 1.0141], results_003.json `verdicts.H3.L1_step`), and H3's
+  logged families lack the one condition in which L1_step loses to L1, an unlogged shift on the unmapped indicators
+  coinciding with the logged change (STEP-003 finding 3; OBSERVER-STEP-DIGEST section 1). No generator Monte Carlo
+  of L1_step's H3 ratio exists, so its pre-run probabilities could not be stated without new simulation.
+- 1C. Register both. Rejected: as extra conjunction clauses they are near-certain and cannot move H3 (PS-sub's L1
+  clause governs it, REVIEW.md 2.2 item 5); as a separate tallied hypothesis it adds a known pass (REVIEW.md 3.5:
+  L1_step "should stay out of" the tally).
+- 1D. Declare it an empirical question. Not a substitute: it is what sense (i) already is, and it gives no rule for
+  sense (ii).
+
+**Strongest case against.** The paper carries L1_step, so the carried rule never faces a registered test, and H3
+stays on a rule believed to fail for PS-sub (generator about 1.585). **Why 1A stands:** the paper does not
+recommend L1_step over L1; L1 is the rule H3 was registered and sized on; an L1_step clause in these families tests
+the one condition already known to favour it; rule B can fail L1 on evidence through N (about 30,656 persons for an
+80% decisive fail); and 1A stays reversible in either direction, while a registered 1B could not be withdrawn.
+
+**Reverse by** a new dated entry below (never `git revert`; referee amendment 5) when:
+1. The owner states that H3's claim is about L1_step. Then L1_step enters under rule B, registered before new data
+   with its own hold, fail and inconclusive probabilities and coverage from a new generator Monte Carlo; 0.934,
+   0.927, 0.977 and 0.960 are not cited as support; the registration discloses that the switch followed L1's 003 fail.
+2. A future design includes unlogged shifts coinciding with logged changes. Then a separate L1_step hypothesis,
+   outside H3's conjunction, may be registered with its own probabilities.
+3. The paper comes to recommend L1_step over L1. Then that rule is registered prospectively as a separate,
+   labelled hypothesis, its place in the tally stated before data.
+4. Consented data estimate the coincidence rate or D's early loading and put one rule ahead at a stated `w`.
+   Then sense (i) is revisited.
+5. The owner overrules this entry for any reason.
+
+### Decision 2: the paper's H3 paragraph (paper/DRAFT.md section 3.7)
+
+**Decision.** Two edits applied; the "[author wording]" marker stays for the owner.
+- "It recommended reading every clause" now reads "The review recommended ...": the nearest antecedent was
+  sim/POST-EVALUATION-003.md, which recommends nothing.
+- One sentence added (about 50 words) stating the future-work rule from the H3-rule entry, its post hoc adoption
+  date (referee amendment 1) and that it is stricter for a pass: at N 4000 the review's Monte Carlo had H3 holding
+  on the interval in 0.002 of populations, against 0.148 on the frozen rule (POST-EVALUATION-003 (d) table,
+  "H3, all six | interval"). "The same six clauses" carries Decision 1 (L1, not L1_step).
+- paper/AUTHOR-NOTES.md item 10 records the status and what remains for him.
+- Checked and kept: every number in the paragraph matches results_003.json and POST-EVALUATION-003 (c), (d) after
+  4-to-3-decimal rounding; "the frozen FAIL is the generator's usual outcome, not bad luck" is consistent with
+  referee amendment 3 (the frozen rule fails correctly in 0.852 of N 4000 populations).
+
+**Options considered.** 2A (accept as is, remove marker): rejected, keeps the wrong antecedent and omits the forward
+rule. 2B with marker removal: rejected, an agent would be signing off his authorship of submitted prose (AUTHOR-NOTES
+item 10 and section 10; ~/lanes/anchor-research/STATE.md "The paper's wording of the H3 result is his"), which the
+grant (no publishing or outward messages) does not cover. Pure 2C (leave everything): rejected, leaves a known error
+and an unstated rule the grant can fix. **Chosen:** 2B's edits, 2C for the marker.
+
+**Strongest case against.** The body is about 5,373 words against the 5,000-word guide, and a forward commitment in a
+results paragraph can read as defensive. **Why it stands:** the sentence is under 1% of the body, and the 0.002
+against 0.148 contrast is the most direct evidence that the post hoc rule makes a pass harder, not easier. He can cut
+it when he removes the marker; the open item is now a read, not a decision.
+
+**Reverse by** a new dated entry below plus a paper edit (never `git revert`): if he cuts or rewrites the sentence,
+record it; if the H3 future rule is reversed, change the sentence in the same commit.
+
+**Not changed:** frozen files and the frozen H3 FAIL, 1.5, W 14, the "[author wording]" marker, paper/SUPPLEMENT.md.
