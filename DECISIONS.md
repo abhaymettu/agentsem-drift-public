@@ -295,3 +295,67 @@ Submission is his step.
 
 **Reverse by:** if he wants a candidate before his read, write one into AUTHOR-NOTES item 10 with the paper
 unchanged and the marker kept. Nothing to undo.
+
+## 2026-10-07 | The owner-only items: H3 marker, AI-use bracket, DECISIONS.md deposit
+
+**Decided by** an Opus reviewer (model opus, effort xhigh, read-only) under the owner's 2026-10-07 overnight grant
+(the conductor's summary of his multiple-choice answers, not his words). Open in RUNLOG.md since the 20:00 entry,
+which labelled it "his only"; a lane was dispatched on it anyway. Third Opus ruling on these items today.
+
+### Part 1: H3 paragraph marker and humanizer read
+
+**Decision.** 1a: stays his; paper unchanged. Removing "[author wording]" (paper/DRAFT.md:381) signs off prose
+under his name, which the entry "L1 versus L1_step, and the paper's H3 paragraph" (Decision 2) already reserved
+for him; there is still no academic voice sample for humanizer. **Rejected:** 1b, agent humanizes and removes the
+marker. **Case against:** the grant routes owner calls to a reviewer, so deferring looks like refusing it. **Why it
+stands:** the paragraph is likely writing-sample material for Dec 1, and his own read is what lets him defend it.
+**Reverse by:** on his message, add a dated entry here, run humanizer holding the numbers listed in the AI-use
+entry's Decision 2, then remove the marker.
+
+### Part 2: the AI-use bracket
+
+**Decision.** 2a: stays bracketed. Nothing has changed since the entry "The AI-use statement and the H3
+paragraph's humanizer read", and the delegation it describes is a conductor summary, not his words. **Rejected:**
+2b unbracket (asserts in his name); 2c cut to the minimal line (contradicts PREREG-003 section 8). **Case
+against:** a bracketed draft is not submittable. **Why it stands:** submission is his step; the bracket costs one
+read. **Reverse by:** as in that entry's Decision 1.
+
+### Part 3: whether DECISIONS.md is deposited
+
+**Decision.** 3c: preparation only, the deposit decision stays his (outward-facing). paper/AUTHOR-NOTES.md
+section 5 gains item 4: DECISIONS.md is on `eval/authorship-filter`, not `main`, so a `main` deposit leaves it
+out; its `~/` and `/Users/` pointers are no reason to withhold it; and the bracket wording follows from his answer.
+
+**New evidence.** Home-directory pointers are not peculiar to DECISIONS.md: `sim/PREREG.md:4` carries one on
+`origin/main`; `sim/PREREG-003.md:8` and `sim/POST-EVALUATION-003.md` lines 11, 25 and 201-205 carry them on this
+branch (checked with `git grep`; PREREG-003 is not on `main`). The Data statement lists POST-EVALUATION-003 for the
+supplement (paper/DRAFT.md:205-207).
+
+**Rejected.** 3a no change (section 5 item 1 would include or drop the file by branch choice, with no one
+deciding); 3b agent decides "not deposited" (outward-facing, his); 3d scrub the paths now (rewrites append-only
+entries for no gain, since frozen files carry the same kind).
+
+**Case against:** item 4 repeats the bracket and the AI-use entry's "Reverse by". **Why it stands:** section 5 is
+the checklist he works from at deposit time.
+
+**Reverse by** deleting AUTHOR-NOTES section 5 item 4 and adding a dated entry here (never `git revert`).
+
+**Dispatch.** These items are owner-only; reopen only on his own message.
+
+
+## 2026-10-07 19:54 CDT | Delegated owner read of the H3 paragraph
+
+Abhay's original phone message at 19:52:18 CDT, phonemsg-REDACTED,
+explicitly delegated this read: "You read it for me and make the decision". It replied to the
+H3 owner-read flag. Instinct read the paragraph at 8309e19, both earlier research decisions and
+the referee amendments, and accepted the paragraph as written.
+
+Decision: remove only the "[author wording]" marker from paper/DRAFT.md section 3.7. Keep the
+antecedent fix and future-rule sentence, including the 0.002 versus 0.148 distinction. No humanizer
+rewrite: the contrasts are audited hedges and flattening them would lose those hedges.
+AUTHOR-NOTES item 10 records the completed read. Marker removal is delegated owner sign-off on
+this prose, not a claim that Abhay personally performed the read or a submission/deposit approval.
+
+This supersedes the owner-read hold in the immediately preceding provisional lane entry. Its
+AI-use bracket and deposit items remain held. No AI-use text, frozen science or numbers changed.
+Reverse only by a new dated decision and explicit prose edit, never by reverting the whole log.

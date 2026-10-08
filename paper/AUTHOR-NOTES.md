@@ -247,6 +247,8 @@ SUBMISSION.md is a build product and is not committed.
    commit cannot.
 2. Make Mettu (2026a, 2026b) retrievable (deposit or preprint).
 3. Confirm or replace the bracketed ethics sentence, now in the Disclosures block before section 3.
+4. Decide whether `DECISIONS.md` is deposited (on `eval/authorship-filter`, not `main`);
+   if not, change the AI-use bracket's log reference to "the author's records".
 
 ### Round 3 (coordinator, v3)
 
@@ -289,13 +291,8 @@ isolate), which needs a new run.
    limit (item 6) absorbs its roughly 260 words. v4.3: it stays as the second paragraph of section 3.5 (about
    100 words, mismatch caveat and verdict kept); the full v4.2 text is Supplement S9. Inserted 2026-10-07 under the owner's delegation of the
    pending paper decisions.
-10. The H3 paragraph in section 3.13 (v4.3: section 3.7) still carries its "[author wording]" marker. Its content follows section 9's
-   order (frozen FAIL first, post hoc interval reading second and labelled, review disclosed, Monte Carlo labelled
-   design-stage); the wording decision stands with the author, and the marker must go before submission.
-   Status 2026-10-07: content decided by an Opus reviewer under the overnight grant, two edits applied (antecedent
-   fix; one future-rule sentence citing 0.002, POST-EVALUATION-003 (d)), marker kept; see DECISIONS.md, "L1 versus
-   L1_step, and the paper's H3 paragraph". Before submission: read the paragraph, keep, change or cut the new
-   sentence, then remove the marker.
+10. H3 paragraph read and accepted 2026-10-07 under the owner's delegation; "[author wording]"
+   marker removed. See DECISIONS.md, 19:54 entry. AI-use wording and deposit remain separate.
 11. Word limit (items 6 and 9). Superseded by the v4.3 trim: by the section 10 script, the body (title
    through the declarations block, excluding the abstract, Appendix A and references) is 5,373 words after the
    science review fixes (4,991 before them), down from 10,305 for v4.2 by the same script; spec 003 is now

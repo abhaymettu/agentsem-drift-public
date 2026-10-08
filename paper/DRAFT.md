@@ -378,7 +378,7 @@ alarm rate after the change, over the same persons' rate on the stable panel, wo
 L1 and L2 and exceed 1.5 under L0, in families PS-sub and PS-use. Supplement S11 gives Table S2, the
 probe budget and exploratory comparisons.
 
-**Registered prediction H3. [author wording]** Under its frozen rule, H3 did not hold. That rule read L1 and L2 on
+**Registered prediction H3.** Under its frozen rule, H3 did not hold. That rule read L1 and L2 on
 the point estimate and L0 on the interval, and H3 failed on one of its six clauses: L1 on PS-sub had a point
 estimate of 1.576 [1.421, 1.749] against "below 1.5". The other five clauses met the frozen rule (Table S2).
 The frozen file states that a pass on the point is weaker than a pass on the interval; L1 on PS-use met the rule
