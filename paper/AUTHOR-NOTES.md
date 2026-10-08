@@ -75,7 +75,7 @@ Section, table and figure numbers elsewhere in these notes are v4.2's unless mar
   [0.0153, 0.0801], `verdicts.H2b`; its dropped 0.05 threshold, spec 003 section 11; H6 -0.0230 [-0.0335,
   -0.0118] and -0.0518 [-0.0643, -0.0395], `verdicts.H6.{DR-1.0,DR-1.5}` (RESULTS-003 "Reported, not
   scored"); L2 minus L1_step 0.2080 [0.1827, 0.2318], `verdicts.H4.L1_step`. The frozen-rule H3 pass rate
-  0.148 at N 4000: POST-EVALUATION-003 (d), REVIEW.md section 3.2 ("H3, all six, drafted").
+  0.148 at N 4000, and 0.002 for H3 holding on the interval at N 4000 (section 3.7 future-rule sentence): POST-EVALUATION-003 (d), REVIEW.md section 3.2 ("H3, all six, drafted").
 - Section 3.13, Table 3 and the H2a, construction-check and H3 paragraphs: `sim/results_003.json`, block
   `verdicts` (printed in `sim/RESULTS-003.md`, "Verdicts"): `verdicts.H1a`, `H1b`, `H2a`, `H4`
   (`est`, `lo`, `hi`, `threshold`); `verdicts.H3.clauses.{L1_PS-sub, L1_PS-use, L2_PS-sub, L2_PS-use,

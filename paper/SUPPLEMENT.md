@@ -431,7 +431,7 @@ rho 0.5 to 2; at twice the weight on false alarms, L1 was ahead at every rho (-0
 populations, the L0 interaction of the D change with the observer change at 21 days was 0.108 (single draw 0.154).
 L1_did, a within-person difference-in-differences variant dropped before the freeze, exceeded L1 by about zero at
 rho 0 (-0.001) and by 0.071, 0.150 and 0.273 at rho 0.5, 1 and 2; and the step of a decomposition from L1 to
-L1_step that only stops re-centring the unmapped indicators was about zero at rho 0 (0.005) and 0.208 at rho 2.
+L1_step that only stops re-centring the unmapped indicators was about zero at rho 0 (0.005) and 0.208 at rho 2. Which of L1 and L1_step is better depends on two quantities that these simulations do not estimate: how often unlogged changes coincide with logged ones, and how strongly `D` loads on the unmapped indicators early (`sim/HYB-003.md`).
 
 ## S12. Corpus audit detail (v4.2 sections 4.1 to 4.3)
 
