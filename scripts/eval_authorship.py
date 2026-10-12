@@ -3,6 +3,7 @@
     python3 scripts/eval_authorship.py --variant baseline            # needs ANTHROPIC_API_KEY (or an `ant auth` profile)
     python3 scripts/eval_authorship.py --variant baseline --approve-harness   # first run only; the person running it approves
     python3 scripts/eval_authorship.py --stub oracle|inverse|constant|empty   # harness self-check, no API call
+    python3 scripts/eval_authorship.py --check                               # grader self-check, no API call
 
 Writes .claude/hillclimb/authorship/<variant>/{results.jsonl, traces/, errors.jsonl, confusion.json}.
 Positive class = agent text (the sim's convention). Grades are label matches; nothing here estimates anything
@@ -150,7 +151,10 @@ def wilson(k, n, z=1.96):
     return p, c - w, c + w
 
 
-def summarize(out):
+def summarize(out, expected):
+    """`expected`: {(prompt_id, rep): (label, split)} for every case the run was asked to score. The *_itt
+    figures count each expected case without an ok row (refusal, truncation, fallback, unparseable, timeout,
+    error) as a miss, so a filter cannot raise its score by not answering the cases it would get wrong."""
     rows = [json.loads(l) for l in (out / "results.jsonl").read_text().splitlines() if l.strip()]
     n_err = sum(1 for _ in open(out / "errors.jsonl")) if (out / "errors.jsonl").exists() else 0
     ok = [r for r in rows if r["status"] == "ok"]
@@ -161,10 +165,18 @@ def summarize(out):
         neg = [r for r in rs if r["meta"]["label"] == "human"]
         tp = sum(r["meta"]["predicted"] == "agent" for r in pos)
         tn = sum(r["meta"]["predicted"] == "human" for r in neg)
+        exp = {k: lab for k, (lab, s) in expected.items() if split == "all" or s == split}
+        hit = {(r["prompt_id"], r["rep"]) for r in rs if (r["prompt_id"], r["rep"]) in exp
+               and r["meta"]["predicted"] == r["meta"]["label"]}
+        n_pos = sum(lab == "agent" for lab in exp.values())
+        tp_itt = sum(exp[k] == "agent" for k in hit)
         report[split] = {"n": len(rs), "tp": tp, "fn": len(pos) - tp, "tn": tn, "fp": len(neg) - tn,
                          "sensitivity": wilson(tp, len(pos)), "specificity": wilson(tn, len(neg)),
                          "accuracy": wilson(tp + tn, len(rs)),
-                         "majority_baseline": max(len(pos), len(neg)) / len(rs) if rs else float("nan")}
+                         "majority_baseline": max(len(pos), len(neg)) / len(rs) if rs else float("nan"),
+                         "n_expected": len(exp), "sensitivity_itt": wilson(tp_itt, n_pos),
+                         "specificity_itt": wilson(len(hit) - tp_itt, len(exp) - n_pos),
+                         "accuracy_itt": wilson(len(hit), len(exp))}
     (out / "confusion.json").write_text(json.dumps(report, indent=2))
     print(f"{out.name}: {report['scored']} scored, {report['not_scored']} not scored "
           f"(refusal/truncated/fallback), {n_err} failed attempts in errors.jsonl")
@@ -175,8 +187,31 @@ def summarize(out):
         f = lambda m: "{:.2f} [{:.2f}, {:.2f}]".format(*s[m])
         print(f"  {split:5} n={s['n']:3}  sens {f('sensitivity')}  spec {f('specificity')}  "
               f"acc {f('accuracy')}  majority {s['majority_baseline']:.2f}")
+        print(f"        unscored = miss, n={s['n_expected']:3}  sens {f('sensitivity_itt')}  "
+              f"spec {f('specificity_itt')}  acc {f('accuracy_itt')}")
     print(f"  sim assumes sens {SIM_ASSUMED['sensitivity']:.2f} / spec {SIM_ASSUMED['specificity']:.2f} "
-          "(spec 001 (ii)); the headline is the test split.")
+          "(spec 001 (ii)); the headline is the test split, unscored = miss.")
+
+
+def self_check():
+    """Grader regression, no API: a filter that answers only the cases it gets right must not score 1.0."""
+    import tempfile
+    cases = [(f"c{i}", "agent" if i % 2 else "human") for i in range(20)]
+    expected = {(i, 0): (lab, "test") for i, lab in cases}
+    for name, answers, want in (("oracle", lambda lab: True, 1.0), ("abstain-when-wrong", lambda lab: lab == "human", 0.5)):
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d)
+            for i, lab in cases:
+                if answers(lab):
+                    append(out / "results.jsonl", {"prompt_id": i, "rep": 0, "split": "test", "status": "ok",
+                                                   "meta": {"label": lab, "predicted": lab}})
+                else:
+                    append(out / "errors.jsonl", {"prompt_id": i, "rep": 0, "failure_class": "unparseable"})
+            summarize(out, expected)
+            got = json.loads((out / "confusion.json").read_text())["test"]["accuracy_itt"][0]
+            if got != want:
+                sys.exit(f"CHECK FAILED: {name} accuracy_itt {got} != {want}")
+    print("check OK: oracle scores 1.0; a filter that leaves every agent case unanswered scores 0.5, not 1.0")
 
 
 async def main():
@@ -188,7 +223,10 @@ async def main():
     ap.add_argument("--timeout-s", type=float, default=180)
     ap.add_argument("--approve-harness", action="store_true")
     ap.add_argument("--stub", choices=("oracle", "inverse", "constant", "empty"))
+    ap.add_argument("--check", action="store_true", help="grader self-check on synthetic rows, no API call")
     args = ap.parse_args()
+    if args.check:
+        return self_check()
 
     state = json.loads((FLOW / "_state.json").read_text())
     if args.stub:
@@ -214,7 +252,7 @@ async def main():
     sem = asyncio.Semaphore(args.concurrency)
     await asyncio.gather(*(run_case(client, c, k, split_of[c["id"]], out, args, sem) for c, k in todo))
     if (out / "results.jsonl").exists():
-        summarize(out)
+        summarize(out, {(c["id"], k): (c["label"], split_of[c["id"]]) for k in range(args.reps) for c in cases})
     else:
         print(f"{out.name}: nothing scored; see {(out / 'errors.jsonl').relative_to(ROOT)}")
 
